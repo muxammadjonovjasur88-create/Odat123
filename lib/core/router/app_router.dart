@@ -1,0 +1,265 @@
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../models/task.dart';
+import '../theme/app_motion.dart';
+import '../widgets/flowa_loading.dart';
+import '../services/auth_repository.dart';
+import '../services/user_repository.dart';
+import '../../features/active_focus/presentation/active_focus_view.dart';
+import '../../features/add_goal/presentation/add_goal_screen.dart';
+import '../../features/ai_planner/presentation/ai_planner_screen.dart';
+import '../../features/blocking/presentation/blocking_permissions_screen.dart';
+import '../../features/blocking/presentation/blocking_settings_screen.dart';
+import '../../features/community/presentation/community_screen.dart';
+import '../../features/daily_plan/presentation/daily_plan_screen.dart';
+import '../../features/deep_focus/data/focus_providers.dart';
+import '../../features/deep_focus/presentation/deep_focus_screen.dart';
+import '../../features/discover/presentation/discover_screen.dart';
+import '../../features/goal_reached/domain/goal_reached_args.dart';
+import '../../features/goal_reached/presentation/goal_reached_screen.dart';
+import '../../features/lobby/presentation/lobbies_screen.dart';
+import '../../features/lobby/presentation/lobby_detail_screen.dart';
+import '../../features/leaderboard/presentation/leaderboard_screen.dart';
+import '../../features/point_system/presentation/point_system_screen.dart';
+import '../../features/premium/presentation/paywall_screen.dart';
+import '../../features/premium/presentation/premium_stats_screen.dart';
+import '../../features/profile/presentation/edit_profile_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/profile/presentation/public_profile_screen.dart';
+import '../../features/progress/presentation/progress_screen.dart';
+import '../../features/settings/presentation/settings_screen.dart';
+import '../../features/setup_profile/presentation/setup_profile_screen.dart';
+import '../../features/sign_in/presentation/sign_in_screen.dart';
+import '../../features/starting_soon/presentation/starting_soon_screen.dart';
+import '../../features/weekly_view/presentation/weekly_view_screen.dart';
+import '../../features/welcome/presentation/welcome_screen.dart';
+import '../../features/random_proof/presentation/proof_capture_screen.dart';
+import '../../features/random_proof/presentation/friends_proofs_screen.dart';
+import '../../features/settings/presentation/telegram_link_screen.dart';
+import 'app_routes.dart';
+
+/// App-wide router with an auth gate.
+///
+/// Redirect rules:
+/// * unknown auth (still loading) → stay on the Welcome splash;
+/// * signed out → only the onboarding flow is reachable;
+/// * signed in without a profile → Setup Profile;
+/// * signed in with a profile → Home (Daily Plan), kept out of onboarding.
+final routerProvider = Provider<GoRouter>((ref) {
+  final gate = _AuthGate(ref);
+  ref.onDispose(gate.dispose);
+
+  GoRoute route(String path, Widget Function(GoRouterState) build) => GoRoute(
+    path: path,
+    pageBuilder: (context, state) => _calmPage(context, state, build(state)),
+  );
+
+  return GoRouter(
+    initialLocation: AppRoutes.welcome,
+    refreshListenable: gate,
+    redirect: gate.redirect,
+    routes: [
+      // Branded wait shown while auth/profile resolve (see [_AuthGate]).
+      route(AppRoutes.loading, (_) => const FlowaLoadingScreen()),
+
+      // --- Onboarding / auth (real screens) ---
+      route(AppRoutes.welcome, (_) => const WelcomeScreen()),
+      route(AppRoutes.discover, (_) => const DiscoverScreen()),
+      route(AppRoutes.signIn, (_) => const SignInScreen()),
+      route(AppRoutes.setupProfile, (_) => const SetupProfileScreen()),
+
+      // --- Planning (real screens) ---
+      route(AppRoutes.dailyPlan, (_) => const DailyPlanScreen()),
+      route(AppRoutes.weeklyView, (_) => const WeeklyViewScreen()),
+      route(AppRoutes.addGoal, (_) => const AddGoalScreen()),
+      route(
+        AppRoutes.editGoal,
+        (state) => AddGoalScreen(existing: state.extra as Task?),
+      ),
+      route(AppRoutes.aiPlanner, (_) => const AiPlannerScreen()),
+
+      // --- Focus (real screens) ---
+      route(AppRoutes.deepFocus, (_) => const FocusScreen()),
+      GoRoute(
+        path: AppRoutes.activeFocus,
+        pageBuilder: (context, state) {
+          final task = ProviderScope.containerOf(
+            context,
+          ).read(currentFocusTaskProvider);
+          return _calmPage(
+            context,
+            state,
+            task == null ? const FocusScreen() : ActiveFocusView(task: task),
+          );
+        },
+      ),
+      route(
+        AppRoutes.goalReached,
+        (state) => GoalReachedScreen(args: state.extra as GoalReachedArgs?),
+      ),
+
+      // --- Blocking (real screens) ---
+      route(
+        AppRoutes.startingSoon,
+        (state) => StartingSoonScreen(task: state.extra as Task),
+      ),
+      route(AppRoutes.blocking, (_) => const BlockingSettingsScreen()),
+      route(
+        AppRoutes.blockingPermissions,
+        (_) => const BlockingPermissionsScreen(),
+      ),
+
+      // --- Community / stats / account (real screens) ---
+      route(AppRoutes.community, (_) => const CommunityScreen()),
+      route(AppRoutes.pointSystem, (_) => const PointSystemScreen()),
+      route(AppRoutes.profile, (_) => const ProfileScreen()),
+      GoRoute(
+        path: '${AppRoutes.profile}/:userId',
+        pageBuilder: (context, state) => _calmPage(
+          context,
+          state,
+          PublicProfileScreen(userId: state.pathParameters['userId']!),
+        ),
+      ),
+      route(AppRoutes.editProfile, (_) => const EditProfileScreen()),
+      route(AppRoutes.settings, (_) => const SettingsScreen()),
+      route(AppRoutes.progress, (_) => const ProgressScreen()),
+      route(AppRoutes.leaderboard, (_) => const LeaderboardScreen()),
+
+      // Private lobbies
+      route(AppRoutes.lobbies, (_) => const LobbiesScreen()),
+      GoRoute(
+        path: '${AppRoutes.lobby}/:id',
+        pageBuilder: (context, state) => _calmPage(
+          context,
+          state,
+          LobbyDetailScreen(lobbyId: state.pathParameters['id']!),
+        ),
+      ),
+
+      // Premium (subscription)
+      route(AppRoutes.paywall, (_) => const PaywallScreen()),
+      route(AppRoutes.premiumStats, (_) => const PremiumStatsScreen()),
+
+      // Random Proof Capture
+      GoRoute(
+        path: '/proof-capture/:sessionId',
+        pageBuilder: (context, state) => _calmPage(
+          context,
+          state,
+          ProofCaptureScreen(sessionId: state.pathParameters['sessionId']!),
+        ),
+      ),
+
+      // --- Qism 3 ---
+      route(AppRoutes.telegramLink, (_) => const TelegramLinkScreen()),
+      route(AppRoutes.friendsProofs, (_) => const FriendsProofsScreen()),
+    ],
+  );
+});
+
+/// Wraps a screen in a calm, consistent fade + slight-slide page transition
+/// (~320ms ease) used for every route.
+///
+/// When the OS asks to minimise motion, we drop the animation entirely and hand
+/// back a [NoTransitionPage] so navigation is instant but still clean.
+Page<void> _calmPage(BuildContext context, GoRouterState state, Widget child) {
+  if (context.reduceMotion) {
+    return NoTransitionPage<void>(key: state.pageKey, child: child);
+  }
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    transitionDuration: AppMotion.page,
+    reverseTransitionDuration: AppMotion.pageReverse,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: AppMotion.enter,
+        reverseCurve: AppMotion.exit,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.02),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
+    child: child,
+  );
+}
+
+/// Onboarding routes reachable while signed out.
+const _onboardingRoutes = {
+  AppRoutes.welcome,
+  AppRoutes.discover,
+  AppRoutes.signIn,
+};
+
+/// Bridges Riverpod auth/profile state to go_router: notifies the router to
+/// re-run [redirect] whenever auth or the user's profile changes.
+class _AuthGate extends ChangeNotifier {
+  _AuthGate(this._ref) {
+    _subs = [
+      _ref.listen(authStateProvider, (_, _) => notifyListeners()),
+      _ref.listen(userProfileProvider, (_, _) => notifyListeners()),
+    ];
+  }
+
+  final Ref _ref;
+  late final List<ProviderSubscription> _subs;
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final auth = _ref.read(authStateProvider);
+    final loc = state.matchedLocation;
+    final inOnboarding = _onboardingRoutes.contains(loc);
+    // Pre-home locations from which it's safe to show the branded loader (never
+    // yank a user who is already inside the app).
+    final preHome =
+        inOnboarding ||
+        loc == AppRoutes.setupProfile ||
+        loc == AppRoutes.loading;
+
+    // Auth status not yet known — show the calm branded loader.
+    if (auth.isLoading || auth.hasError) {
+      return loc == AppRoutes.loading ? null : AppRoutes.loading;
+    }
+
+    final user = auth.asData?.value;
+    if (user == null) {
+      return inOnboarding ? null : AppRoutes.welcome;
+    }
+
+    // Signed in: resolve the profile before deciding. Keep the loader visible
+    // during the first profile load, but don't pull an in-app user onto it.
+    final profile = _ref.read(userProfileProvider);
+    if (profile.isLoading) {
+      if (!preHome) return null;
+      return loc == AppRoutes.loading ? null : AppRoutes.loading;
+    }
+
+    final hasProfile = profile.asData?.value != null;
+    if (!hasProfile) {
+      return loc == AppRoutes.setupProfile ? null : AppRoutes.setupProfile;
+    }
+
+    // Fully onboarded — don't let them sit on onboarding/setup/loader screens.
+    if (preHome) {
+      return AppRoutes.dailyPlan;
+    }
+    return null;
+  }
+
+  @override
+  void dispose() {
+    for (final s in _subs) {
+      s.close();
+    }
+    super.dispose();
+  }
+}

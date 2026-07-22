@@ -1,0 +1,134 @@
+{
+  "project_info": {
+    "project_number": "124357149675",
+    "project_id": "flowa-4fca9",
+    "storage_bucket": "flowa-4fca9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:124357149675:android:7e797c2691a412b3448fae",
+        "android_client_info": {
+          "package_name": "com.company.flova"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEhqM5KjIqSWFJx_sUbozulv4h6CN-jtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "124357149675-edhlldm2p5b18afh3gad6dkjjo082k39.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flowa.flowa"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:124357149675:android:9311a07d1e27b928448fae",
+        "android_client_info": {
+          "package_name": "com.flowa.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "124357149675-ifm4tqveoq2ufmaoui3i8om94ccvf1s8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.flowa.app",
+            "certificate_hash": "2c72f85cea47ce207507ccae15fdc38a40a51e51"
+          }
+        },
+        {
+          "client_id": "124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEhqM5KjIqSWFJx_sUbozulv4h6CN-jtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "124357149675-edhlldm2p5b18afh3gad6dkjjo082k39.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flowa.flowa"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:124357149675:android:344a0063f7468cdd448fae",
+        "android_client_info": {
+          "package_name": "com.flowa.flowa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "124357149675-gputtkb4usjco6lvm1cjdlhp9feno556.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.flowa.flowa",
+            "certificate_hash": "2c72f85cea47ce207507ccae15fdc38a40a51e51"
+          }
+        },
+        {
+          "client_id": "124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEhqM5KjIqSWFJx_sUbozulv4h6CN-jtg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "124357149675-edhlldm2p5b18afh3gad6dkjjo082k39.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.flowa.flowa"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

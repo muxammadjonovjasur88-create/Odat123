@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#F2EFE9</color>
+    <!-- App window background — matches the Flutter cream theme so there's no
+         white flash between the splash and the first Flutter frame. Overridden
+         to the forest-dark in values-night. -->
+    <color name="flowa_window_background">#F2EFE9</color>
+</resources>
