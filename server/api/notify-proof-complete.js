@@ -14,10 +14,10 @@ async function notifyFriends(userId, taskId, userName) {
   if (sharedWith.length === 0) return;
 
   let taskTitle = "Vazifa";
-  if (taskId) {
-    const taskSnap = await db.collectionGroup("tasks").where("__name__", ">=", taskId).limit(1).get();
-    if (!taskSnap.empty) {
-      taskTitle = taskSnap.docs[0].data()?.title ?? "Vazifa";
+  if (userId && taskId) {
+    const taskDoc = await db.collection("users").doc(userId).collection("tasks").doc(taskId).get();
+    if (taskDoc.exists) {
+      taskTitle = taskDoc.data()?.title ?? "Vazifa";
     }
   }
 
