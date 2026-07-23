@@ -15,7 +15,7 @@ import {setGlobalOptions} from "firebase-functions/v2";
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getMessaging} from "firebase-admin/messaging";
-import {getStorage} from "firebase-admin/storage";
+import {createClient} from "@supabase/supabase-js";
 
 setGlobalOptions({region: "us-central1", maxInstances: 10});
 
@@ -24,6 +24,10 @@ const db = getFirestore();
 
 // Set this with:  firebase functions:secrets:set GEMINI_API_KEY
 const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
+// Set these with:  firebase functions:secrets:set SUPABASE_URL
+//                  firebase functions:secrets:set SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_URL_SECRET = defineSecret("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY_SECRET = defineSecret("SUPABASE_SERVICE_ROLE_KEY");
 
 const MODEL = "gemini-2.0-flash";
 const ALLOWED_CATEGORIES = ["study", "sport", "work", "personal", "wellness"];
@@ -615,7 +619,11 @@ export const sendProofTelegramNotice = onDocumentUpdated(
 // BOSQICH D — cleanupExpiredProofs
 
 export const cleanupExpiredProofs = onSchedule(
-  {schedule: "every 1 hours", timeZone: "Etc/UTC"},
+  {
+    schedule: "every 1 hours",
+    timeZone: "Etc/UTC",
+    secrets: [SUPABASE_URL_SECRET, SUPABASE_SERVICE_ROLE_KEY_SECRET],
+  },
   async () => {
     const now = new Date();
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -626,7 +634,12 @@ export const cleanupExpiredProofs = onSchedule(
       .where("status", "in", ["completed", "missed"])
       .get();
 
-    const bucket = getStorage().bucket();
+    // Supabase Storage client (service role key bilan)
+    const supabase = createClient(
+      SUPABASE_URL_SECRET.value(),
+      SUPABASE_SERVICE_ROLE_KEY_SECRET.value(),
+    );
+
     let cleaned = 0;
 
     for (const doc of expiredSessions.docs) {
@@ -637,20 +650,17 @@ export const cleanupExpiredProofs = onSchedule(
 
       const sessionId = doc.id;
       const filesToDelete = [
-        `proofs/${sessionId}/rear.jpg`,
-        `proofs/${sessionId}/front.jpg`,
+        `${sessionId}/rear.jpg`,
+        `${sessionId}/front.jpg`,
       ];
 
-      // Storage fayllarini o'chiramiz
-      for (const filePath of filesToDelete) {
-        try {
-          await bucket.file(filePath).delete();
-        } catch (e) {
-          // Fayl mavjud bo'lmasa xato bo'lishi normal
-          if (e.code !== 404) {
-            console.error(`Storage o'chirish xatosi (${filePath}):`, e);
-          }
-        }
+      // Supabase Storage dan o'chiramiz
+      const {error: storageError} = await supabase.storage
+        .from("proofs")
+        .remove(filesToDelete);
+
+      if (storageError) {
+        console.error(`Storage o'chirish xatosi (${sessionId}):`, storageError.message);
       }
 
       // Firestore'dan faqat URL maydonlarini olib tashlaymiz
