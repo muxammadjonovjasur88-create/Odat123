@@ -328,20 +328,22 @@ export const scheduleRandomProofs = onSchedule(
       const uid = doc.ref.parent.parent?.id;
       if (!uid) continue;
 
-      let startHour = 9;
-      let startMin = 0;
-      let endHour = 21;
-      let endMin = 0;
+      let startHour = 9, startMin = 0;
+      let endHour = 21, endMin = 0;
       
-      if (data.timeWindowStart) {
+      if (data.timeWindowStart && typeof data.timeWindowStart === 'string') {
         const parts = data.timeWindowStart.split(":");
-        startHour = parseInt(parts[0]) || 9;
-        startMin = parseInt(parts[1]) || 0;
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (!isNaN(h)) startHour = h;
+        if (!isNaN(m)) startMin = m;
       }
-      if (data.timeWindowEnd) {
+      if (data.timeWindowEnd && typeof data.timeWindowEnd === 'string') {
         const parts = data.timeWindowEnd.split(":");
-        endHour = parseInt(parts[0]) || 21;
-        endMin = parseInt(parts[1]) || 0;
+        const h = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        if (!isNaN(h)) endHour = h;
+        if (!isNaN(m)) endMin = m;
       }
       
       const startTotalMins = startHour * 60 + startMin;
@@ -349,12 +351,18 @@ export const scheduleRandomProofs = onSchedule(
       const durationMins = Math.max(1, endTotalMins - startTotalMins);
       
       const randomMins = startTotalMins + Math.floor(Math.random() * durationMins);
+      const localHour = Math.floor(randomMins / 60);
+      const localMin = randomMins % 60;
       
-      const scheduledTime = new Date(now);
-      scheduledTime.setUTCHours(Math.floor(randomMins / 60));
-      scheduledTime.setUTCMinutes(randomMins % 60);
-      scheduledTime.setUTCSeconds(0);
-      scheduledTime.setUTCMilliseconds(0);
+      // Asia/Tashkent UTC+5 offset (5 hours)
+      const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
+      const tashkentNow = new Date(now.getTime() + TASHKENT_OFFSET_MS);
+      const year = tashkentNow.getUTCFullYear();
+      const month = tashkentNow.getUTCMonth();
+      const date = tashkentNow.getUTCDate();
+      
+      const localAsUtcMs = Date.UTC(year, month, date, localHour, localMin, 0, 0);
+      const scheduledTime = new Date(localAsUtcMs - TASHKENT_OFFSET_MS);
       
       // Expire at end of day or 24h later
       const expiresAt = new Date(scheduledTime.getTime() + 24 * 60 * 60 * 1000);

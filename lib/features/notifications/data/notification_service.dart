@@ -94,23 +94,36 @@ class NotificationService {
     ),
   );
 
-  /// Schedules a reminder 5 minutes before [task] starts. No-op if that moment
-  /// has already passed. Safe to call repeatedly — re-scheduling the same id
-  /// just replaces the pending notification.
+  /// Schedules reminders 10 minutes and 5 minutes before [task] starts. No-op if
+  /// those moments have already passed. Safe to call repeatedly — re-scheduling
+  /// the same id just replaces the pending notification.
   Future<void> scheduleTaskReminder(Task task) async {
     await init();
-    final when = task.start.subtract(const Duration(minutes: 5));
-    if (when.isBefore(DateTime.now())) return;
+    
+    // 10 minutes before reminder
+    final when10 = task.start.subtract(const Duration(minutes: 10));
+    if (when10.isAfter(DateTime.now())) {
+      await _schedule(
+        id: _taskNotificationId(task, 10),
+        title: '${task.title} 10 daqiqadan so\'ng boshlanadi',
+        body: 'Vazifaga tayyorlaning — Flowa diqqatni jamlashga yordam beradi!',
+        when: tz.TZDateTime.from(when10, tz.local),
+        details: _reminderDetails,
+      );
+    }
 
-    await _schedule(
-      id: _taskNotificationId(task),
-      title: '${task.title} starts in 5 minutes',
-      body:
-          'Focus mode is on — Flowa is helping you stay focused until your '
-          'task ends.',
-      when: tz.TZDateTime.from(when, tz.local),
-      details: _reminderDetails,
-    );
+    // 5 minutes before reminder
+    final when5 = task.start.subtract(const Duration(minutes: 5));
+    if (when5.isAfter(DateTime.now())) {
+      await _schedule(
+        id: _taskNotificationId(task, 5),
+        title: '${task.title} 5 daqiqadan so\'ng boshlanadi',
+        body:
+            'Diqqat rejimi yoqildi — Flowa vazifa tugaguniga qadar yoningizda!',
+        when: tz.TZDateTime.from(when5, tz.local),
+        details: _reminderDetails,
+      );
+    }
   }
 
   /// Schedules tonight's streak nudge at 20:00 with a personalised message.
@@ -142,14 +155,15 @@ class NotificationService {
     await _plugin.cancel(id: _streakId);
   }
 
-  Future<void> cancelTaskReminder(Task task) =>
-      _plugin.cancel(id: _taskNotificationId(task));
+  Future<void> cancelTaskReminder(Task task) async {
+    await init();
+    await _plugin.cancel(id: _taskNotificationId(task, 10));
+    await _plugin.cancel(id: _taskNotificationId(task, 5));
+  }
 
-  /// Stable per-task id derived from its day + start time (not the Firestore
-  /// doc id), so a reminder can be (re)scheduled even before the task has been
-  /// persisted, and de-duplicates across schedulers.
-  int _taskNotificationId(Task task) {
-    final key = '${task.date.toIso8601String()}_${task.startMinute}';
+  /// Stable per-task id derived from its day, start time, and reminder offset minutes.
+  int _taskNotificationId(Task task, int minutesBefore) {
+    final key = '${task.date.toIso8601String()}_${task.startMinute}_$minutesBefore';
     return key.hashCode & 0x7fffffff;
   }
 }

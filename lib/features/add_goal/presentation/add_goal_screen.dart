@@ -44,7 +44,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     AppCategory.work,
     AppCategory.personal,
   ];
-  static const _reminderOptions = <int?>[null, 5, 10, 15, 30];
 
   final _titleController = TextEditingController();
   // Focus duration inputs (entered by the user).
@@ -65,9 +64,34 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   TimeOfDay? _endTime;
   bool _useEndTime = false;
 
-  bool _blockApps = false;
-  int? _reminderMinutes = 10;
   bool _saving = false;
+
+  // ---- Proof fields ----
+  bool _proofRequired = false;
+
+  String? get _calculatedTimeWindowStart {
+    if (_time == null) return null;
+    final h = _time!.hour.toString().padLeft(2, '0');
+    final m = _time!.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  String? get _calculatedTimeWindowEnd {
+    if (_time == null) return null;
+    if (_useEndTime && _endTime != null) {
+      final h = _endTime!.hour.toString().padLeft(2, '0');
+      final m = _endTime!.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    } else {
+      final endHour = _time!.hour + 2;
+      if (endHour >= 24) {
+        return '23:59';
+      }
+      final h = endHour.toString().padLeft(2, '0');
+      final m = _time!.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    }
+  }
 
   // ---- Goal duration fields ----
   /// 'days' = chip/number mode, 'until' = date-picker mode.
@@ -128,8 +152,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     _time = t.startTime;
     final endMinute = t.startMinute + t.durationMinutes;
     _endTime = TimeOfDay(hour: (endMinute ~/ 60) % 24, minute: endMinute % 60);
-    _blockApps = t.blockApps;
-    _reminderMinutes = t.reminderMinutesBefore;
     _workController.text = '${t.workMinutes}';
     _intervalWorkController.text = '${t.intervalWorkSeconds}';
     _setsController.text = '${t.intervalSets}';
@@ -137,6 +159,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       _structuredSets = true;
       _workoutPlan = t.workout;
     }
+    _proofRequired = t.proofRequired;
   }
 
   @override
@@ -245,13 +268,16 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       workMinutes: _workMinutes,
       intervalWorkSeconds: _intervalWorkSeconds,
       intervalSets: _intervalSets,
-      blockApps: _blockApps,
-      reminderMinutesBefore: _reminderMinutes,
+      blockApps: _proofRequired,
+      reminderMinutesBefore: 10,
       workout: _usingWorkout ? _workoutPlan : null,
       rangeMinutes: _useEndTime ? _rangeMinutes : null,
       goalStartDate: _date,
       goalEndDate: _effectiveGoalEndDate,
       goalDurationDays: _effectiveGoalDays,
+      proofRequired: _proofRequired,
+      timeWindowStart: _proofRequired ? _calculatedTimeWindowStart : null,
+      timeWindowEnd: _proofRequired ? _calculatedTimeWindowEnd : null,
     );
 
     setState(() => _saving = true);
@@ -499,38 +525,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
         ),
         const SizedBox(height: 16),
         _goalDurationCard(colors),
-        const SizedBox(height: 16),
-        _BlockToggle(
-          value: _blockApps,
-          onChanged: (v) => setState(() => _blockApps = v),
-        ),
-        const SizedBox(height: 16),
-        AppCard(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Label('addgoal.reminder'.tr()),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  for (final option in _reminderOptions)
-                    AppChip(
-                      label: option == null
-                          ? 'addgoal.reminder_none'.tr()
-                          : 'addgoal.reminder_min'.tr(
-                              namedArgs: {'min': '$option'},
-                            ),
-                      selected: _reminderMinutes == option,
-                      onTap: () => setState(() => _reminderMinutes = option),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
+
         if (_isInterval) ...[
           const SizedBox(height: 16),
           _sportSection(colors),
@@ -538,6 +533,8 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
           const SizedBox(height: 16),
           _deepWorkCard(colors),
         ],
+        const SizedBox(height: 16),
+        _proofSection(colors),
         const SizedBox(height: 28),
         AppButton(
           label: _editing
@@ -817,6 +814,55 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
             colors,
             Icons.air_rounded,
             'addgoal.rest_note'.tr(namedArgs: {'sec': '$rest'}),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _proofSection(AppColorScheme colors) {
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.camera_alt_rounded,
+              size: 20,
+              color: Color(0xFF6366F1),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bajarilganini rasm bilan tasdiqlayman',
+                  style: AppTextStyles.label.copyWith(
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Belgilangan vaqtda ilova sizdan tez surat so\'raydi',
+                  style: AppTextStyles.caption.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Switch.adaptive(
+            value: _proofRequired,
+            activeTrackColor: colors.primary,
+            onChanged: (v) => setState(() => _proofRequired = v),
           ),
         ],
       ),
@@ -1175,60 +1221,4 @@ class _CustomDayChip extends StatelessWidget {
   }
 }
 
-class _BlockToggle extends StatelessWidget {
-  const _BlockToggle({required this.value, required this.onChanged});
 
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: AppCategory.sport.fill,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.do_not_disturb_on_outlined,
-              size: 20,
-              color: AppCategory.sport.foreground,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'addgoal.block_distractions'.tr(),
-                  style: AppTextStyles.label.copyWith(
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'addgoal.block_distractions_hint'.tr(),
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch.adaptive(
-            value: value,
-            onChanged: onChanged,
-            activeTrackColor: colors.primary,
-          ),
-        ],
-      ),
-    );
-  }
-}
