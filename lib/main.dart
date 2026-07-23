@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/router/app_router.dart';
 import 'core/services/auth_repository.dart';
@@ -31,6 +32,17 @@ Future<void> main() async {
   }
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Supabase Storage (proof rasmlar uchun).
+  // SUPABASE_ANON_KEY — bu Supabase dashboard > Project Settings > API >
+  // "anon public" qatoridagi kalit. Quyidagi String'ni shu qiymat bilan almashtiring.
+  await Supabase.initialize(
+    url: 'https://xeymuoezdxhjivilqgtu.supabase.co',
+    // publishableKey = Supabase dashboard > Project Settings > API > "anon public" kalit
+    // MUHIM: Bu yerga o'z kalit qiymatini yozing:
+    publishableKey: 'sb_publishable_-arZuPuO6K3oxXHt0mNZnQ_1wHRCiso',
+  );
+
 
   // Local storage for cached/offline state.
   await Hive.initFlutter();

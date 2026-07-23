@@ -1,4 +1,11 @@
-const { db, getStorage, FieldValue } = require('../utils/firebase');
+const { db, FieldValue } = require('../utils/firebase');
+const { createClient } = require('@supabase/supabase-js');
+
+// Supabase client (server-side: service role key ishlatiladi)
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 function checkAuth(req, res) {
   const secret = req.headers['x-cron-secret'] || req.query['cron_secret'];
@@ -21,7 +28,6 @@ module.exports = async function handler(req, res) {
       .where("status", "in", ["completed", "missed"])
       .get();
 
-    const bucket = getStorage().bucket();
     let cleaned = 0;
 
     for (const doc of expiredSessions.docs) {
@@ -30,18 +36,17 @@ module.exports = async function handler(req, res) {
 
       const sessionId = doc.id;
       const filesToDelete = [
-        `proofs/${sessionId}/rear.jpg`,
-        `proofs/${sessionId}/front.jpg`,
+        `${sessionId}/rear.jpg`,
+        `${sessionId}/front.jpg`,
       ];
 
-      for (const filePath of filesToDelete) {
-        try {
-          await bucket.file(filePath).delete();
-        } catch (e) {
-          if (e.code !== 404) {
-            console.error(`Storage o'chirish xatosi (${filePath}):`, e);
-          }
-        }
+      // Supabase storage dan o'chirish
+      const { error } = await supabase.storage
+        .from('proofs')
+        .remove(filesToDelete);
+
+      if (error) {
+        console.error(`Storage o'chirish xatosi (${sessionId}):`, error.message);
       }
 
       await doc.ref.update({

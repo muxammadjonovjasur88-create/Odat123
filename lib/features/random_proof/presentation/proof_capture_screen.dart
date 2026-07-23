@@ -5,10 +5,10 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProofCaptureScreen extends StatefulWidget {
   const ProofCaptureScreen({super.key, required this.sessionId});
@@ -116,16 +116,27 @@ class _ProofCaptureScreenState extends State<ProofCaptureScreen> {
     });
 
     try {
-      final storage = FirebaseStorage.instance;
-      final rearRef = storage.ref().child('proofs/${widget.sessionId}/rear.jpg');
-      await rearRef.putFile(rearFile);
-      final rearUrl = await rearRef.getDownloadURL();
+      final supabase = Supabase.instance.client;
+      final storageBucket = supabase.storage.from('proofs');
+
+      // Orqa kamera rasmi
+      final rearPath = '${widget.sessionId}/rear.jpg';
+      await storageBucket.upload(
+        rearPath,
+        rearFile,
+        fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+      );
+      final rearUrl = storageBucket.getPublicUrl(rearPath);
 
       String? frontUrl;
       if (frontFile != null) {
-        final frontRef = storage.ref().child('proofs/${widget.sessionId}/front.jpg');
-        await frontRef.putFile(frontFile);
-        frontUrl = await frontRef.getDownloadURL();
+        final frontPath = '${widget.sessionId}/front.jpg';
+        await storageBucket.upload(
+          frontPath,
+          frontFile,
+          fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+        );
+        frontUrl = storageBucket.getPublicUrl(frontPath);
       }
 
       await FirebaseFirestore.instance
@@ -134,7 +145,7 @@ class _ProofCaptureScreenState extends State<ProofCaptureScreen> {
           .update({
         'status': 'completed',
         'rearPhotoUrl': rearUrl,
-        if (frontUrl != null) 'frontPhotoUrl': frontUrl,
+        'frontPhotoUrl': ?frontUrl,
         'completedAt': FieldValue.serverTimestamp(),
       });
 
