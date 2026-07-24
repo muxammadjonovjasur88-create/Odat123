@@ -14,6 +14,28 @@ module.exports = async function handler(req, res) {
 
   try {
     const now = new Date();
+    console.log('DEBUG: now =', now.toISOString());
+
+    const allPending = await db.collection("proofSessions")
+      .where("status", "==", "pending")
+      .get();
+    
+    console.log(`DEBUG: Found ${allPending.docs.length} pending sessions total.`);
+    for (const doc of allPending.docs) {
+      const data = doc.data();
+      console.log(`DEBUG: Session ${doc.id}: scheduledTime =`, data.scheduledTime, 'type =', typeof data.scheduledTime, 'isTimestamp =', data.scheduledTime && typeof data.scheduledTime.toDate === 'function');
+      if (data.scheduledTime) {
+        let scheduledDate = data.scheduledTime;
+        if (typeof data.scheduledTime.toDate === 'function') {
+          scheduledDate = data.scheduledTime.toDate();
+        } else if (typeof data.scheduledTime === 'string') {
+          scheduledDate = new Date(data.scheduledTime);
+        } else if (data.scheduledTime._seconds) {
+          scheduledDate = new Date(data.scheduledTime._seconds * 1000);
+        }
+        console.log(`DEBUG: Comparison: scheduledTime (${scheduledDate instanceof Date ? scheduledDate.toISOString() : scheduledDate}) <= now (${now.toISOString()}) :`, scheduledDate <= now);
+      }
+    }
     
     const sessions = await db.collection("proofSessions")
       .where("status", "==", "pending")
