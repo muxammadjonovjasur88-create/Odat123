@@ -21,28 +21,49 @@ module.exports = async function handler(req, res) {
       .get();
     
     console.log(`DEBUG: Found ${allPending.docs.length} pending sessions total.`);
+    const debugDetails = [];
+
     for (const doc of allPending.docs) {
       const data = doc.data();
-      console.log(`DEBUG: Session ${doc.id}: scheduledTime =`, data.scheduledTime, 'type =', typeof data.scheduledTime, 'isTimestamp =', data.scheduledTime && typeof data.scheduledTime.toDate === 'function');
+      let scheduledDate = null;
+      let isTimestamp = false;
+
       if (data.scheduledTime) {
-        let scheduledDate = data.scheduledTime;
         if (typeof data.scheduledTime.toDate === 'function') {
           scheduledDate = data.scheduledTime.toDate();
+          isTimestamp = true;
         } else if (typeof data.scheduledTime === 'string') {
           scheduledDate = new Date(data.scheduledTime);
         } else if (data.scheduledTime._seconds) {
           scheduledDate = new Date(data.scheduledTime._seconds * 1000);
+          isTimestamp = true;
         }
-        console.log(`DEBUG: Comparison: scheduledTime (${scheduledDate instanceof Date ? scheduledDate.toISOString() : scheduledDate}) <= now (${now.toISOString()}) :`, scheduledDate <= now);
       }
+
+      const isDue = scheduledDate ? scheduledDate <= now : false;
+      
+      debugDetails.push({
+        id: doc.id,
+        scheduledTimeRaw: data.scheduledTime,
+        scheduledTimeParsed: scheduledDate ? scheduledDate.toISOString() : null,
+        isTimestamp,
+        isDue,
+        userId: data.userId
+      });
+
+      console.log(`DEBUG: Session ${doc.id}: raw =`, data.scheduledTime, 'parsed =', scheduledDate?.toISOString(), 'isTimestamp =', isTimestamp, 'isDue =', isDue);
     }
     
+    // Query Firestore for sessions where scheduledTime <= now
     const sessions = await db.collection("proofSessions")
       .where("status", "==", "pending")
       .where("scheduledTime", "<=", now)
       .get();
       
-    let count = 0;
+    let fcmSentCount = 0;
+    let notifiedCount = 0;
+    const processedSessions = [];
+
     for (const doc of sessions.docs) {
       const data = doc.data();
       const uid = data.userId;
@@ -51,7 +72,11 @@ module.exports = async function handler(req, res) {
         status: "notified",
         notifiedAt: now
       });
+      notifiedCount++;
       
+      let fcmSent = false;
+      let fcmError = null;
+
       const userDoc = await db.collection("users").doc(uid).get();
       const fcmToken = userDoc.data()?.fcmToken;
       
@@ -70,14 +95,36 @@ module.exports = async function handler(req, res) {
             android: { priority: "high" },
             apns: { payload: { aps: { contentAvailable: true } } }
           });
-          count++;
+          fcmSentCount++;
+          fcmSent = true;
         } catch (e) {
           console.error(`Failed to send FCM to ${uid}:`, e);
+          fcmError = e.message;
         }
+      } else {
+        console.warn(`User ${uid} has no fcmToken in Firestore!`);
+        fcmError = "No FCM token found for user";
       }
+
+      processedSessions.push({
+        id: doc.id,
+        userId: uid,
+        fcmSent,
+        fcmError
+      });
     }
     
-    res.status(200).json({ success: true, count });
+    res.status(200).json({
+      success: true,
+      count: notifiedCount,
+      notifiedCount,
+      fcmSentCount,
+      pendingTotal: allPending.docs.length,
+      matchedInQuery: sessions.docs.length,
+      serverNow: now.toISOString(),
+      debugPending: debugDetails,
+      processedSessions
+    });
   } catch (error) {
     console.error('Error triggering alarms:', error);
     res.status(500).json({ error: error.message });
