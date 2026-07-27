@@ -16,6 +16,7 @@ import '../../gamification/domain/gamification_math.dart';
 import '../../goal_reached/domain/goal_reached_args.dart';
 import '../../honest_focus/data/focus_session_repository.dart';
 import '../../honest_focus/domain/honest_focus.dart';
+import '../../honest_focus/domain/session_integrity.dart';
 import '../../workout/domain/workout.dart';
 import 'focus_service.dart';
 
@@ -83,9 +84,14 @@ final currentFocusTaskProvider = Provider<Task?>((ref) {
 });
 
 /// Whether [task] should use the sport interval timer rather than Pomodoro.
-/// Decided by the task's category and the user's primary focus type (#3).
+/// Decided by the task's category, the user's primary focus type, or an
+/// explicit custom interval method. [intervalSets] is intentionally NOT
+/// checked here — every task defaults to intervalSets=4, so that field alone
+/// cannot distinguish interval from deep-work sessions.
 bool usesIntervalTimer(Task task, UserProfile? profile) =>
-    task.category == AppCategory.sport || profile?.focusType == 'Sport';
+    task.category == AppCategory.sport ||
+    profile?.focusType == 'Sport' ||
+    task.focusMethod == FocusMethod.custom;
 
 /// Session runs already persisted this process, so a foreground finish and a
 /// native "finished" event can't double-award / double-record. Counted runs
@@ -132,8 +138,20 @@ Future<GoalReachedArgs> completeFocusSession(
     }
   }
 
-  final verdict = HonestFocus.evaluate(signals);
-  final counted = HonestFocus.counts(verdict);
+  var verdict = HonestFocus.evaluate(signals);
+  var counted = HonestFocus.counts(verdict);
+
+  final integrityPercent = SessionIntegrity.calculateScore(
+    signals: signals,
+    checkInsPresented: signals.checkInsPresented,
+    checkInsMissed: signals.checkInsMissed,
+  );
+
+  if (integrityPercent < 0.2) {
+    counted = false;
+    verdict = FocusVerdict.incomplete;
+  }
+
   final completionPercent = GamificationMath.calculateTaskCompletionPercent(
     plannedMinutes: task.durationMinutes,
     actualMinutes: signals.focusedSeconds ~/ 60,
@@ -161,6 +179,7 @@ Future<GoalReachedArgs> completeFocusSession(
         deep: !isSport,
         // Full bonus only when blocking was fully respected.
         blockingEngaged: HonestFocus.blockingRespected(signals),
+        integrityPercent: integrityPercent,
       );
       if (result != null) {
         gained = result.gained;
@@ -210,6 +229,7 @@ Future<GoalReachedArgs> completeFocusSession(
     completionPercent: completionPercent,
     awardedPoints: gained,
     fullCompletion: completionPercent >= 0.95,
+    integrityPercent: integrityPercent,
   );
 }
 
@@ -243,6 +263,7 @@ Future<CompletionResult?> completeAndAward(
   Task task, {
   bool deep = false,
   bool blockingEngaged = false,
+  double integrityPercent = 1.0,
 }) async {
   final uid = ref.read(authStateProvider).asData?.value?.uid;
   if (uid == null) return null;
@@ -260,10 +281,11 @@ Future<CompletionResult?> completeAndAward(
       plannedMinutes: task.durationMinutes,
       actualMinutes: task.durationMinutes,
     );
-    final awardedPoints = GamificationMath.proportionalPoints(
+    final basePoints = GamificationMath.proportionalPoints(
       basePoints: task.points,
       completionPercent: completionPercent,
     );
+    final awardedPoints = (basePoints * integrityPercent).round();
     final fullCompletion = completionPercent >= 0.95;
 
     final today = DateUtils.dateOnly(DateTime.now());

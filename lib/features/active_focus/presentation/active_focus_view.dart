@@ -18,6 +18,7 @@ import '../../blocking/data/blocking_repository.dart';
 import '../../deep_focus/data/focus_providers.dart';
 import '../../deep_focus/data/focus_service.dart';
 import '../../deep_focus/presentation/focus_session_controller.dart';
+import '../../goal_reached/domain/goal_reached_args.dart';
 import '../../honest_focus/domain/honest_focus.dart';
 
 /// Screen 13 — sport interval timer: WORK/REST phases across sets. The timer
@@ -70,14 +71,27 @@ class _ActiveFocusViewState extends ConsumerState<ActiveFocusView> {
   Future<void> _finish() async {
     if (_finishing) return;
     setState(() => _finishing = true);
-    final args = await completeFocusSession(
-      ref,
-      widget.task,
-      signals:
-          ref.read(focusSessionProvider)?.toSignals() ?? const FocusSignals(),
-    );
-    _controller.clear();
-    if (mounted) context.go(AppRoutes.goalReached, extra: args);
+    GoalReachedArgs? args;
+    try {
+      args = await completeFocusSession(
+        ref,
+        widget.task,
+        signals:
+            ref.read(focusSessionProvider)?.toSignals() ?? const FocusSignals(),
+      );
+    } catch (e, st) {
+      debugPrint('[ActiveFocus] completeFocusSession failed: $e\n$st');
+      args = GoalReachedArgs(
+        points: 0,
+        taskTitle: widget.task.title,
+        streak: 0,
+        isSport: true,
+        verdict: FocusVerdict.incomplete,
+      );
+    } finally {
+      _controller.clear();
+      if (mounted) context.go(AppRoutes.goalReached, extra: args);
+    }
   }
 
   /// The phase that follows [index] in the work/rest plan, or null at the end.
@@ -101,6 +115,12 @@ class _ActiveFocusViewState extends ConsumerState<ActiveFocusView> {
     ref.listen(focusSessionProvider, (_, next) {
       if (next != null && next.isFinished && !_finishing) _finish();
     });
+
+    if (session.isFinished && !_finishing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_finishing) _finish();
+      });
+    }
 
     final started = !session.isWaiting;
     final isWork = session.kind == FocusKind.work;

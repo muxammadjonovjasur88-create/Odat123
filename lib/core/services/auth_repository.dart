@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../features/gamification/domain/weekly_reset.dart';
+import '../../features/notifications/data/notification_service.dart';
 import 'firebase_providers.dart';
 
 /// Custom exception for authentication errors to pass safe messages to UI.
@@ -17,9 +18,10 @@ class AuthException implements Exception {
 
 /// Wrapper around [FirebaseAuth] for Flowa's sign-in methods.
 class AuthRepository {
-  AuthRepository(this._auth);
+  AuthRepository(this._auth, this._ref);
 
   final FirebaseAuth _auth;
+  final Ref _ref;
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -34,7 +36,6 @@ class AuthRepository {
       await _googleSignIn.initialize();
 
       final googleUser = await _googleSignIn.authenticate();
-      if (googleUser == null) return null;
 
       final googleAuth = googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
@@ -99,13 +100,23 @@ class AuthRepository {
   /// Signs out of both Google and Firebase so the next sign-in re-shows the
   /// account picker instead of silently reusing the last account.
   Future<void> signOut() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        await _firestore.collection('users').doc(user.uid).update({
+          'fcmToken': FieldValue.delete(),
+        });
+      } catch (_) {}
+      await _ref.read(notificationServiceProvider).clearAllUserData();
+    }
+
     await _googleSignIn.signOut();
     await _auth.signOut();
   }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>(
-  (ref) => AuthRepository(ref.watch(firebaseAuthProvider)),
+  (ref) => AuthRepository(ref.watch(firebaseAuthProvider), ref),
 );
 
 /// Emits the current [User] (or null) and drives the auth gate.

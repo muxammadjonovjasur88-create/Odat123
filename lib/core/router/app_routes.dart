@@ -51,4 +51,5 @@ abstract final class AppRoutes {
   // --- Qism 3: Tasodifiy Isbot ---
   static const telegramLink = '/telegram-link';
   static const friendsProofs = '/friends-proofs';
+  static const taskAlarm = '/task-alarm';
 }

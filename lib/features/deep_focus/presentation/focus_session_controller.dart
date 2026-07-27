@@ -1,6 +1,8 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'dart:math' as math;
+
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/models/task.dart';
@@ -12,6 +14,50 @@ enum FocusKind { work, rest }
 
 enum FocusRunStatus { waiting, running, paused, finished }
 
+/// A single work or rest block inside a segmented Deep Focus session.
+@immutable
+class FocusSegment {
+  const FocusSegment({required this.kind, required this.seconds});
+
+  final FocusKind kind;
+  final int seconds;
+
+  bool get isWork => kind == FocusKind.work;
+  bool get isRest => kind == FocusKind.rest;
+}
+
+/// Builds the ordered list of [FocusSegment]s for a Deep Focus session.
+///
+/// Rule:
+///   • If [totalWorkSeconds] ≤ 45 min (2700 s): a single work block.
+///   • Otherwise: alternate 45-min work blocks with 5-min breaks until
+///     all [totalWorkSeconds] of *work* are scheduled. The last work
+///     block may be shorter than 45 min. No trailing rest is added.
+///
+/// Example: 120 min work →
+///   Work(2700) Rest(300) Work(2700) Rest(300) Work(1800)
+///   = 7200 s work + 600 s rest total.
+List<FocusSegment> buildDeepFocusSegments(int totalWorkSeconds) {
+  const int workChunk = 45 * 60; // 45 min
+  const int restChunk = 5 * 60; //  5 min
+
+  if (totalWorkSeconds <= workChunk) {
+    return [FocusSegment(kind: FocusKind.work, seconds: totalWorkSeconds)];
+  }
+
+  final segments = <FocusSegment>[];
+  int remaining = totalWorkSeconds;
+  while (remaining > 0) {
+    final work = math.min(remaining, workChunk);
+    segments.add(FocusSegment(kind: FocusKind.work, seconds: work));
+    remaining -= work;
+    if (remaining > 0) {
+      segments.add(FocusSegment(kind: FocusKind.rest, seconds: restChunk));
+    }
+  }
+  return segments;
+}
+
 /// Holds an in-progress focus session. Lives in a persistent provider (above
 /// the Focus screen), so navigating away and back never resets it. The
 /// remaining time is always derived from the wall clock ([phaseEndsAt] − now),
@@ -19,6 +65,10 @@ enum FocusRunStatus { waiting, running, paused, finished }
 ///
 /// Phase lengths come from the task: [workSeconds] / [restSeconds] are the
 /// user-entered work + auto break/rest, and [totalSets] the interval sets.
+///
+/// For Deep Focus (non-interval) sessions longer than 45 min the session is
+/// automatically split into Pomodoro-style segments via [buildDeepFocusSegments].
+/// [segments] holds the full plan and [segmentIndex] the current position.
 @immutable
 class FocusSessionState {
   const FocusSessionState({
@@ -36,10 +86,22 @@ class FocusSessionState {
     required this.phaseIndex,
     required this.workSeconds,
     required this.restSeconds,
+    // Deep-focus auto-segmentation
+    this.segments = const [],
+    this.segmentIndex = 0,
+    this.totalWorkSeconds = 0,
+    this.completedWorkSeconds = 0,
+    // Integrity signals
     this.distractingOpens = 0,
     this.awayCount = 0,
     this.awaySeconds = 0,
     this.finishedByTimer = false,
+    this.checkInsPresented = 0,
+    this.checkInsMissed = 0,
+    this.isCheckInActive = false,
+    this.checkInDeadline,
+    // Segment-transition signal (cleared after one tick)
+    this.segmentJustChanged = false,
   });
 
   final String taskId;
@@ -70,6 +132,24 @@ class FocusSessionState {
   final int workSeconds;
   final int restSeconds;
 
+  // ── Deep-focus auto-segmentation ────────────────────────────────────────
+  /// Ordered list of work/rest blocks. Empty for interval sessions.
+  final List<FocusSegment> segments;
+
+  /// Index of the currently active segment.
+  final int segmentIndex;
+
+  /// Total scheduled *work* seconds for this deep-focus session.
+  final int totalWorkSeconds;
+
+  /// Accumulated *work* seconds already completed in past segments.
+  final int completedWorkSeconds;
+
+  /// True for exactly one tick after a segment transition (used by the UI
+  /// to play a sound / vibrate).
+  final bool segmentJustChanged;
+  // ────────────────────────────────────────────────────────────────────────
+
   /// Live "honest focus" integrity signals, mirrored from the native service.
   final int distractingOpens;
   final int awayCount;
@@ -79,6 +159,11 @@ class FocusSessionState {
   /// NOT when the user skipped or ended early. This is what makes completion
   /// earned by real elapsed time rather than a button tap.
   final bool finishedByTimer;
+
+  final int checkInsPresented;
+  final int checkInsMissed;
+  final bool isCheckInActive;
+  final DateTime? checkInDeadline;
 
   /// The session's full length (seconds), for integrity scoring.
   int get totalSessionSeconds =>
@@ -91,6 +176,8 @@ class FocusSessionState {
     awayCount: awayCount,
     awaySeconds: awaySeconds,
     totalSeconds: totalSessionSeconds,
+    checkInsPresented: checkInsPresented,
+    checkInsMissed: checkInsMissed,
   );
 
   bool get isWaiting => status == FocusRunStatus.waiting;
@@ -98,9 +185,30 @@ class FocusSessionState {
   bool get isPaused => status == FocusRunStatus.paused;
   bool get isFinished => status == FocusRunStatus.finished;
 
-  /// Full length of the current phase, for the progress ring.
-  int get currentPhaseSeconds =>
-      kind == FocusKind.work ? workSeconds : restSeconds;
+  /// Whether this deep-focus session uses auto-segmentation (>45 min work).
+  bool get isSegmented => !isInterval && segments.length > 1;
+
+  /// Full length of the current phase, for the per-phase progress ring.
+  int get currentPhaseSeconds {
+    if (isSegmented && segmentIndex < segments.length) {
+      return segments[segmentIndex].seconds;
+    }
+    return kind == FocusKind.work ? workSeconds : restSeconds;
+  }
+
+  /// Overall progress across the whole session (0.0–1.0).
+  /// For segmented sessions: work done / total work.
+  /// For single-block or interval sessions: same as phase progress.
+  double get overallProgress {
+    if (isSegmented && totalWorkSeconds > 0) {
+      final doneWork = kind == FocusKind.work
+          ? completedWorkSeconds + (currentPhaseSeconds - remainingSeconds).clamp(0, currentPhaseSeconds)
+          : completedWorkSeconds;
+      return (doneWork / totalWorkSeconds).clamp(0.0, 1.0);
+    }
+    if (currentPhaseSeconds <= 0) return 0.0;
+    return (1 - remainingSeconds / currentPhaseSeconds).clamp(0.0, 1.0);
+  }
 
   FocusSessionState copyWith({
     FocusRunStatus? status,
@@ -111,10 +219,17 @@ class FocusSessionState {
     int? completedWork,
     int? setNumber,
     int? phaseIndex,
+    int? segmentIndex,
+    int? completedWorkSeconds,
+    bool? segmentJustChanged,
     int? distractingOpens,
     int? awayCount,
     int? awaySeconds,
     bool? finishedByTimer,
+    int? checkInsPresented,
+    int? checkInsMissed,
+    bool? isCheckInActive,
+    DateTime? checkInDeadline,
   }) {
     return FocusSessionState(
       taskId: taskId,
@@ -124,6 +239,8 @@ class FocusSessionState {
       totalSets: totalSets,
       workSeconds: workSeconds,
       restSeconds: restSeconds,
+      segments: segments,
+      totalWorkSeconds: totalWorkSeconds,
       status: status ?? this.status,
       kind: kind ?? this.kind,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
@@ -131,25 +248,65 @@ class FocusSessionState {
       completedWork: completedWork ?? this.completedWork,
       setNumber: setNumber ?? this.setNumber,
       phaseIndex: phaseIndex ?? this.phaseIndex,
+      segmentIndex: segmentIndex ?? this.segmentIndex,
+      completedWorkSeconds: completedWorkSeconds ?? this.completedWorkSeconds,
+      segmentJustChanged: segmentJustChanged ?? this.segmentJustChanged,
       distractingOpens: distractingOpens ?? this.distractingOpens,
       awayCount: awayCount ?? this.awayCount,
       awaySeconds: awaySeconds ?? this.awaySeconds,
       finishedByTimer: finishedByTimer ?? this.finishedByTimer,
+      checkInsPresented: checkInsPresented ?? this.checkInsPresented,
+      checkInsMissed: checkInsMissed ?? this.checkInsMissed,
+      isCheckInActive: isCheckInActive ?? this.isCheckInActive,
+      checkInDeadline: checkInDeadline ?? this.checkInDeadline,
     );
   }
 }
 
-class FocusSessionController extends Notifier<FocusSessionState?> {
+class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBindingObserver {
   Timer? _ticker;
   StreamSubscription<FocusTick>? _nativeSub;
+  AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
+  DateTime? _pausedAt;
+  int _lastCheckInElapsed = 0;
 
   @override
   FocusSessionState? build() {
+    final binding = WidgetsBinding.instance;
+    binding.addObserver(this);
     ref.onDispose(() {
+      binding.removeObserver(this);
       _ticker?.cancel();
       _nativeSub?.cancel();
     });
     return null;
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final previousState = _lifecycleState;
+    _lifecycleState = state;
+
+    final s = this.state;
+    if (s == null || !s.isRunning) return;
+
+    if ((state == AppLifecycleState.paused || state == AppLifecycleState.inactive) &&
+        (previousState == AppLifecycleState.resumed)) {
+      _pausedAt = DateTime.now();
+    } else if (state == AppLifecycleState.resumed && _pausedAt != null) {
+      final awayDuration = DateTime.now().difference(_pausedAt!);
+      _pausedAt = null;
+      final awaySecs = awayDuration.inSeconds;
+      if (awaySecs > 0) {
+        // Exits under 20s are not counted towards awayCount
+        final newAwaySeconds = s.awaySeconds + awaySecs;
+        final newAwayCount = awaySecs >= 20 ? s.awayCount + 1 : s.awayCount;
+        this.state = s.copyWith(
+          awaySeconds: newAwaySeconds,
+          awayCount: newAwayCount,
+        );
+      }
+    }
   }
 
   /// Number of phases in the interval plan: W,R,…,W (rest between sets).
@@ -169,6 +326,14 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
         : task.breakSeconds;
     final totalSets = isInterval ? task.intervalSets : 0;
 
+    // Build segment plan for deep-focus (non-interval) sessions.
+    final segments = isInterval
+        ? const <FocusSegment>[]
+        : buildDeepFocusSegments(workSeconds);
+    final totalWorkSec = isInterval
+        ? 0
+        : segments.where((s) => s.isWork).fold(0, (sum, s) => sum + s.seconds);
+
     final now = DateTime.now();
     final waiting = task.start.isAfter(now);
 
@@ -176,35 +341,84 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
     // scheduled start, so opening the app mid-session shows the SAME remaining
     // time as the background foreground-service notification — rather than
     // restarting the countdown from "now".
+    //
+    // For segmented sessions (>45 min), we still start from the first segment
+    // (the native service tracks the whole block; segments are UI-only).
     FocusRunStatus status;
-    int remaining;
+    int remaining = 0;
     DateTime? phaseEndsAt;
+    int segIdx = 0;
+
     if (waiting) {
       status = FocusRunStatus.waiting;
       remaining = task.start.difference(now).inSeconds;
       phaseEndsAt = null;
     } else if (!isInterval) {
-      final end = task.start.add(Duration(seconds: workSeconds));
-      remaining = end.difference(now).inSeconds;
-      if (remaining <= 0) {
-        status = FocusRunStatus.finished;
-        remaining = 0;
-        phaseEndsAt = null;
+      // For segmented sessions, compute which segment we should be in based on
+      // elapsed time since the task started (so re-opening the app mid-session
+      // lands on the correct segment).
+      final elapsedTotal = now.difference(task.start).inSeconds;
+      if (segments.length > 1) {
+        int consumed = 0;
+        segIdx = 0;
+        for (int i = 0; i < segments.length; i++) {
+          if (consumed + segments[i].seconds > elapsedTotal) {
+            segIdx = i;
+            remaining = segments[i].seconds - (elapsedTotal - consumed);
+            break;
+          }
+          consumed += segments[i].seconds;
+          if (i == segments.length - 1) {
+            // Past the end
+            segIdx = segments.length - 1;
+            remaining = 0;
+          }
+        }
+        if (remaining <= 0) {
+          status = FocusRunStatus.waiting;
+          remaining = segments[0].seconds;
+          phaseEndsAt = null;
+          segIdx = 0;
+        } else {
+          status = FocusRunStatus.running;
+          phaseEndsAt = now.add(Duration(seconds: remaining));
+        }
       } else {
-        status = FocusRunStatus.running;
-        phaseEndsAt = end;
+        // Single block (≤45 min): original behavior
+        final end = task.start.add(Duration(seconds: workSeconds));
+        remaining = end.difference(now).inSeconds;
+        if (remaining <= 0) {
+          status = FocusRunStatus.waiting;
+          remaining = workSeconds;
+          phaseEndsAt = null;
+        } else {
+          status = FocusRunStatus.running;
+          phaseEndsAt = end;
+        }
       }
     } else {
-      status = FocusRunStatus.running;
+      status = FocusRunStatus.waiting;
       remaining = workSeconds;
-      phaseEndsAt = now.add(Duration(seconds: workSeconds));
+      phaseEndsAt = null;
     }
+
+    // Compute completedWorkSeconds for mid-session re-entry on segmented sessions
+    int completedWorkSec = 0;
+    if (!isInterval && segments.length > 1 && segIdx > 0) {
+      for (int i = 0; i < segIdx; i++) {
+        if (segments[i].isWork) completedWorkSec += segments[i].seconds;
+      }
+    }
+
+    final firstKind = (segments.isNotEmpty)
+        ? segments[segIdx].kind
+        : FocusKind.work;
 
     state = FocusSessionState(
       taskId: task.id,
       isInterval: isInterval,
       status: status,
-      kind: FocusKind.work,
+      kind: firstKind,
       remainingSeconds: remaining,
       scheduledStart: task.start,
       scheduledEnd: task.end,
@@ -215,6 +429,10 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
       phaseIndex: 0,
       workSeconds: workSeconds,
       restSeconds: restSeconds,
+      segments: segments,
+      segmentIndex: segIdx,
+      totalWorkSeconds: totalWorkSec,
+      completedWorkSeconds: completedWorkSec,
     );
     _ensureTicker();
     _listenNative();
@@ -229,11 +447,11 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
     _nativeSub = ref.read(focusServiceProvider).events().listen((tick) {
       final s = state;
       if (s == null || tick.taskId != s.taskId) return;
-      // Always mirror the live integrity signals.
+      // Always mirror the live integrity signals (combining native + flutter observers).
       var next = s.copyWith(
-        distractingOpens: tick.distractingOpens,
-        awayCount: tick.awayCount,
-        awaySeconds: tick.awaySeconds,
+        distractingOpens: math.max(s.distractingOpens, tick.distractingOpens),
+        awayCount: math.max(s.awayCount, tick.awayCount),
+        awaySeconds: math.max(s.awaySeconds, tick.awaySeconds),
       );
       if (tick.isFinished) {
         if (!s.isFinished) {
@@ -246,7 +464,8 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
             finishedByTimer: true,
           );
         }
-      } else if (!s.isInterval && s.isRunning) {
+      } else if (!s.isInterval && s.isRunning && !s.isSegmented) {
+        // For single-block deep work, mirror native remaining seconds directly.
         final now = DateTime.now();
         next = next.copyWith(
           remainingSeconds: tick.remainingSeconds,
@@ -269,21 +488,54 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
       return;
     }
     final now = DateTime.now();
-    switch (s.status) {
+
+    // Clear the one-tick segment-change signal
+    FocusSessionState cur = s.segmentJustChanged
+        ? s.copyWith(segmentJustChanged: false)
+        : s;
+
+    switch (cur.status) {
       case FocusRunStatus.waiting:
-        if (!s.scheduledStart.isAfter(now)) {
+        if (!cur.scheduledStart.isAfter(now)) {
           _begin();
         } else {
-          state = s.copyWith(
-            remainingSeconds: s.scheduledStart.difference(now).inSeconds,
+          state = cur.copyWith(
+            remainingSeconds: cur.scheduledStart.difference(now).inSeconds,
           );
         }
       case FocusRunStatus.running:
-        final remaining = s.phaseEndsAt!.difference(now).inSeconds;
+        final remaining = cur.phaseEndsAt!.difference(now).inSeconds;
+
+        FocusSessionState nextState = cur;
+
+        // 1. Check-in expiration
+        if (cur.isCheckInActive && cur.checkInDeadline != null) {
+          if (now.isAfter(cur.checkInDeadline!)) {
+            nextState = nextState.copyWith(
+              isCheckInActive: false,
+              checkInsMissed: cur.checkInsMissed + 1,
+            );
+          }
+        }
+
+        // 2. Trigger check-in every 5 mins (300s) if in foreground
+        if (!nextState.isCheckInActive && _lifecycleState == AppLifecycleState.resumed) {
+          final int elapsed = nextState.totalSessionSeconds - remaining;
+          if (elapsed - _lastCheckInElapsed >= 300) {
+            _lastCheckInElapsed = elapsed - (elapsed % 300);
+            nextState = nextState.copyWith(
+              isCheckInActive: true,
+              checkInsPresented: nextState.checkInsPresented + 1,
+              checkInDeadline: now.add(const Duration(seconds: 45)),
+            );
+          }
+        }
+
         if (remaining <= 0) {
-          _advance(countWork: true);
+          // Phase ended — advance and clear check-in
+          _advance(countWork: true, baseState: nextState.copyWith(isCheckInActive: false));
         } else {
-          state = s.copyWith(remainingSeconds: remaining);
+          state = nextState.copyWith(remainingSeconds: remaining);
         }
       case FocusRunStatus.paused:
       case FocusRunStatus.finished:
@@ -294,32 +546,46 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
   void _begin() {
     final s = state;
     if (s == null) return;
-    state = s.copyWith(
-      status: FocusRunStatus.running,
-      kind: FocusKind.work,
-      phaseIndex: 0,
-      setNumber: s.isInterval ? 1 : 0,
-      remainingSeconds: s.workSeconds,
-      phaseEndsAt: DateTime.now().add(Duration(seconds: s.workSeconds)),
-    );
+
+    if (s.isSegmented) {
+      // Start from the first segment
+      final firstSeg = s.segments[0];
+      state = s.copyWith(
+        status: FocusRunStatus.running,
+        kind: firstSeg.kind,
+        segmentIndex: 0,
+        phaseIndex: 0,
+        setNumber: 0,
+        remainingSeconds: firstSeg.seconds,
+        phaseEndsAt: DateTime.now().add(Duration(seconds: firstSeg.seconds)),
+      );
+    } else {
+      state = s.copyWith(
+        status: FocusRunStatus.running,
+        kind: FocusKind.work,
+        phaseIndex: 0,
+        setNumber: s.isInterval ? 1 : 0,
+        remainingSeconds: s.workSeconds,
+        phaseEndsAt: DateTime.now().add(Duration(seconds: s.workSeconds)),
+      );
+    }
   }
 
   /// Advances to the next phase. [countWork] counts a finished work phase
   /// (auto-completion); a manual skip passes false.
-  void _advance({required bool countWork}) {
-    final s = state;
+  void _advance({required bool countWork, FocusSessionState? baseState}) {
+    final s = baseState ?? state;
     if (s == null) return;
     final now = DateTime.now();
 
     if (s.isInterval) {
+      // ── Interval (sport) session: unchanged ──────────────────────────────
       final next = s.phaseIndex + 1;
       if (next >= _intervalPhaseCount(s.totalSets)) {
         state = s.copyWith(
           status: FocusRunStatus.finished,
           remainingSeconds: 0,
           clearPhaseEnd: true,
-          // Only an honest completion when the clock ran out (countWork), not a
-          // manual skip/end.
           finishedByTimer: countWork,
         );
         return;
@@ -334,17 +600,49 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
         remainingSeconds: seconds,
         phaseEndsAt: now.add(Duration(seconds: seconds)),
       );
+    } else if (s.isSegmented) {
+      // ── Segmented deep-focus session ─────────────────────────────────────
+      final finishedSeg = s.segments[s.segmentIndex];
+      final newCompletedWork = finishedSeg.isWork && countWork
+          ? s.completedWorkSeconds + finishedSeg.seconds
+          : s.completedWorkSeconds;
+      final newCompletedCount = finishedSeg.isWork && countWork
+          ? s.completedWork + 1
+          : s.completedWork;
+
+      final nextIdx = s.segmentIndex + 1;
+      if (nextIdx >= s.segments.length) {
+        // All segments done → session finished
+        state = s.copyWith(
+          status: FocusRunStatus.finished,
+          completedWork: newCompletedCount,
+          completedWorkSeconds: newCompletedWork,
+          remainingSeconds: 0,
+          clearPhaseEnd: true,
+          finishedByTimer: countWork,
+        );
+        return;
+      }
+
+      final nextSeg = s.segments[nextIdx];
+      state = s.copyWith(
+        segmentIndex: nextIdx,
+        kind: nextSeg.kind,
+        remainingSeconds: nextSeg.seconds,
+        phaseEndsAt: now.add(Duration(seconds: nextSeg.seconds)),
+        status: FocusRunStatus.running,
+        completedWork: newCompletedCount,
+        completedWorkSeconds: newCompletedWork,
+        // Signal the UI to play a transition sound/vibration for one tick.
+        segmentJustChanged: true,
+      );
     } else {
-      // Deep-work is a single background countdown (Forest-style): when the
-      // work block ends, the session is finished — it does not loop into a
-      // break — so it matches the native foreground-service session that runs
-      // to the task's end time.
+      // ── Single-block deep-work: session finished ──────────────────────────
       state = s.copyWith(
         status: FocusRunStatus.finished,
         completedWork: countWork ? s.completedWork + 1 : s.completedWork,
         remainingSeconds: 0,
         clearPhaseEnd: true,
-        // Honest completion only when the clock ran out, not a manual skip/end.
         finishedByTimer: countWork,
       );
     }
@@ -352,7 +650,10 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
 
   /// Begin the countdown immediately, skipping the wait for the scheduled time.
   void beginNow() {
-    if (state?.isWaiting ?? false) _begin();
+    final s = state;
+    if (s != null && (s.isWaiting || s.isFinished)) {
+      _begin();
+    }
   }
 
   void togglePause() {
@@ -380,7 +681,7 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
     );
   }
 
-  /// Skip to the next phase (Pomodoro).
+  /// Skip to the next phase (Pomodoro / segmented deep-focus).
   void skip() {
     if (state?.isWaiting ?? true) return;
     _advance(countWork: false);
@@ -416,6 +717,13 @@ class FocusSessionController extends Notifier<FocusSessionState?> {
     _nativeSub?.cancel();
     _nativeSub = null;
     state = null;
+  }
+
+  /// Answers an active check-in prompt.
+  void answerCheckIn() {
+    final s = state;
+    if (s == null || !s.isCheckInActive) return;
+    state = s.copyWith(isCheckInActive: false);
   }
 }
 

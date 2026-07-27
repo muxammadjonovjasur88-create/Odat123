@@ -66,32 +66,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
 
   bool _saving = false;
 
-  // ---- Proof fields ----
-  bool _proofRequired = false;
-
-  String? get _calculatedTimeWindowStart {
-    if (_time == null) return null;
-    final h = _time!.hour.toString().padLeft(2, '0');
-    final m = _time!.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
-
-  String? get _calculatedTimeWindowEnd {
-    if (_time == null) return null;
-    if (_useEndTime && _endTime != null) {
-      final h = _endTime!.hour.toString().padLeft(2, '0');
-      final m = _endTime!.minute.toString().padLeft(2, '0');
-      return '$h:$m';
-    } else {
-      final endHour = _time!.hour + 2;
-      if (endHour >= 24) {
-        return '23:59';
-      }
-      final h = endHour.toString().padLeft(2, '0');
-      final m = _time!.minute.toString().padLeft(2, '0');
-      return '$h:$m';
-    }
-  }
 
   // ---- Goal duration fields ----
   /// 'days' = chip/number mode, 'until' = date-picker mode.
@@ -159,7 +133,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       _structuredSets = true;
       _workoutPlan = t.workout;
     }
-    _proofRequired = t.proofRequired;
   }
 
   @override
@@ -268,16 +241,14 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       workMinutes: _workMinutes,
       intervalWorkSeconds: _intervalWorkSeconds,
       intervalSets: _intervalSets,
-      blockApps: _proofRequired,
+      blockApps: false,
       reminderMinutesBefore: 10,
       workout: _usingWorkout ? _workoutPlan : null,
       rangeMinutes: _useEndTime ? _rangeMinutes : null,
       goalStartDate: _date,
       goalEndDate: _effectiveGoalEndDate,
       goalDurationDays: _effectiveGoalDays,
-      proofRequired: _proofRequired,
-      timeWindowStart: _proofRequired ? _calculatedTimeWindowStart : null,
-      timeWindowEnd: _proofRequired ? _calculatedTimeWindowEnd : null,
+      proofRequired: false,
     );
 
     setState(() => _saving = true);
@@ -533,8 +504,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
           const SizedBox(height: 16),
           _deepWorkCard(colors),
         ],
-        const SizedBox(height: 16),
-        _proofSection(colors),
         const SizedBox(height: 28),
         AppButton(
           label: _editing
@@ -578,21 +547,26 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
         children: [
           _Label('addgoal.duration_how_long'.tr()),
           const SizedBox(height: 12),
-          // Mode toggle
+          // Mode toggle — make each pill expand so long translations don't overflow
           Row(
+            mainAxisSize: MainAxisSize.max,
             children: [
-              _DurationModeChip(
-                label: 'addgoal.duration_mode_days'.tr(),
-                selected: _durationMode == 'days',
-                onTap: () => setState(() => _durationMode = 'days'),
-                colors: colors,
+              Expanded(
+                child: _DurationModeChip(
+                  label: 'addgoal.duration_mode_days'.tr(),
+                  selected: _durationMode == 'days',
+                  onTap: () => setState(() => _durationMode = 'days'),
+                  colors: colors,
+                ),
               ),
               const SizedBox(width: 10),
-              _DurationModeChip(
-                label: 'addgoal.duration_mode_until'.tr(),
-                selected: _durationMode == 'until',
-                onTap: () => setState(() => _durationMode = 'until'),
-                colors: colors,
+              Expanded(
+                child: _DurationModeChip(
+                  label: 'addgoal.duration_mode_until'.tr(),
+                  selected: _durationMode == 'until',
+                  onTap: () => setState(() => _durationMode = 'until'),
+                  colors: colors,
+                ),
               ),
             ],
           ),
@@ -820,55 +794,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     );
   }
 
-  Widget _proofSection(AppColorScheme colors) {
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: const Color(0xFF6366F1).withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.camera_alt_rounded,
-              size: 20,
-              color: Color(0xFF6366F1),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Bajarilganini rasm bilan tasdiqlayman',
-                  style: AppTextStyles.label.copyWith(
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Belgilangan vaqtda ilova sizdan tez surat so\'raydi',
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch.adaptive(
-            value: _proofRequired,
-            activeTrackColor: colors.primary,
-            onChanged: (v) => setState(() => _proofRequired = v),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _autoNote(AppColorScheme colors, IconData icon, String text) {
     return Row(
       children: [
@@ -1088,10 +1013,16 @@ class _DurationModeChip extends StatelessWidget {
           color: selected ? colors.primary : colors.surfaceMuted,
           borderRadius: BorderRadius.circular(24),
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.label.copyWith(
-            color: selected ? Colors.white : colors.textSecondary,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.label.copyWith(
+              color: selected ? Colors.white : colors.textSecondary,
+            ),
           ),
         ),
       ),

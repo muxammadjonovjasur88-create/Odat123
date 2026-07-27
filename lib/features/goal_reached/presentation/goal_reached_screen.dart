@@ -174,6 +174,41 @@ class _GoalReachedScreenState extends ConsumerState<GoalReachedScreen> {
                 textAlign: TextAlign.center,
                 style: AppTextStyles.body.copyWith(color: colors.textSecondary),
               ),
+              if (args != null && args!.integrityPercent < 1.0 && counted) ...[
+                const SizedBox(height: 16),
+                Container(
+                   padding: const EdgeInsets.all(12),
+                   decoration: BoxDecoration(color: colors.surfaceMuted, borderRadius: BorderRadius.circular(12)),
+                   child: Text(
+                     'goal.integrity_reduced'.tr(
+                       namedArgs: {
+                         'basePoints': '${args!.points}',
+                         'awardedPoints': '$awardedPoints',
+                       },
+                     ),
+                     textAlign: TextAlign.center,
+                     style: AppTextStyles.caption.copyWith(color: colors.textPrimary),
+                   ),
+                ),
+              ],
+              if (args != null && args!.integrityPercent == 1.0 && counted) ...[
+                const SizedBox(height: 16),
+                Container(
+                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                   decoration: BoxDecoration(color: colors.surfaceMuted, borderRadius: BorderRadius.circular(20)),
+                   child: Row(
+                     mainAxisSize: MainAxisSize.min,
+                     children: [
+                        Icon(Icons.star_rounded, color: colors.primary, size: 16),
+                        const SizedBox(width: 8),
+                        Text(
+                          'goal.honest_session'.tr(),
+                          style: AppTextStyles.caption.copyWith(color: colors.primary, fontWeight: FontWeight.bold),
+                        ),
+                     ],
+                   ),
+                ),
+              ],
               if (!fullCompletion && counted) ...[
                 const SizedBox(height: 8),
                 Text(

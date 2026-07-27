@@ -1,5 +1,4 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +13,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../premium/data/premium_providers.dart';
 import '../../streak/data/streak_repository.dart';
+import 'alarm_sound_sheet.dart';
 
 /// Screen 19 — settings: profile summary, notifications, theme, blocking
 /// preferences, timer styles, and logout.
@@ -84,18 +84,6 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _Row(
-                    icon: Icons.notifications_none_rounded,
-                    title: 'settings.notifications'.tr(),
-                    subtitle: 'settings.notifications_sub'.tr(),
-                    onTap: () {},
-                  ),
-                  Divider(
-                    height: 1,
-                    color: colors.border,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
-                  _Row(
                     icon: Icons.language_rounded,
                     title: 'settings.language'.tr(),
                     subtitle: localeNativeName(context.locale.languageCode),
@@ -123,7 +111,19 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   _Row(
-                    icon: Icons.do_not_disturb_on_outlined,
+                    icon: Icons.security_rounded,
+                    title: '🔐 ${'perm.title'.tr()}',
+                    subtitle: 'perm.manage_desc'.tr(),
+                    onTap: () => context.push(AppRoutes.blockingPermissions),
+                  ),
+                  Divider(
+                    height: 1,
+                    color: colors.border,
+                    indent: 16,
+                    endIndent: 16,
+                  ),
+                  _Row(
+                    icon: Icons.app_blocking_rounded,
                     title: 'settings.blocking'.tr(),
                     subtitle: 'settings.blocking_sub'.tr(),
                     onTap: () => context.push(AppRoutes.blocking),
@@ -135,10 +135,10 @@ class SettingsScreen extends ConsumerWidget {
                     endIndent: 16,
                   ),
                   _Row(
-                    icon: Icons.timer_outlined,
-                    title: 'settings.timer_styles'.tr(),
-                    subtitle: 'settings.timer_styles_sub'.tr(),
-                    onTap: () {},
+                    icon: Icons.notifications_active_outlined,
+                    title: 'Budilnik ovozi',
+                    subtitle: 'Qo\'ng\'iroq musiqasini tanlang',
+                    onTap: () => showAlarmSoundSheet(context),
                   ),
                 ],
               ),
@@ -188,11 +188,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
-            if (kDebugMode) ...[
-              const SizedBox(height: 22),
-              _SectionLabel('Developer (debug)'),
-              const _StreakDebugPanel(),
-            ],
+
             const SizedBox(height: 28),
             Center(
               child: TextButton(
@@ -482,6 +478,7 @@ class _LanguageOption extends StatelessWidget {
 
 /// Debug-only controls to test the streak freeze + milestone logic without
 /// waiting real days. Only built in debug mode.
+// ignore: unused_element
 class _StreakDebugPanel extends ConsumerWidget {
   const _StreakDebugPanel();
 

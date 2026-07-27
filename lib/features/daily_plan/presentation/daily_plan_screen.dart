@@ -17,6 +17,7 @@ import '../../add_goal/data/task_actions.dart';
 import '../../starting_soon/presentation/starting_soon_watcher.dart';
 import '../../streak/presentation/streak_flame.dart';
 import '../../streak/presentation/streak_reminder_scheduler.dart';
+import '../../notifications/data/notification_service.dart';
 
 /// Screen 06 / 07 — the daily plan home. Shows today's progress ring and a
 /// timeline of task cards, or an empty state inviting the user to plan.
@@ -28,6 +29,11 @@ class DailyPlanScreen extends ConsumerWidget {
     final today = DateUtils.dateOnly(DateTime.now());
     final tasksAsync = ref.watch(tasksForDayProvider(today));
     final profile = ref.watch(userProfileProvider).asData?.value;
+
+    // Trigger permissions check once home is loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationServiceProvider).checkAndRequestPermissions(context);
+    });
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(

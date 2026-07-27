@@ -600,10 +600,17 @@ export const sendProofTelegramNotice = onDocumentUpdated(
       : [];
     if (sharedWith.length === 0) return;
 
+    // Get mood response emoji
+    let moodEmoji = "😊 (Ha, ajoyib)";
+    const mood = after.moodResponse;
+    if (mood === 'great') moodEmoji = "😊 (Ha, ajoyib)";
+    else if (mood === 'hard') moodEmoji = "😐 (Ha, lekin qiyin bo'ldi)";
+    else if (mood === 'missed') moodEmoji = "😔 (Yo'q, chalg'idim)";
+
     // Xabar matni
     const message = newStatus === "completed"
-      ? `✅ ${userName} "${taskTitle}" bo'yicha bugungi isbotni yubordi. Ko'rish uchun ilovani oching.`
-      : `😅 ${userName} bugungi "${taskTitle}" isbotini o'tkazib yubordi.`;
+      ? `✅ ${userName} "${taskTitle}" vazifasini ${moodEmoji} bilan belgiladi.`
+      : `😅 ${userName} bugungi "${taskTitle}" vazifasini o'tkazib yubordi.`;
 
     // Har bir do'stga xabar yuboramiz
     const token = TELEGRAM_BOT_TOKEN.value();
@@ -630,59 +637,9 @@ export const cleanupExpiredProofs = onSchedule(
   {
     schedule: "every 1 hours",
     timeZone: "Etc/UTC",
-    secrets: [SUPABASE_URL_SECRET, SUPABASE_SERVICE_ROLE_KEY_SECRET],
   },
   async () => {
-    const now = new Date();
-    const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-    // 24 soatdan eski completed yoki missed sessiyalar (faqat rasm URL si borlar)
-    const expiredSessions = await db.collection("proofSessions")
-      .where("createdAt", "<", cutoff)
-      .where("status", "in", ["completed", "missed"])
-      .get();
-
-    // Supabase Storage client (service role key bilan)
-    const supabase = createClient(
-      SUPABASE_URL_SECRET.value(),
-      SUPABASE_SERVICE_ROLE_KEY_SECRET.value(),
-    );
-
-    let cleaned = 0;
-
-    for (const doc of expiredSessions.docs) {
-      const data = doc.data();
-
-      // Agar allaqachon tozalangan bo'lsa (URL yo'q), o'tkazib yuboramiz
-      if (!data.rearPhotoUrl && !data.frontPhotoUrl) continue;
-
-      const sessionId = doc.id;
-      const filesToDelete = [
-        `${sessionId}/rear.jpg`,
-        `${sessionId}/front.jpg`,
-      ];
-
-      // Supabase Storage dan o'chiramiz
-      const {error: storageError} = await supabase.storage
-        .from("proofs")
-        .remove(filesToDelete);
-
-      if (storageError) {
-        console.error(`Storage o'chirish xatosi (${sessionId}):`, storageError.message);
-      }
-
-      // Firestore'dan faqat URL maydonlarini olib tashlaymiz
-      // (status va sanani saqlaymiz — streak/stats uchun)
-      await doc.ref.update({
-        rearPhotoUrl: FieldValue.delete(),
-        frontPhotoUrl: FieldValue.delete(),
-        photosDeletedAt: now,
-      });
-
-      cleaned++;
-    }
-
-    console.log(`cleanupExpiredProofs: ${cleaned} sessiya tozalandi.`);
+    console.log("cleanupExpiredProofs: No-op because storage proofs are disabled.");
   },
 );
 

@@ -207,7 +207,11 @@ class _FriendProofCard extends ConsumerWidget {
                   ? _PendingPlaceholder(colors: colors)
                   : switch (session.status) {
                       ProofStatus.completed =>
-                        _BeRealPhoto(session: session),
+                        _MoodProofDisplay(
+                          name: friendName,
+                          session: session,
+                          colors: colors,
+                        ),
                       ProofStatus.missed =>
                         _MissedPlaceholder(name: friendName, colors: colors),
                       ProofStatus.pending ||
@@ -226,108 +230,92 @@ class _FriendProofCard extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// BeReal uslubidagi rasm widget
+// Kayfiyat Check-in isboti
 // ---------------------------------------------------------------------------
 
-class _BeRealPhoto extends StatelessWidget {
-  const _BeRealPhoto({required this.session});
+class _MoodProofDisplay extends StatelessWidget {
+  const _MoodProofDisplay({
+    required this.name,
+    required this.session,
+    required this.colors,
+  });
 
+  final String name;
   final ProofSession session;
+  final AppColorScheme colors;
 
   @override
   Widget build(BuildContext context) {
-    final rear = session.rearPhotoUrl;
-    final front = session.frontPhotoUrl;
+    final mood = session.moodResponse ?? 'great';
+    final (emoji, label, color) = switch (mood) {
+      'great' => ('😊', 'bugungi vazifasini ajoyib bajardi! 🚀', const Color(0xFF22C55E)),
+      'hard' => ('😐', 'bugungi vazifasini qiyinchilik bilan bajardi! ⚡', const Color(0xFFEAB308)),
+      'missed' => ('😔', 'bugungi vazifada chalg\'idi. 😅', const Color(0xFFEF4444)),
+      _ => ('😊', 'bugungi vazifasini belgiladi!', const Color(0xFF22C55E)),
+    };
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      height: 260,
-      child: Stack(
-        fit: StackFit.expand,
+      height: 180,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: const BorderRadius.vertical(
+          bottom: Radius.circular(16),
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Katta arka kamera rasm
-          if (rear != null)
-            Image.network(
-              rear,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) =>
-                  progress == null ? child : _shimmer(),
-              errorBuilder: (context, error, stackTrace) => _errorPlaceholder(),
-            )
-          else
-            _errorPlaceholder(),
-
-          // Kichik old kamera rasm (BeReal uslubi — yuqori chap burchak)
-          if (front != null)
-            Positioned(
-              top: 12,
-              left: 12,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+          // Large emoji with a subtle glowing circle behind
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: color.withValues(alpha: 0.1),
+              border: Border.all(
+                color: color.withValues(alpha: 0.3),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.1),
+                  blurRadius: 12,
+                  spreadRadius: 1,
                 ),
-                child: ClipOval(
-                  child: Image.network(
-                    front,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, progress) =>
-                        progress == null ? child : _shimmer(),
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey.shade700,
-                      child: const Icon(Icons.person, color: Colors.white),
-                    ),
-                  ),
-                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                emoji,
+                style: const TextStyle(fontSize: 36),
               ),
             ),
-
-          // Vaqt stamp
-          Positioned(
-            bottom: 10,
-            right: 12,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _formatTime(session.completedAt ?? session.scheduledTime),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+          ),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: AppTextStyles.body.copyWith(color: colors.textPrimary),
+                children: [
+                  TextSpan(
+                    text: name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const TextSpan(text: ' '),
+                  TextSpan(
+                    text: label,
+                    style: TextStyle(color: colors.textSecondary),
+                  ),
+                ],
               ),
             ),
           ),
         ],
       ),
     );
-  }
-
-  Widget _shimmer() => Container(color: Colors.grey.shade300);
-  Widget _errorPlaceholder() => Container(
-        color: Colors.grey.shade800,
-        child: const Center(
-          child: Icon(Icons.broken_image_rounded, color: Colors.white54),
-        ),
-      );
-
-  String _formatTime(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
   }
 }
 

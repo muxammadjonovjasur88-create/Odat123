@@ -38,6 +38,7 @@ import '../../features/welcome/presentation/welcome_screen.dart';
 import '../../features/random_proof/presentation/proof_capture_screen.dart';
 import '../../features/random_proof/presentation/friends_proofs_screen.dart';
 import '../../features/settings/presentation/telegram_link_screen.dart';
+import '../../features/notifications/presentation/task_alarm_screen.dart';
 import 'app_routes.dart';
 
 /// App-wide router with an auth gate.
@@ -156,6 +157,26 @@ final routerProvider = Provider<GoRouter>((ref) {
       // --- Qism 3 ---
       route(AppRoutes.telegramLink, (_) => const TelegramLinkScreen()),
       route(AppRoutes.friendsProofs, (_) => const FriendsProofsScreen()),
+
+      // --- Task Alarm (Budilnik) ---
+      GoRoute(
+        path: AppRoutes.taskAlarm,
+        pageBuilder: (context, state) {
+          final taskId = state.uri.queryParameters['taskId'] ?? '';
+          final title = state.uri.queryParameters['title'] ?? 'Vazifa';
+          final minutesBefore = int.tryParse(state.uri.queryParameters['minutesBefore'] ?? '10') ?? 10;
+          final notificationId = int.tryParse(state.uri.queryParameters['notificationId'] ?? '0') ?? 0;
+          
+          return NoTransitionPage(
+            child: TaskAlarmScreen(
+              taskId: taskId,
+              title: title,
+              minutesBefore: minutesBefore,
+              notificationId: notificationId,
+            ),
+          );
+        },
+      ),
     ],
   );
 });

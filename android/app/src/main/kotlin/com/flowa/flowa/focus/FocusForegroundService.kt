@@ -136,12 +136,44 @@ class FocusForegroundService : Service() {
             // (default) vs hard wall (strict) is read from BlockerState by the
             // overlay.
             BlockerState.start(packages, startAt, endAt, title, strict, lang)
+            
+            // Check if we need to immediately pull the user out of a distracting app
+            enforceImmediateFocus()
         }
 
         startForeground(NOTIFICATION_ID, buildNotification())
         handler.removeCallbacks(ticker)
         handler.post(ticker)
         return START_STICKY
+    }
+
+    private fun enforceImmediateFocus() {
+        val currentPkg = ForegroundAppDetector.current(this) ?: return
+        if (currentPkg == packageName) return
+        
+        // If the current foreground app is a distracting one, pull them back to Flowa
+        if (BlockerState.shouldBlock(currentPkg)) {
+            // First send them HOME to close the distracting app forcefully (works on MIUI)
+            val sentHome = AppBlockerAccessibilityService.performHomeAction()
+            if (!sentHome) {
+                // Fallback if AccessibilityService is not running
+                try {
+                    val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                        addCategory(Intent.CATEGORY_HOME)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    startActivity(homeIntent)
+                } catch (_: Exception) {}
+            }
+
+            // Immediately launch Flowa MainActivity
+            try {
+                val appIntent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                startActivity(appIntent)
+            } catch (_: Exception) {}
+        }
     }
 
     private fun tick() {

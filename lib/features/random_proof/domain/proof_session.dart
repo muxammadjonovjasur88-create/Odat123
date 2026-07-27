@@ -23,6 +23,7 @@ class ProofSession {
     this.notifiedAt,
     this.taskTitle,
     this.expiresAt,
+    this.moodResponse,
   });
 
   final String id;
@@ -36,6 +37,7 @@ class ProofSession {
   final DateTime? completedAt;
   final DateTime? notifiedAt;
   final DateTime? expiresAt;
+  final String? moodResponse;
 
   /// Task nomi — Cloud Function tomonidan saqlangan bo'lishi mumkin,
   /// yoki ilova UI da taskId orqali olinadi.
@@ -65,6 +67,7 @@ class ProofSession {
       notifiedAt: (data['notifiedAt'] as Timestamp?)?.toDate(),
       expiresAt: (data['expiresAt'] as Timestamp?)?.toDate(),
       taskTitle: data['taskTitle'] as String?,
+      moodResponse: data['moodResponse'] as String?,
     );
   }
 

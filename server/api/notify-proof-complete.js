@@ -1,7 +1,7 @@
 const { db } = require('../utils/firebase');
 const { sendTelegramMessage } = require('../utils/telegram');
 
-async function notifyFriends(userId, taskId, userName) {
+async function notifyFriends(userId, taskId, userName, sessionId) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   if (!token) return;
 
@@ -21,7 +21,20 @@ async function notifyFriends(userId, taskId, userName) {
     }
   }
 
-  const message = `✅ ${name} "${taskTitle}" bo'yicha bugungi isbotni yubordi. Ko'rish uchun ilovani oching.`;
+  // Get mood response emoji
+  let moodEmoji = "😊 (Ha, ajoyib)";
+  if (sessionId) {
+    const sessionDoc = await db.collection("proofSessions").doc(sessionId).get();
+    if (sessionDoc.exists) {
+      const sessionData = sessionDoc.data();
+      const mood = sessionData?.moodResponse;
+      if (mood === 'great') moodEmoji = "😊 (Ha, ajoyib)";
+      else if (mood === 'hard') moodEmoji = "😐 (Ha, lekin qiyin bo'ldi)";
+      else if (mood === 'missed') moodEmoji = "😔 (Yo'q, chalg'idim)";
+    }
+  }
+
+  const message = `✅ ${name} "${taskTitle}" vazifasini ${moodEmoji} bilan belgiladi.`;
 
   for (const friendUid of sharedWith) {
     const friendDoc = await db.collection("users").doc(friendUid).get();
@@ -48,7 +61,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    await notifyFriends(userId, taskId, userName);
+    await notifyFriends(userId, taskId, userName, sessionId);
     res.status(200).json({ success: true });
   } catch (error) {
     console.error('Error notifying proof complete:', error);

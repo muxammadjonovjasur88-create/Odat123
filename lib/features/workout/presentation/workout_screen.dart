@@ -81,6 +81,12 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
       if (next != null && next.isFinished && !_finishing) _finish();
     });
 
+    if (session.isFinished && !_finishing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_finishing) _finish();
+      });
+    }
+
     final accent = session.isRest ? _rest : _work;
 
     return Scaffold(

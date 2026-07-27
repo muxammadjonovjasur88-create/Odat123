@@ -3,6 +3,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../domain/installed_app.dart';
 
@@ -117,6 +118,59 @@ class BlockingService {
   Future<void> requestOverlayPermission() async {
     if (!_supported) return;
     await _invokeSafe<void>('requestOverlayPermission');
+  }
+
+  // --- Additional General Permissions ---
+
+  Future<bool> hasNotificationPermission() async {
+    if (!_supported) return false;
+    return await Permission.notification.isGranted;
+  }
+
+  Future<void> requestNotificationPermission() async {
+    if (!_supported) return;
+    await Permission.notification.request();
+  }
+
+  Future<bool> hasExactAlarmPermission() async {
+    if (!_supported) return false;
+    return await Permission.scheduleExactAlarm.isGranted;
+  }
+
+  Future<void> requestExactAlarmPermission() async {
+    if (!_supported) return;
+    await Permission.scheduleExactAlarm.request();
+  }
+
+  Future<bool> hasIgnoreBatteryOptimizationsPermission() async {
+    if (!_supported) return false;
+    return await Permission.ignoreBatteryOptimizations.isGranted;
+  }
+
+  Future<void> requestIgnoreBatteryOptimizationsPermission() async {
+    if (!_supported) return;
+    await Permission.ignoreBatteryOptimizations.request();
+  }
+
+  Future<bool> hasAudioPermission() async {
+    if (!_supported) return false;
+    if (Platform.isAndroid) {
+      final audioStatus = await Permission.audio.status;
+      if (audioStatus.isGranted) return true;
+      final storageStatus = await Permission.storage.status;
+      return storageStatus.isGranted;
+    }
+    return false;
+  }
+
+  Future<void> requestAudioPermission() async {
+    if (!_supported) return;
+    if (Platform.isAndroid) {
+      final audioResult = await Permission.audio.request();
+      if (!audioResult.isGranted) {
+        await Permission.storage.request();
+      }
+    }
   }
 }
 

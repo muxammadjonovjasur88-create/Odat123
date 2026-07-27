@@ -27,6 +27,7 @@ class _BlockingPermissionsScreenState
   bool _usage = false;
   bool _overlay = false;
   bool _miui = false;
+  bool _battery = false;
 
   BlockingService get _service => ref.read(blockingServiceProvider);
 
@@ -54,12 +55,14 @@ class _BlockingPermissionsScreenState
     final usage = await _service.hasUsageAccess();
     final overlay = await _service.canDrawOverlays();
     final miui = await _service.isMiui();
+    final battery = await _service.hasIgnoreBatteryOptimizationsPermission();
     if (!mounted) return;
     setState(() {
       _accessibility = accessibility;
       _usage = usage;
       _overlay = overlay;
       _miui = miui;
+      _battery = battery;
     });
   }
 
@@ -84,44 +87,66 @@ class _BlockingPermissionsScreenState
               style: AppTextStyles.body.copyWith(color: colors.textSecondary),
             ),
             const SizedBox(height: 24),
-            _PermissionTile(
-              icon: Icons.accessibility_new_rounded,
-              title: 'perm.accessibility_title'.tr(),
-              description: 'perm.accessibility_desc'.tr(),
-              granted: _accessibility,
-              onGrant: _service.openAccessibilitySettings,
-            ),
-            _PermissionTile(
-              icon: Icons.layers_outlined,
-              title: 'perm.overlay_title'.tr(),
-              description: 'perm.overlay_desc'.tr(),
-              granted: _overlay,
-              onGrant: _service.requestOverlayPermission,
-            ),
-            if (_miui) ...[
-              _PermissionTile(
-                icon: Icons.open_in_new_rounded,
-                title: 'perm.miui_popup_title'.tr(),
-                description: 'perm.miui_popup_desc'.tr(),
-                granted: null,
-                onGrant: _service.openMiuiOtherPermissions,
+            AppCard(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Column(
+                children: [
+                  _PermissionTile(
+                    icon: Icons.battery_charging_full_rounded,
+                    title: 'Batareya optimallashtirish',
+                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    granted: _battery,
+                    onGrant: () async {
+                      await _service.requestIgnoreBatteryOptimizationsPermission();
+                      _refresh();
+                    },
+                  ),
+                  Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
+                  _PermissionTile(
+                    icon: Icons.layers_outlined,
+                    title: 'Boshqa ilovalar ustida ko\'rsatish',
+                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    granted: _overlay,
+                    onGrant: _service.requestOverlayPermission,
+                  ),
+                  Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
+                  _PermissionTile(
+                    icon: Icons.visibility_outlined,
+                    title: 'Foydalanish statistikasi',
+                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    granted: _usage,
+                    onGrant: _service.openUsageAccessSettings,
+                  ),
+                  Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
+                  _PermissionTile(
+                    icon: Icons.accessibility_new_rounded,
+                    title: 'Maxsus imkoniyatlar',
+                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    granted: _accessibility,
+                    onGrant: _service.openAccessibilitySettings,
+                  ),
+                  if (_miui) ...[
+                    Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
+                    _PermissionTile(
+                      icon: Icons.open_in_new_rounded,
+                      title: 'Miui Pop-up',
+                      description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                      granted: null,
+                      onGrant: _service.openMiuiOtherPermissions,
+                    ),
+                    Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
+                    _PermissionTile(
+                      icon: Icons.restart_alt_rounded,
+                      title: 'Avtomatik ishga tushish',
+                      description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                      granted: null,
+                      onGrant: _service.openAutostartSettings,
+                    ),
+                  ],
+                ],
               ),
-              _PermissionTile(
-                icon: Icons.restart_alt_rounded,
-                title: 'perm.miui_autostart_title'.tr(),
-                description: 'perm.miui_autostart_desc'.tr(),
-                granted: null,
-                onGrant: _service.openAutostartSettings,
-              ),
-            ],
-            _PermissionTile(
-              icon: Icons.visibility_outlined,
-              title: 'perm.usage_title'.tr(),
-              description: 'perm.usage_desc'.tr(),
-              granted: _usage,
-              onGrant: _service.openUsageAccessSettings,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 16),
             Center(
               child: TextButton.icon(
                 onPressed: _refresh,
@@ -136,6 +161,8 @@ class _BlockingPermissionsScreenState
   }
 }
 
+
+
 class _PermissionTile extends StatelessWidget {
   const _PermissionTile({
     required this.icon,
@@ -148,80 +175,79 @@ class _PermissionTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
-
-  /// null = no detectable status (e.g. MIUI settings); just an action.
   final bool? granted;
-  final Future<void> Function() onGrant;
+  final VoidCallback onGrant;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isGranted = granted == true;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: AppCard(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final statusColor = isGranted ? const Color(0xFF22C55E) : colors.primary;
+
+    return InkWell(
+      onTap: onGrant,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(icon, color: colors.primary, size: 22),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
+            Icon(icon, size: 20, color: colors.textSecondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
                     title,
-                    style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
+                    style: AppTextStyles.label.copyWith(
+                      color: colors.textPrimary,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-                if (granted != null) _StatusBadge(granted: isGranted),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              description,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: colors.textSecondary,
+                  const SizedBox(height: 1),
+                  Text(
+                    description,
+                    style: AppTextStyles.caption.copyWith(
+                      color: colors.textSecondary,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            AppButton(
-              label: isGranted ? 'perm.open_settings'.tr() : 'perm.open'.tr(),
-              variant: isGranted
-                  ? AppButtonVariant.secondary
-                  : AppButtonVariant.primary,
-              expand: false,
-              onPressed: onGrant,
-            ),
+            const SizedBox(width: 8),
+            if (granted != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isGranted ? Colors.transparent : statusColor.withValues(alpha: 0.1),
+                  border: isGranted ? Border.all(color: statusColor.withValues(alpha: 0.5)) : null,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isGranted ? Icons.check_rounded : Icons.add_rounded,
+                      size: 14,
+                      color: statusColor,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isGranted ? 'Berilgan' : 'Yoqish',
+                      style: AppTextStyles.caption.copyWith(
+                        color: statusColor,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.granted});
-
-  final bool granted;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final color = granted ? colors.primary : colors.textTertiary;
-    return Row(
-      children: [
-        Icon(
-          granted ? Icons.check_circle_rounded : Icons.circle_outlined,
-          size: 16,
-          color: color,
-        ),
-        const SizedBox(width: 6),
-        Text(
-          granted ? 'perm.granted'.tr() : 'perm.needed'.tr(),
-          style: AppTextStyles.caption.copyWith(color: color),
-        ),
-      ],
     );
   }
 }

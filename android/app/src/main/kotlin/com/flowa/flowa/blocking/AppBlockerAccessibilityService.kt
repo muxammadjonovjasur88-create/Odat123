@@ -21,10 +21,17 @@ class AppBlockerAccessibilityService : AccessibilityService() {
     companion object {
         const val TAG = "FlowaBlocker"
 
-        /** Whether the service is currently connected (enabled + running). */
         @Volatile
         var running: Boolean = false
             private set
+
+        @Volatile
+        var instance: AppBlockerAccessibilityService? = null
+            private set
+
+        fun performHomeAction(): Boolean {
+            return instance?.performGlobalAction(GLOBAL_ACTION_HOME) ?: false
+        }
     }
 
     private var lastBlockAt = 0L
@@ -32,6 +39,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         running = true
+        instance = this
         Log.d(TAG, "Accessibility service connected")
     }
 
@@ -86,6 +94,7 @@ class AppBlockerAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         running = false
+        instance = null
         Log.d(TAG, "Accessibility service destroyed")
         super.onDestroy()
     }

@@ -125,7 +125,12 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
     // the app is open. Also resolve missed days + grant the weekly freeze.
     _onAuthReady();
     ref.listenManual(authStateProvider, (prev, next) {
-      if (next.asData?.value != null) _onAuthReady();
+      final user = next.asData?.value;
+      if (user != null) {
+        _onAuthReady();
+      } else {
+        ref.read(notificationServiceProvider).cancelFcmSubscription();
+      }
     });
     _focusSub = ref.read(focusServiceProvider).events().listen((tick) {
       if (tick.isFinished && tick.taskId != null) {
@@ -176,6 +181,10 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
 
   /// Runs the once-per-open housekeeping that needs a signed-in user.
   void _onAuthReady() {
+    final uid = ref.read(authStateProvider).asData?.value?.uid;
+    if (uid != null) {
+      ref.read(notificationServiceProvider).setupFcm(uid);
+    }
     _processPendingCompletion();
     _refreshStreak();
   }

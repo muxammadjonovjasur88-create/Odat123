@@ -10,6 +10,8 @@ class FocusSignals {
     this.awayCount = 0,
     this.awaySeconds = 0,
     this.totalSeconds = 0,
+    this.checkInsPresented = 0,
+    this.checkInsMissed = 0,
   });
 
   /// Whether the full task duration genuinely elapsed in real clock time (the
@@ -28,6 +30,12 @@ class FocusSignals {
   /// The session's full length in seconds.
   final int totalSeconds;
 
+  /// Check-ins presented to the user during this session.
+  final int checkInsPresented;
+
+  /// Check-ins missed by the user.
+  final int checkInsMissed;
+
   /// Seconds genuinely spent focused (locked or in Flowa).
   int get focusedSeconds => (totalSeconds - awaySeconds).clamp(0, totalSeconds);
 
@@ -37,12 +45,16 @@ class FocusSignals {
     int? awayCount,
     int? awaySeconds,
     int? totalSeconds,
+    int? checkInsPresented,
+    int? checkInsMissed,
   }) => FocusSignals(
     timerCompleted: timerCompleted ?? this.timerCompleted,
     distractingOpens: distractingOpens ?? this.distractingOpens,
     awayCount: awayCount ?? this.awayCount,
     awaySeconds: awaySeconds ?? this.awaySeconds,
     totalSeconds: totalSeconds ?? this.totalSeconds,
+    checkInsPresented: checkInsPresented ?? this.checkInsPresented,
+    checkInsMissed: checkInsMissed ?? this.checkInsMissed,
   );
 
   factory FocusSignals.fromMap(Map<dynamic, dynamic> m) => FocusSignals(
@@ -51,6 +63,8 @@ class FocusSignals {
     awayCount: (m['awayCount'] as num?)?.toInt() ?? 0,
     awaySeconds: (m['awaySeconds'] as num?)?.toInt() ?? 0,
     totalSeconds: (m['totalSeconds'] as num?)?.toInt() ?? 0,
+    checkInsPresented: (m['checkInsPresented'] as num?)?.toInt() ?? 0,
+    checkInsMissed: (m['checkInsMissed'] as num?)?.toInt() ?? 0,
   );
 }
 

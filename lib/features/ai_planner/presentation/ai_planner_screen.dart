@@ -76,7 +76,7 @@ class _AiPlannerScreenState extends ConsumerState<AiPlannerScreen> {
   Widget _resultSection(AppColorScheme colors, AiPlanState state) {
     switch (state.status) {
       case AiPlanStatus.loading:
-        return _LoadingState(colors: colors);
+        return _LoadingState(colors: colors, progressText: state.progressText);
       case AiPlanStatus.limitReached:
         return _LimitReachedCard(
           onUpgrade: () => context.push(AppRoutes.paywall),
@@ -90,6 +90,10 @@ class _AiPlannerScreenState extends ConsumerState<AiPlannerScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (state.warnings.isNotEmpty) ...[
+              _WarningsCard(warnings: state.warnings),
+              const SizedBox(height: 16),
+            ],
             _SchedulePreview(
               plan: state.plan,
               editing: _editing,
@@ -742,9 +746,10 @@ class _LimitReachedCard extends StatelessWidget {
 }
 
 class _LoadingState extends StatelessWidget {
-  const _LoadingState({required this.colors});
+  const _LoadingState({required this.colors, this.progressText});
 
   final AppColorScheme colors;
+  final String? progressText;
 
   @override
   Widget build(BuildContext context) {
@@ -755,7 +760,7 @@ class _LoadingState extends StatelessWidget {
           const FlowaLoading(size: 72),
           const SizedBox(height: 18),
           Text(
-            'aiplan.crafting'.tr(),
+            progressText ?? 'aiplan.crafting'.tr(),
             style: AppTextStyles.body.copyWith(color: colors.textSecondary),
           ),
         ],
@@ -791,6 +796,45 @@ class _ErrorState extends StatelessWidget {
             expand: false,
             onPressed: onRetry,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WarningsCard extends StatelessWidget {
+  const _WarningsCard({required this.warnings});
+
+  final List<String> warnings;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      color: AppColors.personalFill,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.personalText),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'aiplan.warnings_title'.tr(),
+                  style: AppTextStyles.label.copyWith(color: AppColors.personalText),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < warnings.length; i++) ...[
+            Text(
+              warnings[i],
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.personalText),
+            ),
+            if (i < warnings.length - 1) const SizedBox(height: 6),
+          ],
         ],
       ),
     );

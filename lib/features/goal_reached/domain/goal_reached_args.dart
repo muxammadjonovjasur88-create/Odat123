@@ -17,6 +17,7 @@ class GoalReachedArgs {
     this.completionPercent = 1.0,
     this.awardedPoints = 0,
     this.fullCompletion = true,
+    this.integrityPercent = 1.0,
   });
 
   /// Set-based workout result, when the completed task was a structured workout.
@@ -52,4 +53,7 @@ class GoalReachedArgs {
 
   /// Whether the task was effectively completed at 95%+.
   final bool fullCompletion;
+
+  /// Integrity score of the session (1.0 = fully honest, <1.0 = partial).
+  final double integrityPercent;
 }

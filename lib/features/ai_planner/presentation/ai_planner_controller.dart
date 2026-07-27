@@ -21,6 +21,8 @@ class AiPlanState {
   const AiPlanState({
     this.status = AiPlanStatus.idle,
     this.plan = const [],
+    this.warnings = const [],
+    this.progressText,
     this.goalText = '',
     this.days = 1,
     this.locale = 'en',
@@ -30,6 +32,8 @@ class AiPlanState {
 
   final AiPlanStatus status;
   final List<PlannedTask> plan;
+  final List<String> warnings;
+  final String? progressText;
   final String goalText;
 
   /// Number of days the current plan spans (1 = today only).
@@ -45,6 +49,8 @@ class AiPlanState {
   AiPlanState copyWith({
     AiPlanStatus? status,
     List<PlannedTask>? plan,
+    List<String>? warnings,
+    String? progressText,
     String? goalText,
     int? days,
     String? locale,
@@ -55,6 +61,8 @@ class AiPlanState {
     return AiPlanState(
       status: status ?? this.status,
       plan: plan ?? this.plan,
+      warnings: warnings ?? this.warnings,
+      progressText: progressText ?? this.progressText,
       goalText: goalText ?? this.goalText,
       days: days ?? this.days,
       locale: locale ?? this.locale,
@@ -104,6 +112,8 @@ class AiPlannerController extends Notifier<AiPlanState> {
       days: spanDays,
       locale: locale,
       clearError: true,
+      warnings: [],
+      progressText: null,
     );
 
     final profile = ref.read(userProfileProvider).asData?.value;
@@ -153,7 +163,7 @@ class AiPlannerController extends Notifier<AiPlanState> {
     }
 
     try {
-      final plan = await ref
+      final planResult = await ref
           .read(aiPlannerServiceProvider)
           .generatePlan(
             goalText: text,
@@ -163,8 +173,15 @@ class AiPlannerController extends Notifier<AiPlanState> {
             busyTimesByDay: busyTimesByDay,
             userContext: userContext,
             locale: locale,
+            onProgress: (msg) {
+              state = state.copyWith(progressText: msg);
+            },
           );
-      state = state.copyWith(status: AiPlanStatus.ready, plan: plan);
+      state = state.copyWith(
+        status: AiPlanStatus.ready,
+        plan: planResult.tasks,
+        warnings: planResult.warnings,
+      );
       // Count this successful plan toward today's free quota (only while the
       // limit applies — i.e. premium on and the user is free).
       if (ref.read(premiumEnabledProvider) && !ref.read(isPremiumProvider)) {

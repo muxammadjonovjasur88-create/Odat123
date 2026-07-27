@@ -204,6 +204,44 @@ class GamificationRepository {
         .snapshots()
         .map((q) => q.docs.map(DailyStats.fromDoc).toList());
   }
+
+  /// Advances the user's streak upon successful mood check-in (great or hard response).
+  Future<void> recordProofStreakUpdate(String uid) {
+    final today = DateUtils.dateOnly(DateTime.now());
+    final userRef = _userDoc(uid);
+
+    return _db.runTransaction<void>((tx) async {
+      final userSnap = await tx.get(userRef);
+      final user = userSnap.data() ?? const {};
+
+      final currentStreak = (user['streak'] as num?)?.toInt() ?? 0;
+      final lastActive = (user['lastActiveDate'] as Timestamp?)?.toDate();
+      final freezes = (user['freezes'] as num?)?.toInt() ?? 0;
+
+      // Freeze-aware streak
+      final resolution = StreakMath.onCompletion(
+        streak: currentStreak,
+        lastActive: lastActive,
+        freezes: freezes,
+        today: today,
+      );
+      final newStreak = resolution.streak;
+      final longest = math.max(
+        (user['longestStreak'] as num?)?.toInt() ?? 0,
+        newStreak,
+      );
+
+      final weekId = WeeklyReset.weekIdFor(today);
+
+      tx.set(userRef, {
+        'streak': newStreak,
+        'longestStreak': longest,
+        'lastActiveDate': Timestamp.fromDate(today),
+        'freezes': resolution.freezes,
+        'currentWeekId': weekId,
+      }, SetOptions(merge: true));
+    });
+  }
 }
 
 final gamificationRepositoryProvider = Provider<GamificationRepository>(

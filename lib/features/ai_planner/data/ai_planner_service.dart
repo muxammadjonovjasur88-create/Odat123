@@ -6,6 +6,12 @@ import 'package:http/http.dart' as http;
 
 import '../domain/planned_task.dart';
 
+class AiPlanResult {
+  const AiPlanResult(this.tasks, this.warnings);
+  final List<PlannedTask> tasks;
+  final List<String> warnings;
+}
+
 /// Thrown when a plan can't be produced; [message] is safe to show the user.
 class AiPlannerException implements Exception {
   const AiPlannerException(this.message);
@@ -41,7 +47,7 @@ class AiPlannerService {
 
   bool get isConfigured => _apiKey.isNotEmpty;
 
-  Future<List<PlannedTask>> generatePlan({
+  Future<AiPlanResult> generatePlan({
     required String goalText,
     required String focusType,
     required DateTime startDate,
@@ -49,6 +55,7 @@ class AiPlannerService {
     required Map<String, List<Map<String, String>>> busyTimesByDay,
     Map<String, String> userContext = const {},
     String locale = 'en',
+    void Function(String)? onProgress,
   }) async {
     if (!isConfigured) {
       throw const AiPlannerException(
@@ -65,12 +72,18 @@ class AiPlannerService {
     // from Gemini without token truncation limits for 14-30 day plans.
     const chunkSize = 7;
     final allPlannedTasks = <PlannedTask>[];
+    final allWarnings = <String>[];
 
     for (var chunkStartOffset = 0; chunkStartOffset < totalSpan; chunkStartOffset += chunkSize) {
       final currentChunkDays = (totalSpan - chunkStartOffset).clamp(1, chunkSize);
       final currentChunkStart = start.add(Duration(days: chunkStartOffset));
 
-      final chunkTasks = await _fetchChunkPlan(
+      if (totalSpan > chunkSize) {
+        final endOffset = chunkStartOffset + currentChunkDays;
+        onProgress?.call('${chunkStartOffset + 1}-$endOffset kunlar tuzilmoqda...');
+      }
+
+      final chunkResult = await _fetchChunkPlan(
         goalText: goalText,
         focusType: focusType,
         startDate: currentChunkStart,
@@ -80,7 +93,8 @@ class AiPlannerService {
         locale: locale,
       );
 
-      allPlannedTasks.addAll(chunkTasks);
+      allPlannedTasks.addAll(chunkResult.tasks);
+      allWarnings.addAll(chunkResult.warnings);
     }
 
     if (allPlannedTasks.isEmpty) {
@@ -95,10 +109,10 @@ class AiPlannerService {
       return byDate != 0 ? byDate : a.startMinute.compareTo(b.startMinute);
     });
 
-    return allPlannedTasks;
+    return AiPlanResult(allPlannedTasks, allWarnings);
   }
 
-  Future<List<PlannedTask>> _fetchChunkPlan({
+  Future<AiPlanResult> _fetchChunkPlan({
     required String goalText,
     required String focusType,
     required DateTime startDate,
@@ -164,51 +178,53 @@ class AiPlannerService {
       },
     });
 
-    debugPrint('🤖 [AiPlannerService] Sending Gemini request for $days days starting $startDate...');
-    http.Response res;
-    try {
-      res = await _client.post(
-        uri,
-        headers: const {'Content-Type': 'application/json'},
-        body: body,
-      );
-    } catch (e) {
-      debugPrint('❌ [AiPlannerService] Network error: $e');
-      throw const AiPlannerException(
-        'Could not reach the planning service. Check your connection and '
-        'try again.',
-      );
-    }
+    int retries = 2;
+    while (true) {
+      try {
+        debugPrint('🤖 [AiPlannerService] Sending Gemini request for $days days starting $startDate...');
+        final res = await _client.post(
+          uri,
+          headers: const {'Content-Type': 'application/json'},
+          body: body,
+        );
 
-    debugPrint('🤖 [AiPlannerService] Response status: ${res.statusCode}');
-    if (res.statusCode == 400 ||
-        res.statusCode == 401 ||
-        res.statusCode == 403) {
-      debugPrint('❌ [AiPlannerService] Auth/Permission error body: ${res.body}');
-      throw const AiPlannerException(
-        'The AI request was rejected — check that your Gemini API key is '
-        'valid and enabled.',
-      );
-    }
-    if (res.statusCode != 200) {
-      debugPrint('❌ [AiPlannerService] Error response body: ${res.body}');
-      throw const AiPlannerException(
-        'The planning service is busy right now. Please try again.',
-      );
-    }
+        debugPrint('🤖 [AiPlannerService] Response status: ${res.statusCode}');
+        if (res.statusCode == 400 ||
+            res.statusCode == 401 ||
+            res.statusCode == 403) {
+          debugPrint('❌ [AiPlannerService] Auth/Permission error body: ${res.body}');
+          throw const AiPlannerException(
+            'The AI request was rejected — check that your Gemini API key is '
+            'valid and enabled.',
+          );
+        }
+        if (res.statusCode != 200) {
+          throw Exception('Service returned status ${res.statusCode}');
+        }
 
-    final text = _extractText(res.body);
-    if (text == null) {
-      debugPrint('❌ [AiPlannerService] Could not extract text from response: ${res.body}');
-      throw const AiPlannerException(
-        'The planner returned an unexpected response. Please try again.',
-      );
-    }
+        final text = _extractText(res.body);
+        if (text == null) {
+          throw Exception('Could not extract text from response');
+        }
 
-    debugPrint('🤖 [AiPlannerService] Extracted text length: ${text.length}');
-    final tasks = _validatePlan(text, startDate, days);
-    debugPrint('🤖 [AiPlannerService] Parsed ${tasks.length} valid tasks for this chunk.');
-    return tasks;
+        debugPrint('🤖 [AiPlannerService] Extracted text length: ${text.length}');
+        final result = _validatePlan(text, startDate, days);
+        debugPrint('🤖 [AiPlannerService] Parsed ${result.tasks.length} valid tasks for this chunk.');
+        return result;
+      } catch (e) {
+        debugPrint('❌ [AiPlannerService] Request failed: $e');
+        if (e is AiPlannerException) rethrow;
+        if (retries > 0) {
+          retries--;
+          debugPrint('🤖 [AiPlannerService] Retrying... ($retries left)');
+          await Future.delayed(const Duration(seconds: 2));
+          continue;
+        }
+        throw const AiPlannerException(
+          'The planning service is busy or returned an error. Please check your connection and try again.',
+        );
+      }
+    }
   }
 
   /// Pulls `candidates[0].content.parts[0].text` out of the Gemini response.
@@ -230,14 +246,14 @@ class AiPlannerService {
   /// Parses the model's JSON and keeps only well-formed tasks, validating that
   /// each task's date falls within `[start, start + days)`. Single-day plans
   /// behave as before; multi-day plans keep each task on its own date.
-  List<PlannedTask> _validatePlan(String rawText, DateTime start, int days) {
+  AiPlanResult _validatePlan(String rawText, DateTime start, int days) {
     dynamic parsed;
     try {
       parsed = jsonDecode(rawText);
     } catch (_) {
-      return const [];
+      return const AiPlanResult([], []);
     }
-    if (parsed is! List) return const [];
+    if (parsed is! List) return const AiPlanResult([], []);
 
     final last = start.add(Duration(days: days - 1));
 
@@ -276,6 +292,7 @@ class AiPlannerService {
 
     // Safety net: drop any same-day time overlaps the model may have produced
     final noOverlap = <PlannedTask>[];
+    final warnings = <String>[];
     DateTime? lastDay;
     var lastEnd = 0;
     for (final t in clean) {
@@ -284,11 +301,17 @@ class AiPlannerService {
         noOverlap.add(t);
         lastDay = day;
         lastEnd = t.startMinute + t.durationMinutes;
+      } else {
+        warnings.add('⚠️ "${t.title}" vazifasi vaqt ziddiyati sababli rejaga qo\'shilmadi.');
       }
     }
 
     final maxTasks = days <= 1 ? 8 : (days * 8).clamp(8, 240);
-    return noOverlap.take(maxTasks).toList();
+    final finalTasks = noOverlap.take(maxTasks).toList();
+    if (noOverlap.length > maxTasks) {
+       warnings.add('⚠️ Kunlik vazifalar soni ko\'payib ketgani uchun ba\'zi vazifalar olib tashlandi.');
+    }
+    return AiPlanResult(finalTasks, warnings);
   }
 
   /// Returns the language-enforcement instruction for [locale].
@@ -355,7 +378,9 @@ class AiPlannerService {
       // cannot "forget" it in a long response) ──
       langInstruction,
       '',
-      'You are Flowa, a calm productivity planner.',
+      'You are Flowa, a professional, highly experienced productivity consultant.',
+      'Your goal is to organize the user\'s requests into a healthy, realistic, and highly effective schedule.',
+      'If the user\'s request is extremely vague (e.g. just "plan", "help", "do something"), DO NOT fail. Instead, create a standard balanced productive day (e.g., Morning focus, afternoon learning, evening exercise) and explicitly state in the reasoning: "I created a balanced default plan since the request was vague. Be more specific next time for a tailored plan."',
       multiDay
           ? "Turn the user's goal(s) into a realistic, gentle schedule spread "
                 'across $days consecutive days.'
@@ -409,17 +434,17 @@ class AiPlannerService {
         '- All tasks are dated $startIso.',
         '- Add short restful/wellness breaks between intense tasks.',
       ],
-      '- NEVER overlap two tasks at the same time on the same day, and avoid the '
-          'busy ranges; leave gaps between tasks.',
+      '- EVERY TASK MUST have a date within $startIso..$lastIso (ISO yyyy-mm-dd).',
+      '- EXTREMELY IMPORTANT: NEVER overlap two tasks at the same time on the same day. Consider the durationMinutes of each task.',
+      '- Avoid the busy ranges; leave gaps between tasks.',
       '- category MUST be one of: ${_allowedCategories.join(', ')}.',
       '- startTime is 24-hour HH:mm. durationMinutes is an integer 10-180.',
       '- Order tasks by date, then startTime.',
-      '- "reasoning" field: write exactly 1 short sentence (max 15 words) in '
+      '- "reasoning" field: write exactly 1-2 short sentences in '
           'the same language as the task title, explaining WHY this task is '
-          'placed at this specific time or why the frequency was chosen. Be '
-          'personal — mention the user\'s streak, goal, or focus style when '
-          'relevant (e.g. "Morning sharpness suits your study streak", '
-          '"Placed before lunch for peak cognitive energy").',
+          'placed at this specific time, why the frequency was chosen, or why a break was added. Be '
+          'personal — mention the user\'s streak, goal, active times or focus style when '
+          'relevant.',
       'Return ONLY a JSON array of objects with keys:',
       'title, category, date, startTime, durationMinutes, reasoning.',
       '',
