@@ -195,7 +195,9 @@ module.exports = async function handler(req, res) {
       }
 
       const activityCount = proofSnapshot.size + completedCount + missedCount;
+      console.log(`weekly-insight debug: user=${userId} proofs=${proofSnapshot.size} tasksTotal=${tasksSnapshot.size} completed=${completedCount} missed=${missedCount} activityCount=${activityCount}`);
       if (activityCount === 0) {
+        console.log(`weekly-insight skip: user=${userId} skipped because no activity in the last 7 days`);
         continue;
       }
 
