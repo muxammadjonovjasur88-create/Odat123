@@ -78,7 +78,7 @@ async function queryGeminiInsight(prompt) {
     throw new Error('Missing GEMINI_API_KEY');
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
   const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
@@ -95,6 +95,7 @@ async function queryGeminiInsight(prompt) {
 
   if (!response.ok) {
     const payload = await response.text();
+    console.error('Gemini API error response body:', payload);
     throw new Error(`Gemini API error ${response.status}: ${payload}`);
   }
 
