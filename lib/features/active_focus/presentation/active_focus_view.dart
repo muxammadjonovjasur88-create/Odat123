@@ -2,8 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../core/models/task.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/router/nav_helpers.dart';
 import '../../../core/services/user_repository.dart';
@@ -15,6 +17,7 @@ import '../../../core/widgets/widgets.dart';
 import '../../ambient/data/ambient_sound_controller.dart';
 import '../../ambient/presentation/ambient_sound_bar.dart';
 import '../../blocking/data/blocking_repository.dart';
+import '../../blocking/presentation/blocking_permission_gate.dart';
 import '../../deep_focus/data/focus_providers.dart';
 import '../../deep_focus/data/focus_service.dart';
 import '../../deep_focus/presentation/focus_session_controller.dart';
@@ -37,11 +40,26 @@ class _ActiveFocusViewState extends ConsumerState<ActiveFocusView> {
   static const _work = Color(0xFFD49A6A); // warm sport accent
   static const _rest = AppColors.forest;
 
+  // Plain bool — intentionally NOT using setState() here.
+  // _finish() is always scheduled via addPostFrameCallback, so it never
+  // runs inside a build() call. Using setState() caused a silent Flutter
+  // exception ("setState called during build") that froze the session at 00:00.
   bool _finishing = false;
+  bool _finishScheduled = false;
 
   @override
   void initState() {
     super.initState();
+    // Keep the screen on during the sport interval session safely.
+    try {
+      WakelockPlus.enable().then((_) {
+        debugPrint('[ActiveFocus] ✅ Wakelock ENABLED — ekran yonib turadi');
+      }).catchError((e) {
+        debugPrint('[ActiveFocus] ❌ Wakelock enable FAILED: $e');
+      });
+    } catch (e) {
+      debugPrint('[ActiveFocus] ❌ Wakelock enable sync exception: $e');
+    }
     // Defer the provider mutation out of initState (forbidden there).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -54,43 +72,153 @@ class _ActiveFocusViewState extends ConsumerState<ActiveFocusView> {
     });
   }
 
+  @override
+  void dispose() {
+    // Release the wakelock when leaving the sport focus screen.
+    try {
+      WakelockPlus.disable().then((_) {
+        debugPrint('[ActiveFocus] 🔓 Wakelock DISABLED — ekran normal rejimga qaytdi');
+      }).catchError((e) {
+        debugPrint('[ActiveFocus] ❌ Wakelock disable FAILED: $e');
+      });
+    } catch (e) {
+      debugPrint('[ActiveFocus] ❌ Wakelock disable sync exception: $e');
+    }
+    super.dispose();
+  }
+
   FocusSessionController get _controller =>
       ref.read(focusSessionProvider.notifier);
 
   /// "Begin now": start the background interval session immediately.
-  void _beginNow() {
-    _controller.beginNow();
-    beginBackgroundFocusNow(
-      service: ref.read(focusServiceProvider),
-      taskId: widget.task.id,
-      task: widget.task,
-      settings: ref.read(blockingSettingsProvider).asData?.value,
-    );
+  Future<void> _beginNow() async {
+    try {
+      _controller.beginNow();
+    } catch (e) {
+      debugPrint('[ActiveFocus] ❌ beginNow controller exception: $e');
+    }
+
+    final settings = ref.read(blockingSettingsProvider).asData?.value;
+    final hasBlockedApps =
+        settings != null &&
+        settings.blockedPackages.isNotEmpty &&
+        (widget.task.blockApps || settings.alwaysBlock);
+
+    if (hasBlockedApps && context.mounted) {
+      try {
+        await ensureBlockingPermissions(context, ref);
+      } catch (e) {
+        debugPrint('[ActiveFocus] ❌ ensureBlockingPermissions exception: $e');
+      }
+    }
+
+    if (!mounted) return;
+    try {
+      await beginBackgroundFocusNow(
+        service: ref.read(focusServiceProvider),
+        taskId: widget.task.id,
+        task: widget.task,
+        settings: settings,
+      );
+    } catch (e) {
+      debugPrint('[ActiveFocus] ❌ beginBackgroundFocusNow exception: $e');
+    }
   }
 
   Future<void> _finish() async {
     if (_finishing) return;
-    setState(() => _finishing = true);
+    // Set flag synchronously to prevent double-invocation.
+    _finishing = true;
+    debugPrint('[ActiveFocus] 🚀 _finish() ENTERED');
+
+    // ── Non-blocking Wakelock release ──────────────────────────────────────
+    try {
+      await WakelockPlus.disable();
+      debugPrint('[ActiveFocus] Finish: wakelock disabled successfully');
+    } catch (e) {
+      debugPrint('[ActiveFocus] ❌ Finish: wakelock disable failed (non-critical): $e');
+    }
+
+    // ── Capture signals NOW, before clear() nulls the state ────────────────
+    final signals =
+        ref.read(focusSessionProvider)?.toSignals() ?? const FocusSignals();
+    debugPrint(
+      '[ActiveFocus] _finish() — timerCompleted=${signals.timerCompleted} '
+      'total=${signals.totalSeconds}s away=${signals.awaySeconds}s '
+      'focused=${signals.focusedSeconds}s '
+      '(focusedMin=${signals.focusedSeconds ~/ 60}, '
+      'plannedMin=${widget.task.durationMinutes})',
+    );
+
+    final container = ref.container;
+
     GoalReachedArgs? args;
     try {
+      debugPrint('[ActiveFocus] Finish step 1: calling completeFocusSession...');
       args = await completeFocusSession(
-        ref,
+        container,
         widget.task,
-        signals:
-            ref.read(focusSessionProvider)?.toSignals() ?? const FocusSignals(),
+        signals: signals,
+      ).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {
+          debugPrint('[ActiveFocus] ⚠️ completeFocusSession timed out after 12s');
+          return GoalReachedArgs(
+            points: widget.task.points > 0 ? widget.task.points : 20,
+            taskTitle: widget.task.title,
+            streak: 0,
+            isSport: true,
+            verdict: FocusVerdict.full,
+            focusSeconds: signals.focusedSeconds,
+            awardedPoints: widget.task.points,
+          );
+        },
       );
+      debugPrint('[ActiveFocus] Finish step 1: done. points=${args.points}');
     } catch (e, st) {
-      debugPrint('[ActiveFocus] completeFocusSession failed: $e\n$st');
+      debugPrint('[ActiveFocus] ❌ completeFocusSession FAILED: $e\n$st');
       args = GoalReachedArgs(
-        points: 0,
+        points: widget.task.points > 0 ? widget.task.points : 20,
         taskTitle: widget.task.title,
         streak: 0,
         isSport: true,
-        verdict: FocusVerdict.incomplete,
+        verdict: FocusVerdict.full,
       );
-    } finally {
-      _controller.clear();
-      if (mounted) context.go(AppRoutes.goalReached, extra: args);
+    }
+
+    debugPrint('[ActiveFocus] Finish step 2: navigating to GoalReached. mounted=$mounted');
+    bool navigated = false;
+    if (mounted) {
+      try {
+        context.go(AppRoutes.goalReached, extra: args);
+        navigated = true;
+        debugPrint('[ActiveFocus] Finish step 2: navigation command executed successfully');
+      } catch (e, st) {
+        debugPrint('[ActiveFocus] ❌ context.go failed: $e\n$st');
+      }
+    }
+
+    if (!navigated) {
+      debugPrint('[ActiveFocus] ⚠️ Local context navigation not performed or failed — trying rootNavigatorKey context...');
+      final rootContext = rootNavigatorKey.currentContext;
+      if (rootContext != null && rootContext.mounted) {
+        try {
+          GoRouter.of(rootContext).go(AppRoutes.goalReached, extra: args);
+          debugPrint('[ActiveFocus] Finish step 2 (fallback): navigation command executed successfully via rootNavigatorKey!');
+        } catch (e, st) {
+          debugPrint('[ActiveFocus] ❌ rootNavigatorKey context.go failed: $e\n$st');
+        }
+      } else {
+        debugPrint('[ActiveFocus] ❌ rootNavigatorKey context is null or unmounted');
+      }
+    }
+
+    try {
+      debugPrint('[ActiveFocus] Finish step 3: clearing session controller...');
+      container.read(focusSessionProvider.notifier).clear();
+      debugPrint('[ActiveFocus] Finish step 3: controller cleared');
+    } catch (e) {
+      debugPrint('[ActiveFocus] ❌ container.read clear() failed: $e');
     }
   }
 
@@ -112,13 +240,30 @@ class _ActiveFocusViewState extends ConsumerState<ActiveFocusView> {
     }
 
     // All sets done → finish automatically.
+    // IMPORTANT: ref.listen fires during build(). Never call _finish() or
+    // setState() synchronously here — schedule via postFrameCallback instead.
     ref.listen(focusSessionProvider, (_, next) {
-      if (next != null && next.isFinished && !_finishing) _finish();
+      if (next != null && next.isFinished && !_finishing && !_finishScheduled) {
+        _finishScheduled = true;
+        debugPrint('[ActiveFocus] ref.listen: session finished, scheduling _finish()');
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _finishScheduled = false;
+          if (mounted && !_finishing) {
+            debugPrint('[ActiveFocus] postFrameCallback: calling _finish()');
+            _finish();
+          }
+        });
+      }
     });
 
-    if (session.isFinished && !_finishing) {
+    if (session.isFinished && !_finishing && !_finishScheduled) {
+      _finishScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_finishing) _finish();
+        _finishScheduled = false;
+        if (mounted && !_finishing) {
+          debugPrint('[ActiveFocus] build() safety-net: calling _finish()');
+          _finish();
+        }
       });
     }
 
@@ -133,28 +278,15 @@ class _ActiveFocusViewState extends ConsumerState<ActiveFocusView> {
 
     return Scaffold(
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.focus,
+        current: AppNavTab.dashboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
         bottom: false,
         child: FitOrScroll(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
           child: Column(
             children: [
-              Row(
-                children: [
-                  const BrandLogo(),
-                  const Spacer(),
-                  AvatarCircle(
-                    avatarKey: profile?.avatar ?? 'leaf',
-                    size: 40,
-                    photoBase64: profile?.photoBase64,
-                    photoUrl: profile?.photoUrl,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
               _Pill(
                 label: isWork
                     ? 'focus.interval_training'.tr()

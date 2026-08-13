@@ -86,6 +86,13 @@ object FocusRuntime {
     fun isActive(context: Context): Boolean =
         prefs(context).getBoolean(KEY_ACTIVE, false)
 
+    /** Shifts the session end time by [deltaMs] ms (positive = more time, negative = less). */
+    fun adjustEndAt(context: Context, deltaMs: Long) {
+        val current = endAt(context)
+        val newEnd = (current + deltaMs).coerceAtLeast(System.currentTimeMillis() + 60_000L)
+        prefs(context).edit().putLong(KEY_END, newEnd).apply()
+    }
+
     fun taskId(context: Context): String? =
         prefs(context).getString(KEY_TASK_ID, null)
 

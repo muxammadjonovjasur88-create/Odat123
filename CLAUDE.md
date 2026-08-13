@@ -1,4 +1,4 @@
-# Flowa
+# Odat
 
 A calm, "Zen" productivity mobile app. **Android first**, with the goal of shipping to
 Google Play. Production-quality, clean code. The developer tests on a real Android device.

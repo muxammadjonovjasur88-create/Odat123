@@ -250,7 +250,12 @@ class _StreakCardState extends State<StreakCard>
             SizedBox(
               width: 56,
               height: 56,
-              child: Center(child: StreakFlame(streak: widget.streak, size: 28)),
+              child: Center(
+                child: StreakBumpAnimation(
+                  streak: widget.streak,
+                  child: StreakFlame(streak: widget.streak, size: 28),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(

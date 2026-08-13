@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Validate translations",
+			"type": "shell",
+			"command": "python -c \"import json, pathlib; files=['assets/translations/en.json','assets/translations/ru.json','assets/translations/uz.json']; [json.load(pathlib.Path(f).open(encoding='utf-8')) for f in files]; print('JSON OK')\"",
+			"problemMatcher": []
+		}
+	]
+}

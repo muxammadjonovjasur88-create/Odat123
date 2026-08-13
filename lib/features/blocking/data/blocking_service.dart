@@ -7,6 +7,29 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../domain/installed_app.dart';
 
+/// Why [BlockingService.startSession] could not arm blocking.
+enum BlockingStartFailReason {
+  /// Neither Accessibility Service nor Usage Access is granted — the app
+  /// cannot detect which app is in the foreground.
+  noDetectionPermission,
+
+  /// The "draw over other apps" (SYSTEM_ALERT_WINDOW) permission is not granted
+  /// so the blocking overlay cannot be shown.
+  noOverlayPermission,
+}
+
+/// Result returned by [BlockingService.startSession].
+class BlockingStartResult {
+  const BlockingStartResult({required this.armed, required this.reason});
+
+  /// Whether the native blocking session was successfully started.
+  final bool armed;
+
+  /// Non-null when [armed] is false and blocking failed due to a missing
+  /// permission (rather than an empty package list or non-Android platform).
+  final BlockingStartFailReason? reason;
+}
+
 /// Dart side of the `flowa/blocking` MethodChannel (Android only).
 ///
 /// Drives the native AppBlockerAccessibilityService + blocking overlay: during
@@ -19,9 +42,18 @@ class BlockingService {
 
   Future<T?> _invokeSafe<T>(String method, [dynamic arguments]) async {
     try {
-      return await _channel.invokeMethod<T>(method, arguments);
-    } catch (e) {
-      debugPrint('BlockingService.$method failed: $e');
+      debugPrint('[BlockingService] → $method($arguments)');
+      final result = await _channel.invokeMethod<T>(method, arguments);
+      debugPrint('[BlockingService] ← $method result: $result');
+      return result;
+    } on MissingPluginException catch (e) {
+      debugPrint('[BlockingService] ✗ $method: MethodChannel not registered — $e');
+      return null;
+    } on PlatformException catch (e) {
+      debugPrint('[BlockingService] ✗ $method: PlatformException ${e.code}: ${e.message}');
+      return null;
+    } catch (e, st) {
+      debugPrint('[BlockingService] ✗ $method failed: $e\n$st');
       return null;
     }
   }
@@ -74,14 +106,48 @@ class BlockingService {
   /// (e.g. while the app is open) yet kick in exactly at the 5-minutes-before
   /// moment, surviving the app being closed. Package names are Android
   /// application IDs, e.g. `com.instagram.android`, `org.telegram.messenger`.
-  Future<void> startSession({
+  ///
+  /// Returns [BlockingStartResult] describing whether blocking was actually
+  /// armed, or which permission is missing so the caller can show a prompt.
+  Future<BlockingStartResult> startSession({
     required List<String> packages,
     required DateTime startAt,
     required DateTime endTime,
     bool strict = false,
     String lang = 'en',
   }) async {
-    if (!_supported) return;
+    if (!_supported) return const BlockingStartResult(armed: false, reason: null);
+    if (packages.isEmpty) {
+      debugPrint('[BlockingService] startSession: packages list is empty — nothing to block');
+      return const BlockingStartResult(armed: false, reason: null);
+    }
+
+    // Pre-flight: check that at least one detection method and the overlay are available.
+    final hasA11y = await isAccessibilityEnabled();
+    final hasUsage = await hasUsageAccess();
+    final hasOverlay = await canDrawOverlays();
+
+    debugPrint(
+      '[BlockingService] startSession pre-flight: '
+      'accessibility=$hasA11y usageAccess=$hasUsage overlay=$hasOverlay '
+      'packages=${packages.length}',
+    );
+
+    if (!hasA11y && !hasUsage) {
+      debugPrint('[BlockingService] ✗ startSession ABORTED: no foreground-app detection method enabled');
+      return const BlockingStartResult(
+        armed: false,
+        reason: BlockingStartFailReason.noDetectionPermission,
+      );
+    }
+    if (!hasOverlay) {
+      debugPrint('[BlockingService] ✗ startSession ABORTED: overlay permission not granted');
+      return const BlockingStartResult(
+        armed: false,
+        reason: BlockingStartFailReason.noOverlayPermission,
+      );
+    }
+
     await _invokeSafe<void>('startSession', {
       'packages': packages,
       'startAt': startAt.millisecondsSinceEpoch,
@@ -89,6 +155,8 @@ class BlockingService {
       'strict': strict,
       'lang': lang,
     });
+    debugPrint('[BlockingService] ✓ startSession armed for ${packages.length} packages');
+    return const BlockingStartResult(armed: true, reason: null);
   }
 
   Future<void> stopSession() async {

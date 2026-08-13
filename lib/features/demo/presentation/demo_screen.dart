@@ -19,7 +19,7 @@ class DemoScreen extends ConsumerStatefulWidget {
 
 class _DemoScreenState extends ConsumerState<DemoScreen> {
   AppCategory _selectedCategory = AppCategory.sport;
-  AppNavTab _tab = AppNavTab.calendar;
+  AppNavTab _tab = AppNavTab.dashboard;
   bool _loading = false;
 
   @override
@@ -29,7 +29,7 @@ class _DemoScreenState extends ConsumerState<DemoScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flowa · Components'),
+        title: const Text('Odat · Components'),
         actions: [
           IconButton(
             tooltip: isDark ? 'Switch to light' : 'Switch to dark',

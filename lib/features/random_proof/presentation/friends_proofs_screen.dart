@@ -27,12 +27,8 @@ class FriendsProofsScreen extends ConsumerWidget {
     final friendUids = myProfile?.sharedWith ?? [];
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Do\'stlarning isbotlari'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+      appBar: FlowaAppBar(
+        showBackButton: true,
         actions: [
           IconButton(
             tooltip: 'Do\'st qo\'shish',

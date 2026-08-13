@@ -3,23 +3,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/app_category.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/router/nav_helpers.dart';
-import '../../../core/services/user_repository.dart';
+import '../../../core/services/auth_repository.dart';
+import '../../../core/services/task_repository.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_motion.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatting.dart';
 import '../../../core/widgets/widgets.dart';
-import '../../premium/data/premium_providers.dart';
-import '../../premium/domain/premium.dart';
+import '../data/ai_assistant_service.dart';
 import '../domain/planned_task.dart';
+import '../domain/weekly_analytics.dart';
 import 'ai_planner_controller.dart';
+import 'providers/weekly_analytics_provider.dart';
 
-/// Screen 11 — the "Zen Schedule" AI planner. The user describes their day,
-/// Gemini (via the Cloud Function) proposes a schedule, and they can accept,
-/// prune, or regenerate it.
+class _AiChatMessage {
+  _AiChatMessage({
+    required this.text,
+    required this.isAi,
+    required this.time,
+    this.suggestedTask,
+  });
+
+  final String text;
+  final bool isAi;
+  final String time;
+  final PlannedTask? suggestedTask;
+  bool isTaskAccepted = false;
+  bool isTaskDeclined = false;
+}
+
+/// Production-ready AI Assistant Screen matching the Dark/Neon theme.
+/// Features Real Weekly Analytics (Haftalik tahlil), Real AI Chat Interface (Gemini Cloud Function),
+/// and Task Suggestion cards with Accept / Decline flow.
 class AiPlannerScreen extends ConsumerStatefulWidget {
   const AiPlannerScreen({super.key});
 
@@ -28,40 +45,146 @@ class AiPlannerScreen extends ConsumerStatefulWidget {
 }
 
 class _AiPlannerScreenState extends ConsumerState<AiPlannerScreen> {
-  final _goalController = TextEditingController();
+  final TextEditingController _inputController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   bool _editing = false;
+  bool _isAiThinking = false;
 
-  /// Optional planning span the user picked; null = auto-detect from the goal.
-  int? _days;
+  late final List<_AiChatMessage> _messages;
 
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    _messages = [
+      _AiChatMessage(
+        text:
+            "Salom! Men sizning Shaxsiy Zen Yordamchingizman. Haftalik natijalaringiz haqida so'rashingiz yoki yangi reja qo'shishingiz mumkin.",
+        isAi: true,
+        time: timeStr,
+      ),
+    ];
+  }
 
   @override
   void dispose() {
-    _goalController.dispose();
+    _inputController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
-  void _generate() {
-    FocusScope.of(context).unfocus();
-    setState(() => _editing = false);
-    ref
-        .read(aiPlannerControllerProvider.notifier)
-        .generate(
-          _goalController.text,
-          days: _days,
-          locale: context.locale.languageCode,
+  Future<void> _sendMessage() async {
+    final text = _inputController.text.trim();
+    if (text.isEmpty || _isAiThinking) return;
+
+    final now = DateTime.now();
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    setState(() {
+      _messages.add(
+        _AiChatMessage(
+          text: text,
+          isAi: false,
+          time: timeStr,
+        ),
+      );
+      _inputController.clear();
+      _isAiThinking = true;
+    });
+
+    _scrollToBottom();
+
+    try {
+      final response = await ref.read(aiAssistantServiceProvider).ask(text);
+      if (!mounted) return;
+
+      setState(() {
+        _isAiThinking = false;
+        _messages.add(
+          _AiChatMessage(
+            text: response.reply,
+            isAi: true,
+            time: timeStr,
+            suggestedTask: response.suggestedTask,
+          ),
         );
+      });
+      _scrollToBottom();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isAiThinking = false;
+        _messages.add(
+          _AiChatMessage(
+            text:
+                "Hozir javob bera olmayapman, birozdan keyin qayta urinib ko'ring.",
+            isAi: true,
+            time: timeStr,
+          ),
+        );
+      });
+      _scrollToBottom();
+    }
   }
 
-  /// Fills the input with a tapped example prompt.
-  void _fillExample(String text) {
+  Future<void> _acceptSuggestedTask(_AiChatMessage msg) async {
+    final planned = msg.suggestedTask;
+    if (planned == null) return;
+
+    final uid = ref.read(authStateProvider).asData?.value?.uid;
+    if (uid == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vazifa qo\'shish uchun tizimga kiring.')),
+      );
+      return;
+    }
+
+    final newTask = planned.toTask();
+
+    try {
+      await ref.read(taskRepositoryProvider).addTask(uid, newTask);
+      if (!mounted) return;
+
+      setState(() {
+        msg.isTaskAccepted = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"${planned.title}" kunlik rejangizga qo\'shildi!'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vazifani saqlashda xato yuz berdi.')),
+      );
+    }
+  }
+
+  void _declineSuggestedTask(_AiChatMessage msg) {
     setState(() {
-      _goalController.text = text;
-      _goalController.selection = TextSelection.collapsed(offset: text.length);
+      msg.isTaskDeclined = true;
     });
   }
 
-  Future<void> _acceptAll() async {
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  Future<void> _acceptAllPlannerTasks() async {
     final ok = await ref.read(aiPlannerControllerProvider.notifier).acceptAll();
     if (ok && mounted) {
       ScaffoldMessenger.of(context)
@@ -71,135 +194,75 @@ class _AiPlannerScreenState extends ConsumerState<AiPlannerScreen> {
     }
   }
 
-  /// The result area below the input, keyed by [AiPlanState.status] so the
-  /// surrounding [AnimatedSwitcher] can cross-fade between states.
-  Widget _resultSection(AppColorScheme colors, AiPlanState state) {
-    switch (state.status) {
-      case AiPlanStatus.loading:
-        return _LoadingState(colors: colors, progressText: state.progressText);
-      case AiPlanStatus.limitReached:
-        return _LimitReachedCard(
-          onUpgrade: () => context.push(AppRoutes.paywall),
-        );
-      case AiPlanStatus.error:
-        return _ErrorState(
-          message: state.errorMessage ?? 'aiplan.error_generic'.tr(),
-          onRetry: _generate,
-        );
-      case AiPlanStatus.ready:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (state.warnings.isNotEmpty) ...[
-              _WarningsCard(warnings: state.warnings),
-              const SizedBox(height: 16),
-            ],
-            _SchedulePreview(
-              plan: state.plan,
-              editing: _editing,
-              onRemove: (i) =>
-                  ref.read(aiPlannerControllerProvider.notifier).removeAt(i),
-            ),
-            const SizedBox(height: 20),
-            _Actions(
-              accepting: state.accepting,
-              canAccept: state.plan.isNotEmpty,
-              editing: _editing,
-              onAccept: _acceptAll,
-              onEdit: () => setState(() => _editing = !_editing),
-              onRegenerate: () =>
-                  ref.read(aiPlannerControllerProvider.notifier).regenerate(),
-            ),
-          ],
-        );
-      case AiPlanStatus.idle:
-        return const SizedBox.shrink();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final state = ref.watch(aiPlannerControllerProvider);
-    final profile = ref.watch(userProfileProvider).asData?.value;
-    // Show the free-quota hint only while the premium system is on and the user
-    // is free.
-    final showQuota =
-        ref.watch(premiumEnabledProvider) && !ref.watch(isPremiumProvider);
-    final remaining = ref.watch(aiPlansRemainingProvider);
+    final aiState = ref.watch(aiPlannerControllerProvider);
+    final analytics = ref.watch(weeklyAnalyticsProvider);
 
     return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push(AppRoutes.addGoal),
-        backgroundColor: colors.primary,
-        foregroundColor: colors.onPrimary,
-        elevation: 2,
-        shape: const CircleBorder(),
-        child: const Icon(Icons.add_rounded, size: 28),
-      ),
+      backgroundColor: const Color(0xFF0B0F19),
+      appBar: const FlowaAppBar(),
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.focus,
+        current: AppNavTab.ai,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
+        child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const BrandLogo(),
-                AvatarCircle(
-                  avatarKey: profile?.avatar ?? 'leaf',
-                  size: 40,
-                  photoBase64: profile?.photoBase64,
-                  photoUrl: profile?.photoUrl,
-                ),
-              ],
-            ),
-            const SizedBox(height: 22),
-            Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 18,
-                  color: colors.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'aiplan.title'.tr(),
-                  style: AppTextStyles.label.copyWith(
-                    color: colors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _GoalInputCard(
-              controller: _goalController,
-              loading: state.status == AiPlanStatus.loading,
-              selectedDays: _days,
-              onDaysChanged: (d) => setState(() => _days = d),
-              onGenerate: _generate,
-            ),
-            if (showQuota) ...[
-              const SizedBox(height: 10),
-              _QuotaHint(remaining: remaining),
-            ],
-            const SizedBox(height: 14),
-            _GuideCard(onExampleTap: _fillExample),
-            const SizedBox(height: 24),
-            // Gently cross-fade between loading / limit / error / ready instead
-            // of popping the section in and out.
-            AnimatedSwitcher(
-              duration: context.reduceMotion ? Duration.zero : AppMotion.fade,
-              switchInCurve: AppMotion.enter,
-              switchOutCurve: AppMotion.exit,
-              child: KeyedSubtree(
-                key: ValueKey(state.status),
-                child: _resultSection(colors, state),
+            // ── Section 1 (Top): Weekly Analytics ───────────────────────────
+            _WeeklyAnalyticsSection(analytics: analytics),
+
+            // ── Section 2 (Middle): AI Chat Interface ──────────────────────
+            Expanded(
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: _messages.length +
+                    (_isAiThinking ? 1 : 0) +
+                    (aiState.status != AiPlanStatus.idle ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (index < _messages.length) {
+                    final msg = _messages[index];
+                    return msg.isAi
+                        ? _AiMessageBubble(
+                            message: msg,
+                            onAcceptTask: () => _acceptSuggestedTask(msg),
+                            onDeclineTask: () => _declineSuggestedTask(msg),
+                          )
+                        : _UserMessageBubble(message: msg);
+                  }
+
+                  final typingIndex = _messages.length;
+                  if (_isAiThinking && index == typingIndex) {
+                    return const _TypingIndicatorBubble();
+                  }
+
+                  // AI Planner generated result block
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: _AiGeneratedResult(
+                      state: aiState,
+                      editing: _editing,
+                      onAccept: _acceptAllPlannerTasks,
+                      onToggleEdit: () => setState(() => _editing = !_editing),
+                      onRemove: (i) => ref
+                          .read(aiPlannerControllerProvider.notifier)
+                          .removeAt(i),
+                      onRegenerate: () => ref
+                          .read(aiPlannerControllerProvider.notifier)
+                          .regenerate(),
+                    ),
+                  );
+                },
               ),
+            ),
+
+            // ── Section 3 (Bottom): Chat Input Field ───────────────────────
+            _ChatInputField(
+              controller: _inputController,
+              isThinking: _isAiThinking,
+              onSend: _sendMessage,
             ),
           ],
         ),
@@ -208,310 +271,801 @@ class _AiPlannerScreenState extends ConsumerState<AiPlannerScreen> {
   }
 }
 
-class _GoalInputCard extends StatelessWidget {
-  const _GoalInputCard({
-    required this.controller,
-    required this.loading,
-    required this.selectedDays,
-    required this.onDaysChanged,
-    required this.onGenerate,
-  });
+// ── Section 1: Weekly Analytics Component ──────────────────────────────────
+class _WeeklyAnalyticsSection extends StatelessWidget {
+  const _WeeklyAnalyticsSection({required this.analytics});
 
-  final TextEditingController controller;
-  final bool loading;
-  final int? selectedDays;
-  final ValueChanged<int?> onDaysChanged;
-  final VoidCallback onGenerate;
-
-  // null = auto-detect span from the goal text.
-  static const _dayOptions = <int?>[null, 1, 7, 30];
-
-  /// Localized label for a planning-span option.
-  static String _spanLabel(int? value) {
-    if (value == null) return 'aiplan.span_auto'.tr();
-    if (value == 1) return 'aiplan.span_today'.tr();
-    return 'aiplan.span_days'.tr(namedArgs: {'count': '$value'});
-  }
+  final WeeklyAnalytics analytics;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppCard(
+    const cyan = Color(0xFF00E5FF);
+    const purple = Color(0xFFAA00FF);
+
+    final days = ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'];
+    final rates = analytics.rates;
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A27),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: cyan.withValues(alpha: 0.25),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cyan.withValues(alpha: 0.08),
+            blurRadius: 16,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: controller,
-            maxLines: 3,
-            minLines: 2,
-            style: AppTextStyles.body.copyWith(color: colors.textPrimary),
-            cursorColor: colors.primary,
-            decoration: InputDecoration(
-              isCollapsed: true,
-              border: InputBorder.none,
-              hintText: 'aiplan.input_hint'.tr(),
-              hintStyle: AppTextStyles.body.copyWith(
-                color: colors.textTertiary,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: cyan.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.analytics_rounded,
+                      size: 18,
+                      color: cyan,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Haftalik tahlil',
+                    style: AppTextStyles.h3.copyWith(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: cyan.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  '${analytics.completionPercentage}% Bajarildi',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Real Chart progress bars
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              for (int i = 0; i < days.length; i++)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        Container(
+                          height: 48,
+                          width: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 600),
+                          curve: Curves.easeOutCubic,
+                          height: (48 * (i < rates.length ? rates[i] : 0.0))
+                              .clamp(4.0, 48.0),
+                          width: 12,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [cyan, purple],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                            boxShadow: [
+                              BoxShadow(
+                                color: cyan.withValues(alpha: 0.3),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      days[i],
+                      style: AppTextStyles.caption.copyWith(
+                        color: const Color(0xFF9E9E9E),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Section 2: AI Chat Bubbles ─────────────────────────────────────────────
+class _AiMessageBubble extends StatelessWidget {
+  const _AiMessageBubble({
+    required this.message,
+    required this.onAcceptTask,
+    required this.onDeclineTask,
+  });
+
+  final _AiChatMessage message;
+  final VoidCallback onAcceptTask;
+  final VoidCallback onDeclineTask;
+
+  @override
+  Widget build(BuildContext context) {
+    const cyan = Color(0xFF00E5FF);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: cyan.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF151A27),
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                  bottomRight: Radius.circular(18),
+                ),
+                border: Border.all(
+                  color: cyan.withValues(alpha: 0.25),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _FormattedAiText(
+                    text: message.text,
+                    style: AppTextStyles.body.copyWith(
+                      color: Colors.white,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                    cyanColor: cyan,
+                  ),
+                  if (message.suggestedTask != null) ...[
+                    _TaskSuggestionCard(
+                      task: message.suggestedTask!,
+                      isAccepted: message.isTaskAccepted,
+                      isDeclined: message.isTaskDeclined,
+                      onAccept: onAcceptTask,
+                      onDecline: onDeclineTask,
+                    ),
+                  ],
+                  const SizedBox(height: 6),
+                  Text(
+                    message.time,
+                    style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFF9E9E9E),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(width: 32),
+        ],
+      ),
+    );
+  }
+}
+
+class _TaskSuggestionCard extends StatelessWidget {
+  const _TaskSuggestionCard({
+    required this.task,
+    required this.isAccepted,
+    required this.isDeclined,
+    required this.onAccept,
+    required this.onDecline,
+  });
+
+  final PlannedTask task;
+  final bool isAccepted;
+  final bool isDeclined;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+
+  @override
+  Widget build(BuildContext context) {
+    const cyan = Color(0xFF00E5FF);
+
+    IconData icon;
+    switch (task.category) {
+      case AppCategory.study:
+        icon = Icons.school_rounded;
+        break;
+      case AppCategory.sport:
+        icon = Icons.fitness_center_rounded;
+        break;
+      case AppCategory.work:
+        icon = Icons.work_rounded;
+        break;
+      case AppCategory.wellness:
+        icon = Icons.spa_rounded;
+        break;
+      case AppCategory.personal:
+        icon = Icons.person_rounded;
+        break;
+    }
+
+    final dateStr =
+        '${task.date.year}-${task.date.month.toString().padLeft(2, '0')}-${task.date.day.toString().padLeft(2, '0')}';
+
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F1420),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isAccepted
+              ? const Color(0xFF00E676)
+              : (isDeclined
+                  ? Colors.redAccent.withValues(alpha: 0.5)
+                  : cyan.withValues(alpha: 0.4)),
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             children: [
-              Text(
-                'aiplan.plan_over'.tr(),
-                style: AppTextStyles.caption.copyWith(color: colors.textSecondary),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  gradient: AppColors.primaryGradient,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 16, color: Colors.white),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      for (final value in _dayOptions) ...[
-                        AppChip(
-                          label: _spanLabel(value),
-                          selected: selectedDays == value,
-                          onTap: () => onDaysChanged(value),
-                        ),
-                        const SizedBox(width: 6),
-                      ],
-                    ],
+                child: Text(
+                  task.title,
+                  style: AppTextStyles.h3.copyWith(
+                    color: Colors.white,
+                    fontSize: 13,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: AppButton(
-              label: 'aiplan.generate'.tr(),
-              icon: Icons.auto_awesome_rounded,
-              expand: false,
-              loading: loading,
-              onPressed: loading ? null : onGenerate,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A small, calm tip card explaining the planner, with tappable example prompts
-/// that fill the input. Mention a time frame, and list several goals at once.
-class _GuideCard extends StatelessWidget {
-  const _GuideCard({required this.onExampleTap});
-
-  final ValueChanged<String> onExampleTap;
-
-  static const _exampleKeys = [
-    'aiplan.example_1',
-    'aiplan.example_2',
-    'aiplan.example_3',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppCard(
-      color: colors.tintSage,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.tips_and_updates_outlined,
-                size: 18,
-                color: colors.primary,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'aiplan.how_it_works'.tr(),
-                style: AppTextStyles.label.copyWith(color: colors.textPrimary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
-            'aiplan.guide_body'.tr(),
-            style: AppTextStyles.bodySmall.copyWith(
-              color: colors.textSecondary,
+            '📅 $dateStr  •  ⏰ ${formatHm24(task.startMinute)} (${task.durationMinutes} min)',
+            style: AppTextStyles.caption.copyWith(
+              color: const Color(0xFF9E9E9E),
+              fontSize: 11,
             ),
           ),
-          const SizedBox(height: 12),
-          for (final key in _exampleKeys) ...[
-            _ExampleChip(text: key.tr(), onTap: () => onExampleTap(key.tr())),
-            const SizedBox(height: 8),
-          ],
+          const SizedBox(height: 10),
+          if (isAccepted)
+            Row(
+              children: [
+                const Icon(Icons.check_circle_rounded,
+                    color: Color(0xFF00E676), size: 16),
+                const SizedBox(width: 6),
+                Text(
+                  'Vazifa jadvalga qo\'shildi',
+                  style: AppTextStyles.caption.copyWith(
+                    color: const Color(0xFF00E676),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            )
+          else if (isDeclined)
+            Text(
+              'Bekor qilindi',
+              style: AppTextStyles.caption.copyWith(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.w600,
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'Qabul qilish',
+                    icon: Icons.check_rounded,
+                    onPressed: onAccept,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: onDecline,
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                  ),
+                  child: const Text(
+                    'Bekor qilish',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
   }
 }
 
-class _ExampleChip extends StatelessWidget {
-  const _ExampleChip({required this.text, required this.onTap});
-
-  final String text;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.north_east_rounded, size: 15, color: colors.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                text,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: colors.textPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SchedulePreview extends StatelessWidget {
-  const _SchedulePreview({
-    required this.plan,
-    required this.editing,
-    required this.onRemove,
+class _FormattedAiText extends StatelessWidget {
+  const _FormattedAiText({
+    required this.text,
+    required this.style,
+    required this.cyanColor,
   });
 
-  final List<PlannedTask> plan;
-  final bool editing;
-  final ValueChanged<int> onRemove;
-
-  /// Builds the preview rows, inserting a day header before each new date when
-  /// the plan spans multiple days.
-  List<Widget> _scheduleItems(AppColorScheme colors) {
-    final multiDay = plan.map((t) => _dayKey(t.date)).toSet().length > 1;
-    final items = <Widget>[];
-    String? prevKey;
-    for (var i = 0; i < plan.length; i++) {
-      final task = plan[i];
-      final key = _dayKey(task.date);
-      if (multiDay && key != prevKey) {
-        if (items.isNotEmpty) items.add(const SizedBox(height: 18));
-        items.add(_DayHeader(label: _dayLabel(task.date)));
-        items.add(const SizedBox(height: 10));
-        prevKey = key;
-      } else if (i > 0) {
-        items.add(Divider(height: 24, color: colors.border));
-      }
-      items.add(
-        _PreviewRow(task: task, editing: editing, onRemove: () => onRemove(i)),
-      );
-    }
-    return items;
-  }
-
-  static String _dayKey(DateTime d) => '${d.year}-${d.month}-${d.day}';
-
-  static String _dayLabel(DateTime date) {
-    final today = DateUtils.dateOnly(DateTime.now());
-    final d = DateUtils.dateOnly(date);
-    final diff = d.difference(today).inDays;
-    if (diff == 0) return 'aiplan.day_today'.tr();
-    if (diff == 1) return 'aiplan.day_tomorrow'.tr();
-    const wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const mo = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${wd[d.weekday - 1]}, ${mo[d.month - 1]} ${d.day}';
-  }
+  final String text;
+  final TextStyle style;
+  final Color cyanColor;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
+    final lines = text.split('\n');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            // Flexible so a long title wraps instead of pushing the chip off-screen.
-            Flexible(
-              child: Text(
-                'aiplan.schedule_title'.tr(),
-                style: AppTextStyles.h2.copyWith(color: colors.textPrimary),
-              ),
-            ),
-            const SizedBox(width: 10),
-            AppChip(
-              label: 'aiplan.suggested'.tr(),
-              fill: AppColors.studyFill,
-              foreground: AppColors.studyText,
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        AppCard(
-          padding: const EdgeInsets.all(18),
-          child: Column(
+      children: lines.map((line) {
+        final trimmed = line.trim();
+        final isBullet = trimmed.startsWith('•') || trimmed.startsWith('-');
+        final content = isBullet ? trimmed.substring(1).trim() : trimmed;
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: 4, left: isBullet ? 6 : 0),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'aiplan.schedule_intro'.tr(),
-                style: AppTextStyles.body.copyWith(
-                  color: colors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              const SizedBox(height: 18),
-              ..._scheduleItems(colors),
-              if (plan.isEmpty)
+              if (isBullet)
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    'aiplan.no_tasks_left'.tr(),
-                    style: AppTextStyles.bodySmall.copyWith(
-                      color: colors.textTertiary,
+                  padding: const EdgeInsets.only(right: 6, top: 6),
+                  child: Container(
+                    width: 5,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: cyanColor,
+                      shape: BoxShape.circle,
                     ),
                   ),
                 ),
+              Expanded(
+                child: _RichTextBold(
+                  text: content,
+                  style: style,
+                  cyanColor: cyanColor,
+                ),
+              ),
             ],
           ),
-        ),
-      ],
+        );
+      }).toList(),
     );
   }
 }
 
-class _PreviewRow extends StatelessWidget {
-  const _PreviewRow({
+class _RichTextBold extends StatelessWidget {
+  const _RichTextBold({
+    required this.text,
+    required this.style,
+    required this.cyanColor,
+  });
+
+  final String text;
+  final TextStyle style;
+  final Color cyanColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final parts = text.split('**');
+    if (parts.length == 1) {
+      return Text(text, style: style);
+    }
+
+    final spans = <TextSpan>[];
+    for (int i = 0; i < parts.length; i++) {
+      if (parts[i].isEmpty) continue;
+      spans.add(
+        TextSpan(
+          text: parts[i],
+          style: i.isOdd
+              ? style.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: cyanColor,
+                )
+              : style,
+        ),
+      );
+    }
+    return RichText(text: TextSpan(children: spans));
+  }
+}
+
+class _TypingIndicatorBubble extends StatelessWidget {
+  const _TypingIndicatorBubble();
+
+  @override
+  Widget build(BuildContext context) {
+    const cyan = Color(0xFF00E5FF);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.auto_awesome,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151A27),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: cyan.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: cyan,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Yozyapti...',
+                  style: AppTextStyles.caption.copyWith(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _UserMessageBubble extends StatelessWidget {
+  const _UserMessageBubble({required this.message});
+
+  final _AiChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    const cyan = Color(0xFF00E5FF);
+    const purple = Color(0xFFAA00FF);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          const SizedBox(width: 48),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: cyan.withValues(alpha: 0.15),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(18),
+                  topRight: Radius.circular(18),
+                  bottomLeft: Radius.circular(18),
+                ),
+                border: Border.all(
+                  color: purple.withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    message.text,
+                    style: AppTextStyles.body.copyWith(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    message.time,
+                    style: AppTextStyles.caption.copyWith(
+                      color: const Color(0xFF9E9E9E),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Section 3: Chat Input Component ─────────────────────────────────────────
+class _ChatInputField extends StatelessWidget {
+  const _ChatInputField({
+    required this.controller,
+    required this.isThinking,
+    required this.onSend,
+  });
+
+  final TextEditingController controller;
+  final bool isThinking;
+  final VoidCallback onSend;
+
+  @override
+  Widget build(BuildContext context) {
+    const cyan = Color(0xFF00E5FF);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF151A27),
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(
+                  color: cyan.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: TextField(
+                controller: controller,
+                enabled: !isThinking,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: const InputDecoration(
+                  hintText: 'Xabar yozing...',
+                  hintStyle: TextStyle(color: Color(0xFF9E9E9E), fontSize: 14),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                ),
+                onSubmitted: (_) => onSend(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: isThinking ? null : onSend,
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: cyan.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: isThinking
+                  ? const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── AI Generated Plan Block ────────────────────────────────────────────────
+class _AiGeneratedResult extends StatelessWidget {
+  const _AiGeneratedResult({
+    required this.state,
+    required this.editing,
+    required this.onAccept,
+    required this.onToggleEdit,
+    required this.onRemove,
+    required this.onRegenerate,
+  });
+
+  final AiPlanState state;
+  final bool editing;
+  final VoidCallback onAccept;
+  final VoidCallback onToggleEdit;
+  final ValueChanged<int> onRemove;
+  final VoidCallback onRegenerate;
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.status == AiPlanStatus.loading) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF151A27),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
+          children: [
+            const FlowaLoading(size: 32),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                state.progressText ?? 'aiplan.crafting'.tr(),
+                style: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state.status == AiPlanStatus.ready && state.plan.isNotEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF151A27),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.3),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'aiplan.schedule_title'.tr(),
+              style: AppTextStyles.h3.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: 12),
+            for (int i = 0; i < state.plan.length; i++) ...[
+              _PlannedTaskRow(
+                task: state.plan[i],
+                editing: editing,
+                onRemove: () => onRemove(i),
+              ),
+              if (i < state.plan.length - 1)
+                const Divider(height: 16, color: Color(0xFF262F45)),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'aiplan.accept_all'.tr(),
+                    icon: Icons.check_circle_outline_rounded,
+                    loading: state.accepting,
+                    onPressed: state.accepting ? null : onAccept,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(
+                    editing ? Icons.check_rounded : Icons.edit_outlined,
+                    color: const Color(0xFF00E5FF),
+                  ),
+                  onPressed: onToggleEdit,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh_rounded, color: Color(0xFF9E9E9E)),
+                  onPressed: onRegenerate,
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+class _PlannedTaskRow extends StatelessWidget {
+  const _PlannedTaskRow({
     required this.task,
     required this.editing,
     required this.onRemove,
@@ -523,320 +1077,37 @@ class _PreviewRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 68,
+          width: 50,
           child: Text(
-            formatHm12(task.startMinute),
-            style: AppTextStyles.bodySmall.copyWith(
-              color: colors.textSecondary,
-            ),
+            formatHm24(task.startMinute),
+            style: const TextStyle(color: Color(0xFF00E5FF), fontSize: 12),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 task.title,
-                style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
+                style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
-              const SizedBox(height: 4),
               Text(
-                '${formatDuration(task.durationMinutes)} • '
-                '${task.category.label}',
-                style: AppTextStyles.caption.copyWith(
-                  color: colors.textSecondary,
-                ),
+                '${task.durationMinutes} min • ${task.category.label}',
+                style: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 11),
               ),
-              if (task.reasoning != null && task.reasoning!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 5),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.lightbulb_outline_rounded,
-                        size: 12,
-                        color: colors.primary.withValues(alpha: 0.7),
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          task.reasoning!,
-                          style: AppTextStyles.caption.copyWith(
-                            color: colors.textTertiary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
             ],
           ),
         ),
-        const SizedBox(width: 8),
         if (editing)
-          GestureDetector(
-            onTap: onRemove,
-            child: Icon(
-              Icons.remove_circle_outline_rounded,
-              size: 22,
-              color: colors.textSecondary,
-            ),
-          )
-        else
-          Icon(Icons.drag_handle_rounded, size: 22, color: colors.textTertiary),
+          IconButton(
+            icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 18),
+            onPressed: onRemove,
+          ),
       ],
-    );
-  }
-}
-
-class _DayHeader extends StatelessWidget {
-  const _DayHeader({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Row(
-      children: [
-        Icon(Icons.event_rounded, size: 16, color: colors.primary),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: AppTextStyles.label.copyWith(color: colors.textPrimary),
-        ),
-      ],
-    );
-  }
-}
-
-class _Actions extends StatelessWidget {
-  const _Actions({
-    required this.accepting,
-    required this.canAccept,
-    required this.editing,
-    required this.onAccept,
-    required this.onEdit,
-    required this.onRegenerate,
-  });
-
-  final bool accepting;
-  final bool canAccept;
-  final bool editing;
-  final VoidCallback onAccept;
-  final VoidCallback onEdit;
-  final VoidCallback onRegenerate;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AppButton(
-          label: 'aiplan.accept_all'.tr(),
-          icon: Icons.check_circle_outline_rounded,
-          loading: accepting,
-          onPressed: (accepting || !canAccept) ? null : onAccept,
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: AppButton(
-                label: editing ? 'common.done'.tr() : 'aiplan.edit'.tr(),
-                icon: Icons.edit_outlined,
-                variant: AppButtonVariant.secondary,
-                onPressed: accepting ? null : onEdit,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: AppButton(
-                label: 'aiplan.regenerate'.tr(),
-                icon: Icons.refresh_rounded,
-                variant: AppButtonVariant.secondary,
-                onPressed: accepting ? null : onRegenerate,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// Small line under the input showing how many free AI plans remain today.
-class _QuotaHint extends StatelessWidget {
-  const _QuotaHint({required this.remaining});
-
-  final int remaining;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Row(
-      children: [
-        Icon(Icons.bolt_outlined, size: 15, color: colors.textSecondary),
-        const SizedBox(width: 6),
-        Text(
-          'premium.ai_quota_left'.tr(
-            namedArgs: {
-              'remaining': '$remaining',
-              'total': '$kFreeAiPlansPerDay',
-            },
-          ),
-          style: AppTextStyles.caption.copyWith(color: colors.textSecondary),
-        ),
-      ],
-    );
-  }
-}
-
-/// Gentle "you've used today's free AI plans" card with a calm upgrade path.
-class _LimitReachedCard extends StatelessWidget {
-  const _LimitReachedCard({required this.onUpgrade});
-
-  final VoidCallback onUpgrade;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppCard(
-      color: kPremiumGoldSoft,
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.workspace_premium_rounded,
-            size: 36,
-            color: kPremiumGold,
-          ),
-          const SizedBox(height: 14),
-          Text(
-            kAiLimitMessage.tr(),
-            textAlign: TextAlign.center,
-            style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'premium.ai_limit_body'.tr(),
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodySmall.copyWith(
-              color: colors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 18),
-          AppButton(
-            label: 'premium.start'.tr(),
-            icon: Icons.spa_rounded,
-            expand: false,
-            onPressed: onUpgrade,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LoadingState extends StatelessWidget {
-  const _LoadingState({required this.colors, this.progressText});
-
-  final AppColorScheme colors;
-  final String? progressText;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: 36),
-      child: Column(
-        children: [
-          const FlowaLoading(size: 72),
-          const SizedBox(height: 18),
-          Text(
-            progressText ?? 'aiplan.crafting'.tr(),
-            style: AppTextStyles.body.copyWith(color: colors.textSecondary),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppCard(
-      padding: const EdgeInsets.all(22),
-      child: Column(
-        children: [
-          Icon(Icons.cloud_off_rounded, size: 40, color: colors.textTertiary),
-          const SizedBox(height: 14),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body.copyWith(color: colors.textSecondary),
-          ),
-          const SizedBox(height: 18),
-          AppButton(
-            label: 'common.retry'.tr(),
-            icon: Icons.refresh_rounded,
-            expand: false,
-            onPressed: onRetry,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WarningsCard extends StatelessWidget {
-  const _WarningsCard({required this.warnings});
-
-  final List<String> warnings;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      color: AppColors.personalFill,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.personalText),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'aiplan.warnings_title'.tr(),
-                  style: AppTextStyles.label.copyWith(color: AppColors.personalText),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          for (var i = 0; i < warnings.length; i++) ...[
-            Text(
-              warnings[i],
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.personalText),
-            ),
-            if (i < warnings.length - 1) const SizedBox(height: 6),
-          ],
-        ],
-      ),
     );
   }
 }

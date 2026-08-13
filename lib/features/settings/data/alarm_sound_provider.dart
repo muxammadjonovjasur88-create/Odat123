@@ -8,14 +8,14 @@ class AlarmSoundNotifier extends Notifier<String> {
   String build() {
     // Start with the default and load the saved value asynchronously.
     _load();
-    return 'assets/sounds/alarm.wav';
+    return 'system_alarm';
   }
 
   Future<void> _load() async {
     final box = await Hive.openBox('flowa_settings');
     final saved = box.get(_key) as String?;
     if (saved != null && saved.isNotEmpty) {
-      state = saved;
+      state = saved == 'assets/sounds/alarm.wav' ? 'system_alarm' : saved;
     }
   }
 

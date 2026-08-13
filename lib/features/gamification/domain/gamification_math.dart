@@ -10,8 +10,8 @@ import 'package:flutter/material.dart' show DateUtils;
 abstract final class GamificationMath {
   GamificationMath._();
 
-  static const int finishedSessionBonus = 10;
-  static const int unbrokenBlockingBonus = 10;
+  static const double finishedSessionBonusPercent = 0.3;
+  static const double unbrokenBlockingBonusPercent = 0.3;
   static const int perStreakDay = 5;
   static const int maxStreakBonus = 50;
   static const double minCompletionPercentForPoints = 0.1;
@@ -21,8 +21,19 @@ abstract final class GamificationMath {
       (streak * perStreakDay).clamp(0, maxStreakBonus);
 
   /// Bonus earned by completing a single session.
-  static int sessionBonus({required bool blockingEngaged}) =>
-      finishedSessionBonus + (blockingEngaged ? unbrokenBlockingBonus : 0);
+  ///
+  /// This is proportional to the task's base point value, so short tasks do
+  /// not get a larger fixed bonus than longer tasks.
+  static int sessionBonus({
+    required int taskPoints,
+    required bool blockingEngaged,
+  }) {
+    final baseBonus = (taskPoints * finishedSessionBonusPercent).round();
+    final blockBonus = blockingEngaged
+        ? (taskPoints * unbrokenBlockingBonusPercent).round()
+        : 0;
+    return baseBonus + blockBonus;
+  }
 
   /// Total points for a day: base rate + accumulated session bonuses + the
   /// consistency (streak) bonus.
@@ -83,5 +94,22 @@ abstract final class GamificationMath {
     final yesterday = t.subtract(const Duration(days: 1));
     if (last == yesterday) return current + 1; // consecutive day
     return 1; // a day was missed → start over (today counts)
+  }
+
+  /// Preview helper: estimates the **base** points a task will award when
+  /// fully completed with 100 % integrity — i.e. `durationMinutes * 1 pt/min`.
+  ///
+  /// This intentionally excludes runtime-only bonuses (sessionBonus,
+  /// streakBonus) because those depend on dynamic state unknown at
+  /// task-creation time. Pass [streak] to also show the streak bonus.
+  ///
+  /// Formula mirrors [Task.pointsPerMinute] and [proportionalPoints] at 100 %
+  /// completion so the value shown is always consistent with actual awarding.
+  static int previewPoints({
+    required int durationMinutes,
+    int streak = 0,
+  }) {
+    final base = durationMinutes.clamp(1, 600); // pointsPerMinute = 1
+    return base + streakBonus(streak);
   }
 }

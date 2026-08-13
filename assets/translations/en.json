@@ -6,10 +6,18 @@
     "cancel": "Cancel",
     "save": "Save",
     "done": "Done",
-    "retry": "Try Again",
+    "retry": "Retry",
     "pts": "pts",
-    "days_streak": "{count} days streak"
+    "days_streak": "{count}-day streak"
   },
+  "nav": {
+    "dashboard": "Dashboard",
+    "note": "Notes",
+    "ai": "AI",
+    "leaderboard": "Leaderboard",
+    "profile": "Profile"
+  },
+  "nav_note": "Notes",
   "language": {
     "title": "Language",
     "english": "English",
@@ -37,6 +45,7 @@
     "tooltip_weekly": "Weekly view",
     "load_error": "We couldn't load your plan.",
     "progress": "PROGRESS",
+    "daily_progress": "Daily Progress",
     "focus_ritual": "Focus Ritual",
     "progress_message": "You're making beautiful progress today. {done} out of {total} tasks are complete. Stay intentional.",
     "progress_message_mixed": "Great effort today! {done} tasks fully complete, {partial} partially done — out of {total}. Keep going!",
@@ -46,8 +55,14 @@
     "empty_title": "No goals yet — let's plan your day",
     "empty_body": "Every intentional ritual begins with a single step. Use our AI guide to curate your day or set your intentions manually.",
     "add_manually": "Add Manually",
-    "ask_ai": "Ask AI"
+    "ask_ai": "Ask AI",
+    "active_task_label": "NOW IN PROGRESS",
+    "active_task_done": "COMPLETED",
+    "active_task_left": "left"
   },
+  "quest_running": "Running",
+  "quest_reading": "Reading",
+  "daily_quests_title": "Daily Quests",
   "focus": {
     "current_task": "CURRENT TASK",
     "focusing": "Focusing",
@@ -65,6 +80,8 @@
     "begin_now": "Begin now",
     "end": "End",
     "reset": "Reset",
+    "subtract_5m": "-5 min",
+    "add_5m": "+5 min",
     "nothing_title": "Nothing to focus on yet",
     "nothing_body": "Plan a task on your calendar, then come back to begin a focus session.",
     "plan_task": "Plan a Task",
@@ -91,7 +108,7 @@
   },
   "settings": {
     "title": "Settings",
-    "member_default": "Flowa Member",
+    "member_default": "Odat Member",
     "member_since": "Zen Member since {year}",
     "experience": "Experience",
     "notifications": "Notifications",
@@ -110,8 +127,8 @@
     "logout": "Log out of Focus"
   },
   "premium": {
-    "title": "Flowa Premium",
-    "subtitle": "A calmer, deeper practice — unlock the full Flowa, gently.",
+    "title": "Odat Premium",
+    "subtitle": "A calmer, deeper practice — unlock the full Odat, gently.",
     "benefit_ai_title": "Unlimited AI planning",
     "benefit_ai_sub": "Plan as many goals as you like — no daily limit.",
     "benefit_stats_title": "Deep monthly stats",
@@ -221,7 +238,13 @@
     "points_earned": "Points earned",
     "reps": "{done}/{total} reps",
     "total_reps": "Total reps",
-    "total_time": "Total time"
+    "total_time": "Total time",
+    "mood_sheet_title": "How are you feeling after this session?",
+    "mood_sheet_subtitle": "Pick one — it only takes 2 seconds",
+    "mood_great": "Great",
+    "mood_hard": "It was tough",
+    "mood_missed": "Got distracted",
+    "mood_skip": "Skip"
   },
   "progress": {
     "growth_circle": "Growth Circle",
@@ -291,7 +314,7 @@
     "error_save": "We couldn't save your profile. Please try again",
     "skip": "Skip",
     "title": "Tell us about yourself",
-    "subtitle": "A few gentle touches to make Flowa yours",
+    "subtitle": "A few gentle touches to make Odat yours",
     "your_avatar": "Your Avatar",
     "avatar_hint": "Choose a default or upload a photo",
     "name_label": "What should we call you?",
@@ -304,7 +327,7 @@
     "lets_go": "Let's Go",
     "change_later": "You can change these settings anytime in your profile.",
     "choose_avatar": "Choose your avatar",
-    "premium_avatar_locked": "Premium avatar — unlock with Flowa Premium 🌿"
+    "premium_avatar_locked": "Premium avatar — unlock with Odat Premium 🌿"
   },
   "signin": {
     "error_empty_phone": "Please enter your phone number",
@@ -313,6 +336,7 @@
     "mobile_number": "Mobile number",
     "or_log_in_with": "Or continue with",
     "google": "Continue with Google",
+    "telegram": "Continue with Telegram",
     "or_phone": "or continue with phone",
     "google_error": "Google sign-in didn't work. Please try again.",
     "privacy": "We'll only use your Google account to sign you in securely."
@@ -343,6 +367,7 @@
     "goal_title": "Goal Title",
     "goal_title_hint": "What will you focus on?",
     "category": "Category",
+    "focus_mode": "Focus Type",
     "date": "Date",
     "start": "Start",
     "set_end_time": "Set an end time",
@@ -380,7 +405,11 @@
     "duration_until_label": "Until when is your goal?",
     "duration_end_date": "End date",
     "duration_pick_date": "Pick a date",
-    "duration_days_note": "Goal spans {count} days."
+    "duration_days_note": "Goal spans {count} days.",
+    "mood_confirmation_title": "Confirm with mood",
+    "mood_confirmation_desc": "We'll ask for your mood at the scheduled time (😊/😐/😔)",
+    "mood_confirmation_hint": "Mood check-in instead of photo proof",
+    "points_preview": "✅ Upon completion: +{points} pts"
   },
   "weekly": {
     "overview": "Weekly Overview",
@@ -391,6 +420,9 @@
     "consistency_peak": "Consistency Peak",
     "consistency_body": "You've hit {percent}% of your focus goals this week.",
     "nothing_planned": "Nothing planned for this day."
+  },
+  "insights": {
+    "weekly_title": "Weekly insight"
   },
   "profile": {
     "zen_master_level": "Zen Master · Level {level}",
@@ -488,14 +520,14 @@
     "starts_in_one": "Your task '{title}' starts in {count} minute.",
     "starts_in_many": "Your task '{title}' starts in {count} minutes.",
     "sanctuary_mode": "DIGITAL SANCTUARY MODE",
-    "sanctuary_body": "Flowa will gently help you stay focused.",
+    "sanctuary_body": "Odat will gently help you stay focused.",
     "im_ready": "I'm ready",
     "not_now": "Not now"
   },
   "perm": {
     "title": "Permissions",
     "manage_desc": "Manage all necessary permissions",
-    "intro": "To ensure Flowa functions properly, it requires a few permissions. We only use them to enhance your experience.",
+    "intro": "To ensure Odat functions properly, it requires a few permissions. We only use them to enhance your experience.",
     "notification_title": "Notifications",
     "notification_desc": "To deliver timely alerts and task reminders.",
     "exact_alarm_title": "Exact Alarms",
@@ -505,7 +537,7 @@
     "audio_title": "Audio Access",
     "audio_desc": "To pick custom music for your alarms.",
     "accessibility_title": "Accessibility — Focus Blocking",
-    "accessibility_desc": "The main switch. Lets Flowa notice the instant a blocked app opens so it can pause it. Enable \"Flowa Focus Blocking\" in the list. Flowa never reads screen content.",
+    "accessibility_desc": "The main switch. Lets Odat notice the instant a blocked app opens so it can pause it. Enable \"Odat Focus Blocking\" in the list. Odat never reads screen content.",
     "overlay_title": "Display over other apps",
     "overlay_desc": "Allows the calm \"Stay focused\" screen to appear on top of a blocked app.",
     "miui_popup_title": "MIUI — Pop-up in background",

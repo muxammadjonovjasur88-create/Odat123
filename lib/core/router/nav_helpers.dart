@@ -7,12 +7,14 @@ import 'app_routes.dart';
 /// Maps a bottom-nav tab to its home route.
 String routeForTab(AppNavTab tab) {
   switch (tab) {
-    case AppNavTab.calendar:
+    case AppNavTab.dashboard:
       return AppRoutes.dailyPlan;
-    case AppNavTab.focus:
-      return AppRoutes.deepFocus;
-    case AppNavTab.stats:
-      return AppRoutes.progress;
+    case AppNavTab.zametka:
+      return AppRoutes.eslatma;
+    case AppNavTab.ai:
+      return AppRoutes.aiPlanner;
+    case AppNavTab.leaderboard:
+      return AppRoutes.leaderboard;
     case AppNavTab.profile:
       return AppRoutes.profile;
   }

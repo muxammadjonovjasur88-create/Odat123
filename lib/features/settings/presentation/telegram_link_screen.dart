@@ -192,7 +192,7 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
               _StepTile(
                 step: '1',
                 colors: colors,
-                text: 'Telegram\'da @FlowaBuddy_bot ni toping',
+                text: 'Telegram\'da @flowwabuddybot ni toping',
               ),
               const SizedBox(height: 10),
               _StepTile(
@@ -378,7 +378,7 @@ class _StepTile extends StatelessWidget {
                 style:
                     AppTextStyles.body.copyWith(color: colors.textPrimary),
               ),
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
         ),

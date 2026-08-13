@@ -86,10 +86,8 @@ class _StartingSoonWatcherState extends ConsumerState<StartingSoonWatcher> {
         notifications.scheduleTaskReminder(task);
       }
 
-      // 2. Surface the Starting Soon screen as the task gets close.
-      if (minutesUntil >= 0 &&
-          minutesUntil <= _leadMinutes &&
-          !_armed.contains(task.id)) {
+      // 2. Surface the Starting Soon screen as the task gets close, or if it's already active.
+      if (minutesUntil <= _leadMinutes && !_armed.contains(task.id)) {
         _armed.add(task.id);
         context.push(AppRoutes.startingSoon, extra: task);
         break; // one prompt at a time

@@ -56,9 +56,22 @@ dependencies:
   http: ^1.2.2
   easy_localization: ^3.0.7
   camera: ^0.12.0+2
+  google_mlkit_pose_detection: ^0.13.0
+  video_player: ^2.9.0
   path_provider: ^2.1.6
   file_picker: ^11.0.2
   permission_handler: ^12.0.3
+  wakelock_plus: ^1.2.10
+  uuid: ^4.5.1
+  intl: ^0.20.2
+  geolocator: ^14.0.2
+  geocoding: ^5.0.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  flutter_background_service: ^5.1.0
+  flutter_compass: ^0.8.0
+  url_launcher: ^6.3.1
+  pdfx: ^2.9.2
 
 # path_provider_android 2.3.x switched to a native JNI implementation, which
 # adds a flaky CMake/NDK build that locks files on Windows
@@ -70,7 +83,7 @@ dependency_overrides:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
+  fake_cloud_firestore: ^4.1.1
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -95,13 +108,15 @@ flutter_launcher_icons:
 
 # Native splash — run: dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#F2EFE9"
+  color: "#000000"
+  color_dark: "#000000"
   image: "assets/icon/flowa_icon.png"
-  color_dark: "#181C18"
   image_dark: "assets/icon/flowa_icon.png"
   android_12:
-    color: "#F2EFE9"
+    color: "#000000"
+    color_dark: "#000000"
     image: "assets/icon/flowa_icon.png"
+    image_dark: "assets/icon/flowa_icon.png"
 
 flutter:
   uses-material-design: true
@@ -113,6 +128,8 @@ flutter:
     - assets/sounds/
     - assets/icon/
     - assets/fonts/
+    - assets/intro/
+    - assets/intro/intro.mp4
 
   fonts:
     - family: Poppins

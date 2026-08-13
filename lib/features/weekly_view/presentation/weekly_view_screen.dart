@@ -57,7 +57,7 @@ class WeeklyViewScreen extends ConsumerWidget {
         child: const Icon(Icons.add_rounded, size: 28),
       ),
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.calendar,
+        current: AppNavTab.dashboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
@@ -270,12 +270,24 @@ class _WeeklyTaskCard extends ConsumerWidget {
 
   final Task task;
 
-  Future<void> _toggle(WidgetRef ref) async {
+  Future<void> _toggle(BuildContext context, WidgetRef ref) async {
     final uid = ref.read(authStateProvider).asData?.value?.uid;
     if (uid == null) return;
+    final newCompleted = !task.isCompleted;
     await ref
         .read(taskRepositoryProvider)
-        .setCompleted(uid, task.id, !task.isCompleted);
+        .setCompleted(uid, task.id, newCompleted);
+    if (newCompleted && !task.pointsAwarded && context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('home.no_focus_note'.tr()),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+    }
   }
 
   @override
@@ -347,6 +359,17 @@ class _WeeklyTaskCard extends ConsumerWidget {
                         color: colors.textSecondary,
                       ),
                     ),
+                    if (done && !task.pointsAwarded) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'home.no_focus_note'.tr(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(
+                          color: colors.textTertiary,
+                        ),
+                      ),
+                    ],
                     if (task.hasReminder) ...[
                       const SizedBox(height: 10),
                       _ReminderRow(task: task),
@@ -356,7 +379,7 @@ class _WeeklyTaskCard extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               GestureDetector(
-                onTap: () => _toggle(ref),
+                onTap: () => _toggle(context, ref),
                 child: Container(
                   width: 28,
                   height: 28,

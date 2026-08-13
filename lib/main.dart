@@ -19,11 +19,21 @@ import 'core/theme/app_theme.dart';
 import 'features/deep_focus/data/focus_providers.dart';
 import 'features/deep_focus/data/focus_service.dart';
 import 'features/notifications/data/notification_service.dart';
+import 'features/reminders/domain/models/reminder.dart';
+import 'features/running/domain/services/running_background_service.dart';
 import 'features/streak/data/streak_repository.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
+  final stopwatch = Stopwatch()..start();
+  
+  void logTime(String step) {
+    debugPrint('🕒 [APP STARTUP] $step took: ${stopwatch.elapsedMilliseconds} ms');
+    stopwatch.reset();
+  }
+
   WidgetsFlutterBinding.ensureInitialized();
+  logTime('WidgetsFlutterBinding.ensureInitialized');
 
   // Debug-only: show the exception + stack ON SCREEN (scrollable) instead of the
   // default red screen, so an unexpected crash is diagnosable from a screenshot.
@@ -31,24 +41,44 @@ Future<void> main() async {
     ErrorWidget.builder = (details) => _CrashReport(details: details);
   }
 
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // To optimize cold start, we run independent initializations in parallel.
+  // Firebase, Supabase, Hive, and EasyLocalization do not depend on each other.
+  final firebaseFuture = Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  ).then((_) => logTime('Firebase.initializeApp (parallel)'));
 
-  // Supabase Storage (proof rasmlar uchun).
-  // SUPABASE_ANON_KEY — bu Supabase dashboard > Project Settings > API >
-  // "anon public" qatoridagi kalit. Quyidagi String'ni shu qiymat bilan almashtiring.
-  await Supabase.initialize(
+  final supabaseFuture = Supabase.initialize(
     url: 'https://xeymuoezdxhjivilqgtu.supabase.co',
-    // publishableKey = Supabase dashboard > Project Settings > API > "anon public" kalit
-    // MUHIM: Bu yerga o'z kalit qiymatini yozing:
     publishableKey: 'sb_publishable_-arZuPuO6K3oxXHt0mNZnQ_1wHRCiso',
-  );
+  ).then((_) => logTime('Supabase.initialize (parallel)'));
 
+  final hiveAndLocaleFuture = () async {
+    await Hive.initFlutter();
+    logTime('Hive.initFlutter (parallel)');
+    
+    if (!Hive.isAdapterRegistered(10)) Hive.registerAdapter(RepeatTypeAdapter());
+    if (!Hive.isAdapterRegistered(11)) Hive.registerAdapter(ReminderAdapter());
+    
+    await LocaleStore.init();
+    logTime('LocaleStore.init (parallel)');
+  }();
 
-  // Local storage for cached/offline state.
-  await Hive.initFlutter();
-  // Remembered app language (seeds the start locale below).
-  await LocaleStore.init();
-  await EasyLocalization.ensureInitialized();
+  final easyLocalizationFuture = EasyLocalization.ensureInitialized()
+      .then((_) => logTime('EasyLocalization.ensureInitialized (parallel)'));
+
+  await Future.wait([
+    firebaseFuture,
+    supabaseFuture,
+    hiveAndLocaleFuture,
+    easyLocalizationFuture,
+  ]);
+  logTime('Parallel init complete');
+
+  try {
+    await RunningBackgroundService.initialize();
+  } catch (e) {
+    debugPrint('RunningBackgroundService init error: $e');
+  }
 
   runApp(
     EasyLocalization(
@@ -63,6 +93,7 @@ Future<void> main() async {
       child: const ProviderScope(child: FlowaApp()),
     ),
   );
+  logTime('runApp (end of main)');
 }
 
 /// A scrollable on-screen crash report (debug only). Deliberately built from
@@ -180,13 +211,13 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
   }
 
   /// Runs the once-per-open housekeeping that needs a signed-in user.
-  void _onAuthReady() {
+  Future<void> _onAuthReady() async {
     final uid = ref.read(authStateProvider).asData?.value?.uid;
     if (uid != null) {
-      ref.read(notificationServiceProvider).setupFcm(uid);
+      await ref.read(notificationServiceProvider).setupFcm(uid);
     }
-    _processPendingCompletion();
-    _refreshStreak();
+    await _processPendingCompletion();
+    await _refreshStreak();
   }
 
   Future<void> _processPendingCompletion() async {

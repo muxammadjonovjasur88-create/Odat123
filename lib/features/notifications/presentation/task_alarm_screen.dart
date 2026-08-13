@@ -54,10 +54,18 @@ class _TaskAlarmScreenState extends State<TaskAlarmScreen>
   Future<void> _setupAlarm() async {
     try {
       final box = await Hive.openBox('flowa_settings');
-      final soundPath = box.get('task_alarm_sound', defaultValue: 'assets/sounds/alarm.wav') as String;
+      final rawSoundPath = box.get('task_alarm_sound', defaultValue: 'system_alarm') as String;
+      
+      final soundPath = rawSoundPath == 'assets/sounds/alarm.wav' 
+          ? 'system_alarm' 
+          : rawSoundPath;
 
-      if (soundPath.startsWith('assets/')) {
+      if (soundPath == 'system_alarm') {
+        await _audioPlayer.setUrl('content://settings/system/alarm_alert');
+      } else if (soundPath.startsWith('assets/')) {
         await _audioPlayer.setAsset(soundPath);
+      } else if (soundPath.startsWith('file://')) {
+        await _audioPlayer.setUrl(soundPath);
       } else {
         await _audioPlayer.setFilePath(soundPath);
       }
@@ -66,9 +74,9 @@ class _TaskAlarmScreenState extends State<TaskAlarmScreen>
       await _audioPlayer.play();
     } catch (e) {
       debugPrint('Error playing alarm sound: $e');
-      // Fallback to default
+      // Fallback
       try {
-        await _audioPlayer.setAsset('assets/sounds/alarm.wav');
+        await _audioPlayer.setUrl('content://settings/system/alarm_alert');
         await _audioPlayer.setLoopMode(LoopMode.one);
         await _audioPlayer.play();
       } catch (_) {}
@@ -124,10 +132,10 @@ class _TaskAlarmScreenState extends State<TaskAlarmScreen>
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFF4E4E).withOpacity(0.1),
+                    color: const Color(0xFFFF4E4E).withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: const Color(0xFFFF4E4E).withOpacity(0.3),
+                      color: const Color(0xFFFF4E4E).withValues(alpha: 0.3),
                       width: 2,
                     ),
                   ),
@@ -155,10 +163,10 @@ class _TaskAlarmScreenState extends State<TaskAlarmScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFB300).withOpacity(0.15),
+                      color: const Color(0xFFFFB300).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: const Color(0xFFFFB300).withOpacity(0.4),
+                        color: const Color(0xFFFFB300).withValues(alpha: 0.4),
                       ),
                     ),
                     child: Text(
@@ -190,7 +198,7 @@ class _TaskAlarmScreenState extends State<TaskAlarmScreen>
                     borderRadius: BorderRadius.circular(40),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFD32F2F).withOpacity(0.4),
+                        color: const Color(0xFFD32F2F).withValues(alpha: 0.4),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),

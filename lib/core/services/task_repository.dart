@@ -58,14 +58,26 @@ class TaskRepository {
     return snap.exists ? Task.fromDoc(snap) : null;
   }
 
+  /// Uses [SetOptions.merge] so the call is safe even if the task document
+  /// was deleted between scheduling and completion (e.g. user deleted task
+  /// mid-session). A plain `.update()` would throw [not-found] in that case.
   Future<void> setCompleted(String uid, String taskId, bool completed) =>
-      _col(uid).doc(taskId).update({'isCompleted': completed});
+      _col(uid).doc(taskId).set(
+        {'isCompleted': completed},
+        SetOptions(merge: true),
+      );
 
   /// Marks the task completed AND its points as awarded, in one write — the
   /// idempotency stamp used by [completeAndAward].
-  Future<void> markAwarded(String uid, String taskId) => _col(
-    uid,
-  ).doc(taskId).update({'isCompleted': true, 'pointsAwarded': true});
+  ///
+  /// Uses [SetOptions.merge] instead of `.update()` so the call succeeds even
+  /// when the task document no longer exists (avoids [not-found] exceptions
+  /// that would otherwise silently abort the entire point-award pipeline).
+  Future<void> markAwarded(String uid, String taskId) =>
+      _col(uid).doc(taskId).set(
+        {'isCompleted': true, 'pointsAwarded': true},
+        SetOptions(merge: true),
+      );
 
   /// Overwrites an existing task's editable fields (title, schedule, category,
   /// focus config, blocking, reminder) while preserving `createdAt`. Completion
@@ -76,13 +88,17 @@ class TaskRepository {
   /// Persists the focus-session completion ratio [percent] (0.0–1.0) without
   /// touching completion / awarded flags — safe to call from both the foreground
   /// and background completion paths.
+  ///
+  /// Uses [SetOptions.merge] so the write is safe even if the task document was
+  /// deleted (avoids [not-found] exceptions on background completion paths).
   Future<void> saveCompletionPercent(
     String uid,
     String taskId,
     double percent,
-  ) => _col(uid).doc(taskId).update({
-        'completionPercent': percent.clamp(0.0, 1.0),
-      });
+  ) => _col(uid).doc(taskId).set(
+        {'completionPercent': percent.clamp(0.0, 1.0)},
+        SetOptions(merge: true),
+      );
 
   Future<void> deleteTask(String uid, String taskId) =>
       _col(uid).doc(taskId).delete();

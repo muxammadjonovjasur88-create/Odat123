@@ -3,17 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/uzbekistan_regions.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/services/auth_repository.dart';
 import '../../../core/services/locale_store.dart';
+import '../../../core/services/region_controller.dart';
 import '../../../core/services/theme_mode_controller.dart';
 import '../../../core/services/user_repository.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../premium/data/premium_providers.dart';
 import '../../streak/data/streak_repository.dart';
-import 'alarm_sound_sheet.dart';
+import 'feedback_sheet.dart';
 
 /// Screen 19 — settings: profile summary, notifications, theme, blocking
 /// preferences, timer styles, and logout.
@@ -32,13 +35,7 @@ class SettingsScreen extends ConsumerWidget {
     final since = profile?.createdAt?.year ?? DateTime.now().year;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('settings.title'.tr()),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      appBar: const FlowaAppBar(showBackButton: true),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -54,25 +51,27 @@ class SettingsScreen extends ConsumerWidget {
                     photoUrl: profile?.photoUrl,
                   ),
                   const SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile?.name ?? 'settings.member_default'.tr(),
-                        style: AppTextStyles.h3.copyWith(
-                          color: colors.textPrimary,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          profile?.name ?? 'settings.member_default'.tr(),
+                          style: AppTextStyles.h3.copyWith(
+                            color: colors.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'settings.member_since'.tr(
-                          namedArgs: {'year': '$since'},
+                        const SizedBox(height: 2),
+                        Text(
+                          'settings.member_since'.tr(
+                            namedArgs: {'year': '$since'},
+                          ),
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: colors.textSecondary,
+                          ),
                         ),
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -135,10 +134,10 @@ class SettingsScreen extends ConsumerWidget {
                     endIndent: 16,
                   ),
                   _Row(
-                    icon: Icons.notifications_active_outlined,
-                    title: 'Budilnik ovozi',
-                    subtitle: 'Qo\'ng\'iroq musiqasini tanlang',
-                    onTap: () => showAlarmSoundSheet(context),
+                    icon: Icons.help_outline_rounded,
+                    title: 'Yordam va taklif',
+                    subtitle: 'Fikr-mulohaza yoki muammo haqida yozing',
+                    onTap: () => showFeedbackSheet(context),
                   ),
                 ],
               ),
@@ -164,30 +163,11 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ],
-            // --- Tasodifiy Isbot bo'limi ---
-            const SizedBox(height: 22),
-            _SectionLabel('Tasodifiy Isbot'),
-            AppCard(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Column(
-                children: [
-                  _Row(
-                    icon: Icons.people_outline_rounded,
-                    title: 'Do\'stlarning isbotlari',
-                    subtitle: 'Bugun do\'stlarim nima qildi?',
-                    onTap: () => context.push(AppRoutes.friendsProofs),
-                  ),
-                  Divider(
-                    height: 1,
-                    color: colors.border,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
-                  _TelegramRow(profile: profile),
-                ],
-              ),
-            ),
 
+            // --- Joylashuv bo'limi ---
+            const SizedBox(height: 22),
+            _SectionLabel('Joylashuv'),
+            _LocationSection(),
 
             const SizedBox(height: 28),
             Center(
@@ -201,57 +181,6 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-
-/// Sozlamalar ekranidagi Telegram qatori — holat ko'rsatib, ulash/uzish ekraniga o'tadi.
-class _TelegramRow extends ConsumerWidget {
-  const _TelegramRow({required this.profile});
-
-  final dynamic profile; // UserProfile?
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    final isLinked = (profile?.telegramChatId ?? '').isNotEmpty;
-    return InkWell(
-      onTap: () => context.push(AppRoutes.telegramLink),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Icon(Icons.telegram_rounded, size: 22, color: colors.primary),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Telegram ulanishi',
-                    style: AppTextStyles.label.copyWith(
-                      color: colors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isLinked
-                        ? 'Ulangan — do\'stlar Telegram xabar oladi'
-                        : 'Ulanmagan — bosib sozlang',
-                    style: AppTextStyles.caption.copyWith(
-                      color: isLinked
-                          ? const Color(0xFF22C55E)
-                          : colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
           ],
         ),
       ),
@@ -566,6 +495,203 @@ class _StreakDebugPanel extends ConsumerWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _LocationSection — viloyat ko'rsatish va yangilash (Settings ichida)
+// ---------------------------------------------------------------------------
+
+class _LocationSection extends ConsumerWidget {
+  const _LocationSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final regionState = ref.watch(regionControllerProvider);
+
+    final (String subtitle, Color subtitleColor) = switch (regionState.status) {
+      RegionStatus.initial => ('Aniqlanmagan', colors.textSecondary),
+      RegionStatus.loading => ('Aniqlanmoqda...', AppColors.cyanAccent),
+      RegionStatus.loaded => (
+          regionState.region?.displayName ?? "Noma'lum",
+          AppColors.cyanAccent,
+        ),
+      RegionStatus.unavailable => (
+          regionState.errorMessage ?? 'Viloyat aniqlanmadi',
+          colors.textSecondary,
+        ),
+    };
+
+    return AppCard(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        children: [
+          // Region display row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.location_on_rounded,
+                  size: 22,
+                  color: colors.primary,
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Sizning viloyatingiz',
+                        style: AppTextStyles.label.copyWith(
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          if (regionState.status == RegionStatus.loading)
+                            SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                color: AppColors.cyanAccent,
+                              ),
+                            )
+                          else
+                            Icon(
+                              regionState.status == RegionStatus.loaded
+                                  ? Icons.check_circle_rounded
+                                  : Icons.info_outline_rounded,
+                              size: 12,
+                              color: subtitleColor,
+                            ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              subtitle,
+                              style: AppTextStyles.caption.copyWith(
+                                color: subtitleColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Divider(height: 1, color: colors.border, indent: 16, endIndent: 16),
+          // Refresh GPS button
+          InkWell(
+            onTap: regionState.status == RegionStatus.loading
+                ? null
+                : () => ref
+                    .read(regionControllerProvider.notifier)
+                    .detectAndSave(),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(Icons.gps_fixed_rounded, size: 22, color: colors.primary),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Joylashuvni yangilash',
+                          style: AppTextStyles.label.copyWith(
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'GPS orqali viloyatni qayta aniqlash',
+                          style: AppTextStyles.caption.copyWith(
+                            color: colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+          // Manual region pick (fallback)
+          if (regionState.status == RegionStatus.unavailable) ...{
+            Divider(
+                height: 1, color: colors.border, indent: 16, endIndent: 16),
+            _ManualRegionRow(
+              onPick: (r) =>
+                  ref.read(regionControllerProvider.notifier).setManually(r),
+            ),
+          },
+        ],
+      ),
+    );
+  }
+}
+
+class _ManualRegionRow extends StatelessWidget {
+  const _ManualRegionRow({required this.onPick});
+
+  final ValueChanged<UzRegion> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return PopupMenuButton<UzRegion>(
+      onSelected: onPick,
+      color: const Color(0xFF1F2638),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      itemBuilder: (_) => UzRegion.values
+          .map(
+            (r) => PopupMenuItem(
+              value: r,
+              child: Text(
+                r.displayName,
+                style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+              ),
+            ),
+          )
+          .toList(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(Icons.list_rounded, size: 22, color: colors.primary),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Qo\'lda tanlash',
+                    style: AppTextStyles.label
+                        .copyWith(color: colors.textPrimary),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'GPS ishlamaganda ro\'yxatdan tanlang',
+                    style: AppTextStyles.caption
+                        .copyWith(color: colors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+          ],
+        ),
       ),
     );
   }

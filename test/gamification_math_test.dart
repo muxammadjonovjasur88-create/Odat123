@@ -46,9 +46,112 @@ void main() {
       );
     });
 
-    test('session bonus depends on blocking', () {
-      expect(GamificationMath.sessionBonus(blockingEngaged: true), 20);
-      expect(GamificationMath.sessionBonus(blockingEngaged: false), 10);
+    test('session bonus depends on blocking and scales with task points', () {
+      expect(
+        GamificationMath.sessionBonus(taskPoints: 20, blockingEngaged: true),
+        12,
+      );
+      expect(
+        GamificationMath.sessionBonus(taskPoints: 20, blockingEngaged: false),
+        6,
+      );
+    });
+    test('short tasks get smaller bonus than longer tasks', () {
+      expect(
+        GamificationMath.sessionBonus(taskPoints: 5, blockingEngaged: true),
+        4,
+      );
+      expect(
+        GamificationMath.sessionBonus(taskPoints: 10, blockingEngaged: true),
+        6,
+      );
+    });
+
+    test('10-minute task should earn at least as many total points as 5-minute task with same conditions', () {
+      final fiveMinutePoints = 5;
+      final tenMinutePoints = 10;
+
+      final fiveMinuteTotal = fiveMinutePoints +
+          GamificationMath.sessionBonus(taskPoints: fiveMinutePoints, blockingEngaged: true);
+      final tenMinuteTotal = tenMinutePoints +
+          GamificationMath.sessionBonus(taskPoints: tenMinutePoints, blockingEngaged: true);
+
+      expect(tenMinuteTotal, greaterThan(fiveMinuteTotal));
+    });
+
+    test('gained total with blocking: 5m should be less than 10m', () {
+      final fiveMinuteTotal = 5 +
+          GamificationMath.sessionBonus(taskPoints: 5, blockingEngaged: true);
+      final tenMinuteTotal = 10 +
+          GamificationMath.sessionBonus(taskPoints: 10, blockingEngaged: true);
+
+      expect(fiveMinuteTotal, 9);
+      expect(tenMinuteTotal, 16);
+      expect(tenMinuteTotal, greaterThan(fiveMinuteTotal));
+    });
+
+    test('gained total without blocking: 5m should be less than 10m', () {
+      final fiveMinuteTotal = 5 +
+          GamificationMath.sessionBonus(taskPoints: 5, blockingEngaged: false);
+      final tenMinuteTotal = 10 +
+          GamificationMath.sessionBonus(taskPoints: 10, blockingEngaged: false);
+
+      expect(fiveMinuteTotal, 7);
+      expect(tenMinuteTotal, 13);
+      expect(tenMinuteTotal, greaterThan(fiveMinuteTotal));
+    });
+
+    test('full duration score matrix is monotonic and matches expected values', () {
+      final durations = [1, 5, 10, 15, 25, 30, 45, 60, 90, 120, 180, 240, 300, 480];
+      final expectedNoBlocking = {
+        1: 1,
+        5: 7,
+        10: 13,
+        15: 20,
+        25: 33,
+        30: 39,
+        45: 59,
+        60: 78,
+        90: 117,
+        120: 156,
+        180: 234,
+        240: 312,
+        300: 390,
+        480: 624,
+      };
+      final expectedBlocking = {
+        1: 1,
+        5: 9,
+        10: 16,
+        15: 25,
+        25: 41,
+        30: 48,
+        45: 73,
+        60: 96,
+        90: 144,
+        120: 192,
+        180: 288,
+        240: 384,
+        300: 480,
+        480: 768,
+      };
+
+      int previousNoBlocking = 0;
+      int previousBlocking = 0;
+      for (final duration in durations) {
+        final noBlocking = duration +
+            GamificationMath.sessionBonus(taskPoints: duration, blockingEngaged: false);
+        final blocking = duration +
+            GamificationMath.sessionBonus(taskPoints: duration, blockingEngaged: true);
+
+        expect(noBlocking, expectedNoBlocking[duration]);
+        expect(blocking, expectedBlocking[duration]);
+        expect(noBlocking, greaterThanOrEqualTo(previousNoBlocking));
+        expect(blocking, greaterThanOrEqualTo(previousBlocking));
+
+        previousNoBlocking = noBlocking;
+        previousBlocking = blocking;
+      }
     });
   });
 

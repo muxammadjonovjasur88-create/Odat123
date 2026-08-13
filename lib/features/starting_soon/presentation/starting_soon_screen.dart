@@ -27,13 +27,16 @@ class StartingSoonScreen extends ConsumerWidget {
   }
 
   Future<void> _ready(BuildContext context, WidgetRef ref) async {
-    // Start the background session now (countdown + blocking + notification).
-    await beginBackgroundFocusNow(
-      service: ref.read(focusServiceProvider),
-      taskId: task.id,
-      task: task,
-      settings: ref.read(blockingSettingsProvider).asData?.value,
-    );
+    if (!DateTime.now().isBefore(task.start)) {
+      // Start the background session now (countdown + blocking + notification).
+      await beginBackgroundFocusNow(
+        service: ref.read(focusServiceProvider),
+        taskId: task.id,
+        task: task,
+        settings: ref.read(blockingSettingsProvider).asData?.value,
+      );
+    }
+    // DeepFocusScreen (FocusScreen) manages the waiting countdown state natively.
     if (context.mounted) context.go(AppRoutes.deepFocus);
   }
 

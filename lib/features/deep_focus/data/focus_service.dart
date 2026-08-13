@@ -69,9 +69,18 @@ class FocusService {
 
   Future<T?> _invokeSafe<T>(String method, [dynamic arguments]) async {
     try {
-      return await _channel.invokeMethod<T>(method, arguments);
-    } catch (e) {
-      debugPrint('FocusService.$method failed: $e');
+      debugPrint('[FocusService] → invokeMethod($method, $arguments)');
+      final result = await _channel.invokeMethod<T>(method, arguments);
+      debugPrint('[FocusService] ← $method result: $result');
+      return result;
+    } on MissingPluginException catch (e) {
+      debugPrint('[FocusService] ✗ $method: MethodChannel not registered — $e');
+      return null;
+    } on PlatformException catch (e) {
+      debugPrint('[FocusService] ✗ $method: PlatformException ${e.code}: ${e.message}\ndetails: ${e.details}');
+      return null;
+    } catch (e, st) {
+      debugPrint('[FocusService] ✗ $method: unexpected error — $e\n$st');
       return null;
     }
   }
@@ -103,6 +112,14 @@ class FocusService {
   Future<void> stopSession() async {
     if (!_supported) return;
     await _invokeSafe<void>('stopSession');
+  }
+
+  /// Shifts the native session end time by [deltaSeconds] seconds.
+  /// Positive = add time, negative = subtract time. The native service
+  /// updates its countdown on the very next 1-second tick (no restart needed).
+  Future<void> adjustTime(int deltaSeconds) async {
+    if (!_supported) return;
+    await _invokeSafe<void>('adjustTime', {'deltaSeconds': deltaSeconds});
   }
 
   /// The current background session, or null if none.

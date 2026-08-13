@@ -69,10 +69,14 @@ class _FlowaLoadingState extends State<FlowaLoading>
       width: widget.size,
       height: widget.size,
       decoration: BoxDecoration(color: colors.tintSage, shape: BoxShape.circle),
-      child: Icon(
-        Icons.eco_rounded,
-        size: widget.size * 0.46,
-        color: colors.primary,
+      child: Padding(
+        padding: EdgeInsets.all(widget.size * 0.18),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/icon/flowa_icon.png',
+            fit: BoxFit.contain,
+          ),
+        ),
       ),
     );
 

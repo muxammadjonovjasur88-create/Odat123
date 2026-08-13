@@ -7,7 +7,8 @@ import '../constants/app_category.dart';
 /// The focus technique used while a task runs.
 enum FocusMethod {
   pomodoro('Pomodoro'),
-  custom('Interval');
+  custom('Interval'),
+  note('Eslatma');
 
   const FocusMethod(this.label);
   final String label;
@@ -39,6 +40,7 @@ class Task {
     this.pointsAwarded = false,
     this.blockApps = false,
     this.focusMethod = FocusMethod.pomodoro,
+    this.note,
     this.reminderMinutesBefore,
     required this.points,
     this.workMinutes = 25,
@@ -83,6 +85,9 @@ class Task {
 
   final bool blockApps;
   final FocusMethod focusMethod;
+
+  /// Optional text note or reminder details for this task.
+  final String? note;
 
   /// Minutes before [start] to remind; null means no reminder.
   final int? reminderMinutesBefore;
@@ -160,6 +165,8 @@ class Task {
     bool? isCompleted,
     bool? pointsAwarded,
     double? completionPercent,
+    FocusMethod? focusMethod,
+    String? note,
   }) => Task(
     id: id ?? this.id,
     title: title,
@@ -170,7 +177,8 @@ class Task {
     isCompleted: isCompleted ?? this.isCompleted,
     pointsAwarded: pointsAwarded ?? this.pointsAwarded,
     blockApps: blockApps,
-    focusMethod: focusMethod,
+    focusMethod: focusMethod ?? this.focusMethod,
+    note: note ?? this.note,
     reminderMinutesBefore: reminderMinutesBefore,
     points: points,
     workMinutes: workMinutes,
@@ -203,6 +211,8 @@ class Task {
     required DateTime date,
     required int startMinute,
     required bool isInterval,
+    FocusMethod? focusMethod,
+    String? note,
     int workMinutes = 25,
     int intervalWorkSeconds = 45,
     int intervalSets = 4,
@@ -252,9 +262,11 @@ class Task {
       startMinute: startMinute,
       durationMinutes: clamped,
       blockApps: blockApps,
-      focusMethod: (isInterval || workout != null)
-          ? FocusMethod.custom
-          : FocusMethod.pomodoro,
+      focusMethod: focusMethod ??
+          ((isInterval || workout != null)
+              ? FocusMethod.custom
+              : FocusMethod.pomodoro),
+      note: note,
       reminderMinutesBefore: reminderMinutesBefore,
       points: clamped * pointsPerMinute,
       workMinutes: effectiveWork,
@@ -310,6 +322,7 @@ class Task {
     'pointsAwarded': pointsAwarded,
     'blockApps': blockApps,
     'focusMethod': focusMethod.name,
+    if (note != null) 'note': note,
     'reminderMinutesBefore': reminderMinutesBefore,
     'points': points,
     'workMinutes': workMinutes,
@@ -334,6 +347,7 @@ class Task {
   /// stale `workout` when a task is changed away from set-based mode.
   Map<String, dynamic> toUpdateMap() {
     final m = toMap()..remove('createdAt');
+    m['note'] = note;
     m['workout'] = workout?.toMap(); // explicit null removes an old workout
     // Persist goal duration even when null (removes stale values on edit).
     m['goalStartDate'] = goalStartDate != null
@@ -362,6 +376,7 @@ class Task {
       pointsAwarded: (data['pointsAwarded'] as bool?) ?? false,
       blockApps: (data['blockApps'] as bool?) ?? false,
       focusMethod: FocusMethod.fromName(data['focusMethod'] as String?),
+      note: data['note'] as String?,
       reminderMinutesBefore: (data['reminderMinutesBefore'] as num?)?.toInt(),
       points: (data['points'] as num?)?.toInt() ?? 0,
       // Fall back to the block length for tasks created before these fields.

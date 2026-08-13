@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
@@ -71,13 +70,7 @@ class _BlockingPermissionsScreenState
     final colors = context.colors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('perm.title'.tr()),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      appBar: const FlowaAppBar(showBackButton: true),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
@@ -94,7 +87,7 @@ class _BlockingPermissionsScreenState
                   _PermissionTile(
                     icon: Icons.battery_charging_full_rounded,
                     title: 'Batareya optimallashtirish',
-                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    description: 'Sozlamalar ochilgach, \'Odat\'ni toping va yoqing.',
                     granted: _battery,
                     onGrant: () async {
                       await _service.requestIgnoreBatteryOptimizationsPermission();
@@ -105,7 +98,7 @@ class _BlockingPermissionsScreenState
                   _PermissionTile(
                     icon: Icons.layers_outlined,
                     title: 'Boshqa ilovalar ustida ko\'rsatish',
-                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    description: 'Sozlamalar ochilgach, \'Odat\'ni toping va yoqing.',
                     granted: _overlay,
                     onGrant: _service.requestOverlayPermission,
                   ),
@@ -113,7 +106,7 @@ class _BlockingPermissionsScreenState
                   _PermissionTile(
                     icon: Icons.visibility_outlined,
                     title: 'Foydalanish statistikasi',
-                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    description: 'Sozlamalar ochilgach, \'Odat\'ni toping va yoqing.',
                     granted: _usage,
                     onGrant: _service.openUsageAccessSettings,
                   ),
@@ -121,7 +114,7 @@ class _BlockingPermissionsScreenState
                   _PermissionTile(
                     icon: Icons.accessibility_new_rounded,
                     title: 'Maxsus imkoniyatlar',
-                    description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                    description: 'Sozlamalar ochilgach, \'Odat\'ni toping va yoqing.',
                     granted: _accessibility,
                     onGrant: _service.openAccessibilitySettings,
                   ),
@@ -130,7 +123,7 @@ class _BlockingPermissionsScreenState
                     _PermissionTile(
                       icon: Icons.open_in_new_rounded,
                       title: 'Miui Pop-up',
-                      description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                      description: 'Sozlamalar ochilgach, \'Odat\'ni toping va yoqing.',
                       granted: null,
                       onGrant: _service.openMiuiOtherPermissions,
                     ),
@@ -138,7 +131,7 @@ class _BlockingPermissionsScreenState
                     _PermissionTile(
                       icon: Icons.restart_alt_rounded,
                       title: 'Avtomatik ishga tushish',
-                      description: 'Sozlamalar ochilgach, \'Flowa\'ni toping va yoqing.',
+                      description: 'Sozlamalar ochilgach, \'Odat\'ni toping va yoqing.',
                       granted: null,
                       onGrant: _service.openAutostartSettings,
                     ),

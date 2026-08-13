@@ -44,6 +44,10 @@ class GamificationRepository {
 
   /// Records a finished session: recomputes today's points, advances the
   /// streak, and rolls up lifetime totals — all in one transaction.
+  ///
+  /// Wraps the Firestore transaction in a try/catch so transient network or
+  /// permission errors are logged clearly rather than causing a silent abort
+  /// of the point-award pipeline in [completeAndAward].
   Future<CompletionResult> recordCompletion(
     String uid, {
     required Task task,
@@ -54,124 +58,181 @@ class GamificationRepository {
     required double completionPercent,
     required int awardedPoints,
     required bool fullCompletion,
-  }) {
+    int? durationMinutesOverride,
+    int? focusedMinutesOverride,
+  }) async {
+    final effectiveDuration = durationMinutesOverride ?? task.durationMinutes;
+    final effectiveFocusMinutes = focusedMinutesOverride ?? effectiveDuration;
     final today = DateUtils.dateOnly(DateTime.now());
     final userRef = _userDoc(uid);
     final dailyRef = _dailyCol(uid).doc(_dayId(today));
 
-    return _db.runTransaction<CompletionResult>((tx) async {
-      final userSnap = await tx.get(userRef);
-      final dailySnap = await tx.get(dailyRef);
-      final user = userSnap.data() ?? const {};
-      final daily = dailySnap.data() ?? const {};
+    try {
+      return await _db.runTransaction<CompletionResult>((tx) async {
+        final userSnap = await tx.get(userRef);
+        final dailySnap = await tx.get(dailyRef);
+        final user = userSnap.data() ?? const {};
+        final daily = dailySnap.data() ?? const {};
 
-      final oldDailyPoints = (daily['points'] as num?)?.toInt() ?? 0;
-      final oldBonus = (daily['bonus'] as num?)?.toInt() ?? 0;
-      final oldFocusMin = (daily['focusMinutes'] as num?)?.toInt() ?? 0;
-      final oldDeep = (daily['deepSessions'] as num?)?.toInt() ?? 0;
+        final oldDailyPoints = (daily['points'] as num?)?.toInt() ?? 0;
+        final currentStreak = (user['streak'] as num?)?.toInt() ?? 0;
+        final lastActive = (user['lastActiveDate'] as Timestamp?)?.toDate();
+        final freezes = (user['freezes'] as num?)?.toInt() ?? 0;
+        final currentWeekId = (user['currentWeekId'] as String?) ?? '';
+        final weeklyPoints = (user['weeklyPoints'] as num?)?.toInt() ?? 0;
+        final weeklyFocusMinutes =
+            (user['weeklyFocusMinutes'] as num?)?.toInt() ?? 0;
+        final currentMonthId = (user['currentMonthId'] as String?) ?? '';
+        final monthlyPoints = (user['monthlyPoints'] as num?)?.toInt() ?? 0;
+        final monthlyFocusMinutes =
+            (user['monthlyFocusMinutes'] as num?)?.toInt() ?? 0;
+        final oldHours =
+            (daily['hours'] as Map?)?.map((key, value) => MapEntry(
+                  key.toString(),
+                  (value as num).toInt(),
+                )) ??
+            <String, int>{};
+        final earnedBadges =
+            (user['earnedBadges'] as List?)
+                ?.map((e) => (e as num).toInt())
+                .toSet() ??
+            <int>{};
 
-      final currentStreak = (user['streak'] as num?)?.toInt() ?? 0;
-      final lastActive = (user['lastActiveDate'] as Timestamp?)?.toDate();
-      final freezes = (user['freezes'] as num?)?.toInt() ?? 0;
-      final currentWeekId = (user['currentWeekId'] as String?) ?? '';
-      final weeklyPoints = (user['weeklyPoints'] as num?)?.toInt() ?? 0;
-      final weeklyFocusMinutes =
-          (user['weeklyFocusMinutes'] as num?)?.toInt() ?? 0;
-      final earnedBadges =
-          (user['earnedBadges'] as List?)
-              ?.map((e) => (e as num).toInt())
-              .toSet() ??
-          <int>{};
+        // Freeze-aware streak: bridge any missed day with a freeze before
+        // counting today.
+        final resolution = StreakMath.onCompletion(
+          streak: currentStreak,
+          lastActive: lastActive,
+          freezes: freezes,
+          today: today,
+        );
+        final newStreak = resolution.streak;
+        final longest = math.max(
+          (user['longestStreak'] as num?)?.toInt() ?? 0,
+          newStreak,
+        );
 
-      // Freeze-aware streak: bridge any missed day with a freeze before
-      // counting today.
-      final resolution = StreakMath.onCompletion(
-        streak: currentStreak,
-        lastActive: lastActive,
-        freezes: freezes,
-        today: today,
-      );
-      final newStreak = resolution.streak;
-      final longest = math.max(
-        (user['longestStreak'] as num?)?.toInt() ?? 0,
-        newStreak,
-      );
+        // Milestone: award a badge the first time a threshold is reached.
+        final milestone = StreakMath.milestoneFor(newStreak, earnedBadges);
 
-      // Milestone: award a badge the first time a threshold is reached.
-      final milestone = StreakMath.milestoneFor(newStreak, earnedBadges);
+        final isFirstOfToday = lastActive == null || DateUtils.dateOnly(lastActive) != today;
 
-      final newBonus =
-          oldBonus +
-          GamificationMath.sessionBonus(blockingEngaged: blockingEngaged);
-      final newDailyPoints = GamificationMath.dailyPoints(
-        completed: completedToday,
-        total: totalToday,
-        accumulatedSessionBonus: newBonus,
-        streak: newStreak,
-      );
-      final delta = newDailyPoints - oldDailyPoints;
+        final sessionBonus = GamificationMath.sessionBonus(
+          taskPoints: task.points,
+          blockingEngaged: blockingEngaged,
+        );
+        final streakBonus = isFirstOfToday ? GamificationMath.streakBonus(newStreak) : 0;
+        final gained = math.max(0, awardedPoints + sessionBonus + streakBonus);
+        debugPrint(
+          '[gamification] recordCompletion TX: '
+          'awardedPoints=$awardedPoints sessionBonus=$sessionBonus '
+          'streakBonus=$streakBonus (streak=$newStreak, first=$isFirstOfToday) -> gained=$gained '
+          'completionPercent=${completionPercent.toStringAsFixed(2)} '
+          'blockingEngaged=$blockingEngaged',
+        );
 
-      // Tally focus minutes by completion hour (deep-merged), for the premium
-      // "most productive time of day" stat.
-      final completionHour = DateTime.now().hour;
-      final weekId = WeeklyReset.weekIdFor(today);
-      final nextWeeklyPoints = WeeklyReset.resolveWeeklyPoints(
-        currentWeekId: currentWeekId,
-        weekId: weekId,
-        weeklyPoints: weeklyPoints,
-        delta: delta,
-      );
-      final nextWeeklyFocusMinutes = WeeklyReset.resolveWeeklyFocusMinutes(
-        currentWeekId: currentWeekId,
-        weekId: weekId,
-        weeklyFocusMinutes: weeklyFocusMinutes,
-        durationMinutes: task.durationMinutes,
-      );
+        final newDailyPoints = oldDailyPoints + gained;
 
-      tx.set(dailyRef, {
-        'date': Timestamp.fromDate(today),
-        'points': newDailyPoints,
-        'bonus': newBonus,
-        'focusMinutes': oldFocusMin + task.durationMinutes,
-        'deepSessions': oldDeep + (deep ? 1 : 0),
-        'completed': completedToday,
-        'total': totalToday,
-        'hours': {
-          '$completionHour': FieldValue.increment(task.durationMinutes),
-        },
-      }, SetOptions(merge: true));
+        // Tally focus minutes by completion hour (deep-merged), for the premium
+        // "most productive time of day" stat.
+        final completionHour = DateTime.now().hour;
+        final weekId = WeeklyReset.weekIdFor(today);
+        final nextWeeklyPoints = WeeklyReset.resolveWeeklyPoints(
+          currentWeekId: currentWeekId,
+          weekId: weekId,
+          weeklyPoints: weeklyPoints,
+          delta: gained,
+        );
+        final nextWeeklyFocusMinutes = WeeklyReset.resolveWeeklyFocusMinutes(
+          currentWeekId: currentWeekId,
+          weekId: weekId,
+          weeklyFocusMinutes: weeklyFocusMinutes,
+          durationMinutes: effectiveFocusMinutes,
+        );
 
-      tx.set(userRef, {
-        'streak': newStreak,
-        'longestStreak': longest,
-        'lastActiveDate': Timestamp.fromDate(today),
-        'freezes': resolution.freezes,
-        'currentWeekId': weekId,
-        'weeklyPoints': nextWeeklyPoints,
-        'weeklyFocusMinutes': nextWeeklyFocusMinutes,
-        'totalPoints': FieldValue.increment(delta),
-        'totalFocusMinutes': FieldValue.increment(task.durationMinutes),
-        'totalDeepSessions': FieldValue.increment(deep ? 1 : 0),
-        if (milestone != null)
-          'earnedBadges': FieldValue.arrayUnion([milestone]),
-      }, SetOptions(merge: true));
+        final monthId = MonthlyReset.monthIdFor(today);
+        final nextMonthlyPoints = MonthlyReset.resolveMonthlyPoints(
+          currentMonthId: currentMonthId,
+          monthId: monthId,
+          monthlyPoints: monthlyPoints,
+          delta: gained,
+        );
+        final nextMonthlyFocusMinutes = MonthlyReset.resolveMonthlyFocusMinutes(
+          currentMonthId: currentMonthId,
+          monthId: monthId,
+          monthlyFocusMinutes: monthlyFocusMinutes,
+          durationMinutes: effectiveFocusMinutes,
+        );
 
-      debugPrint(
-        '[points] tx write → users/$uid: daily(${_dayId(today)}).points='
-        '$newDailyPoints, weeklyPoints=$nextWeeklyPoints, '
-        'weeklyFocusMinutes=$nextWeeklyFocusMinutes, totalPoints+=$delta',
-      );
+        final oldDailyBonus = (daily['bonus'] as num?)?.toInt() ?? 0;
+        final oldDailyFocus = (daily['focusMinutes'] as num?)?.toInt() ?? 0;
+        final oldDailyDeep = (daily['deepSessions'] as num?)?.toInt() ?? 0;
 
-      return (
-        gained: delta,
-        streak: newStreak,
-        dailyPoints: newDailyPoints,
-        milestone: milestone,
-        completionPercent: completionPercent,
-        awardedPoints: awardedPoints,
-        fullCompletion: fullCompletion,
-      );
-    });
+        final nextDailyPoints = oldDailyPoints + gained;
+        final nextDailyBonus = oldDailyBonus + sessionBonus;
+        final nextDailyFocus = oldDailyFocus + effectiveFocusMinutes;
+        final nextDailyDeep = oldDailyDeep + (deep ? 1 : 0);
+
+        final updatedHours = Map<String, int>.from(oldHours);
+        updatedHours['$completionHour'] =
+            (oldHours['$completionHour'] ?? 0) + effectiveFocusMinutes;
+
+        tx.set(dailyRef, {
+          'date': Timestamp.fromDate(today),
+          'points': nextDailyPoints,
+          'bonus': nextDailyBonus,
+          'focusMinutes': nextDailyFocus,
+          'deepSessions': nextDailyDeep,
+          'completed': completedToday,
+          'total': totalToday,
+          'hours': updatedHours,
+        }, SetOptions(merge: true));
+
+        final oldTotalPoints = (user['totalPoints'] as num?)?.toInt() ?? 0;
+        final nextTotalPoints = oldTotalPoints + gained;
+        final oldTotalFocus = (user['totalFocusMinutes'] as num?)?.toInt() ?? 0;
+        final nextTotalFocus = oldTotalFocus + effectiveFocusMinutes;
+        final oldDeep = (user['totalDeepSessions'] as num?)?.toInt() ?? 0;
+        final nextDeep = oldDeep + (deep ? 1 : 0);
+
+        tx.set(userRef, {
+          'streak': newStreak,
+          'longestStreak': longest,
+          'lastActiveDate': Timestamp.fromDate(today),
+          'freezes': resolution.freezes,
+          'currentWeekId': weekId,
+          'weeklyPoints': nextWeeklyPoints,
+          'weeklyFocusMinutes': nextWeeklyFocusMinutes,
+          'currentMonthId': monthId,
+          'monthlyPoints': nextMonthlyPoints,
+          'monthlyFocusMinutes': nextMonthlyFocusMinutes,
+          'totalPoints': nextTotalPoints,
+          'totalFocusMinutes': nextTotalFocus,
+          'totalDeepSessions': nextDeep,
+          if (milestone != null)
+            'earnedBadges': FieldValue.arrayUnion([milestone]),
+        }, SetOptions(merge: true));
+
+        debugPrint(
+          '[points] tx write → users/$uid: daily(${_dayId(today)}).points='
+          '$newDailyPoints, weeklyPoints=$nextWeeklyPoints, '
+          'weeklyFocusMinutes=$nextWeeklyFocusMinutes, totalPoints+=$gained',
+        );
+
+        return (
+          gained: gained,
+          streak: newStreak,
+          dailyPoints: newDailyPoints,
+          milestone: milestone,
+          completionPercent: completionPercent,
+          awardedPoints: awardedPoints,
+          fullCompletion: fullCompletion,
+        );
+      });
+    } catch (e, st) {
+      debugPrint('[gamification] recordCompletion FAILED for uid=$uid: $e\n$st');
+      rethrow;
+    }
   }
 
   Stream<DailyStats> watchDay(String uid, DateTime day) {
@@ -206,41 +267,48 @@ class GamificationRepository {
   }
 
   /// Advances the user's streak upon successful mood check-in (great or hard response).
-  Future<void> recordProofStreakUpdate(String uid) {
+  Future<void> recordProofStreakUpdate(String uid) async {
     final today = DateUtils.dateOnly(DateTime.now());
     final userRef = _userDoc(uid);
 
-    return _db.runTransaction<void>((tx) async {
-      final userSnap = await tx.get(userRef);
-      final user = userSnap.data() ?? const {};
+    try {
+      await _db.runTransaction<void>((tx) async {
+        final userSnap = await tx.get(userRef);
+        final user = userSnap.data() ?? const {};
 
-      final currentStreak = (user['streak'] as num?)?.toInt() ?? 0;
-      final lastActive = (user['lastActiveDate'] as Timestamp?)?.toDate();
-      final freezes = (user['freezes'] as num?)?.toInt() ?? 0;
+        final currentStreak = (user['streak'] as num?)?.toInt() ?? 0;
+        final lastActive = (user['lastActiveDate'] as Timestamp?)?.toDate();
+        final freezes = (user['freezes'] as num?)?.toInt() ?? 0;
 
-      // Freeze-aware streak
-      final resolution = StreakMath.onCompletion(
-        streak: currentStreak,
-        lastActive: lastActive,
-        freezes: freezes,
-        today: today,
+        // Freeze-aware streak
+        final resolution = StreakMath.onCompletion(
+          streak: currentStreak,
+          lastActive: lastActive,
+          freezes: freezes,
+          today: today,
+        );
+        final newStreak = resolution.streak;
+        final longest = math.max(
+          (user['longestStreak'] as num?)?.toInt() ?? 0,
+          newStreak,
+        );
+
+        final weekId = WeeklyReset.weekIdFor(today);
+
+        tx.set(userRef, {
+          'streak': newStreak,
+          'longestStreak': longest,
+          'lastActiveDate': Timestamp.fromDate(today),
+          'freezes': resolution.freezes,
+          'currentWeekId': weekId,
+        }, SetOptions(merge: true));
+      });
+    } catch (e, st) {
+      debugPrint(
+        '[gamification] recordProofStreakUpdate FAILED for uid=$uid: $e\n$st',
       );
-      final newStreak = resolution.streak;
-      final longest = math.max(
-        (user['longestStreak'] as num?)?.toInt() ?? 0,
-        newStreak,
-      );
-
-      final weekId = WeeklyReset.weekIdFor(today);
-
-      tx.set(userRef, {
-        'streak': newStreak,
-        'longestStreak': longest,
-        'lastActiveDate': Timestamp.fromDate(today),
-        'freezes': resolution.freezes,
-        'currentWeekId': weekId,
-      }, SetOptions(merge: true));
-    });
+      rethrow;
+    }
   }
 }
 

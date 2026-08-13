@@ -18,6 +18,7 @@ import '../../../core/widgets/widgets.dart';
 import '../../blocking/data/blocking_repository.dart';
 import '../../deep_focus/data/focus_providers.dart';
 import '../../deep_focus/data/focus_service.dart';
+import '../../gamification/domain/gamification_math.dart';
 import '../../notifications/data/notification_service.dart';
 import '../../workout/domain/workout.dart';
 import '../../workout/presentation/workout_builder.dart';
@@ -56,6 +57,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   final _setsController = TextEditingController(text: '4'); // sport sets
   bool _manual = true;
   AppCategory _category = AppCategory.study;
+  FocusMethod _focusMethod = FocusMethod.pomodoro;
   DateTime? _date;
   TimeOfDay? _time;
 
@@ -122,6 +124,8 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     _manual = true;
     _titleController.text = t.title;
     _category = t.category;
+    // If the task was previously a note, just fall back to pomodoro to avoid issues
+    _focusMethod = t.focusMethod == FocusMethod.note ? FocusMethod.pomodoro : t.focusMethod;
     _date = t.date;
     _time = t.startTime;
     final endMinute = t.startMinute + t.durationMinutes;
@@ -148,10 +152,37 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   /// Sport/interval timer when the category is Sport (or the user's focus type
   /// is Sport) — matches the Focus screen's decision.
   bool get _isInterval {
+    if (_focusMethod == FocusMethod.custom) return true;
     final focusType = ref.read(userProfileProvider).asData?.value?.focusType;
     return _category == AppCategory.sport || focusType == 'Sport';
   }
 
+  /// Estimated points the user will earn if they complete this task fully.
+  /// Uses [GamificationMath.previewPoints] — the same formula used at award time.
+  int get _previewPoints {
+    final streak = ref.read(userProfileProvider).asData?.value?.streak ?? 0;
+    final int duration;
+    if (_usingWorkout) {
+      duration = ((_workoutPlan?.estimatedSeconds ?? 0) + 59) ~/ 60;
+    } else if (_isInterval) {
+      final restSec = Task.autoRestSeconds(_intervalWorkSeconds);
+      duration = (Task.intervalDurationSeconds(
+                sets: _intervalSets,
+                workSeconds: _intervalWorkSeconds,
+                restSeconds: restSec,
+              ) +
+              59) ~/
+          60;
+    } else if (_useEndTime && _rangeMinutes != null) {
+      duration = _rangeMinutes!;
+    } else {
+      duration = _workMinutes;
+    }
+    return GamificationMath.previewPoints(
+      durationMinutes: duration.clamp(1, 600),
+      streak: streak,
+    );
+  }
   int get _workMinutes =>
       (int.tryParse(_workController.text) ?? 25).clamp(5, 180);
   int get _intervalWorkSeconds =>
@@ -238,17 +269,19 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       date: _date!,
       startMinute: _time!.hour * 60 + _time!.minute,
       isInterval: _isInterval,
+      focusMethod: _focusMethod,
+      note: widget.existing?.note,
       workMinutes: _workMinutes,
       intervalWorkSeconds: _intervalWorkSeconds,
       intervalSets: _intervalSets,
-      blockApps: false,
+      blockApps: true,
       reminderMinutesBefore: 10,
       workout: _usingWorkout ? _workoutPlan : null,
       rangeMinutes: _useEndTime ? _rangeMinutes : null,
       goalStartDate: _date,
       goalEndDate: _effectiveGoalEndDate,
       goalDurationDays: _effectiveGoalDays,
-      proofRequired: false,
+      proofRequired: true,
     );
 
     setState(() => _saving = true);
@@ -349,15 +382,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     final colors = context.colors;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _editing ? 'addgoal.title_edit'.tr() : 'addgoal.title_new'.tr(),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      appBar: const FlowaAppBar(showBackButton: true),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
@@ -409,6 +434,26 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
                       selected: _category == c,
                       onTap: () => setState(() => _category = c),
                     ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              _Label('addgoal.focus_mode'.tr()),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _FocusMethodChip(
+                    label: 'Focus',
+                    icon: Icons.timer_outlined,
+                    selected: _focusMethod == FocusMethod.pomodoro,
+                    onTap: () => setState(() => _focusMethod = FocusMethod.pomodoro),
+                  ),
+                  const SizedBox(width: 12),
+                  _FocusMethodChip(
+                    label: 'Interval',
+                    icon: Icons.fitness_center_rounded,
+                    selected: _focusMethod == FocusMethod.custom,
+                    onTap: () => setState(() => _focusMethod = FocusMethod.custom),
+                  ),
                 ],
               ),
               const SizedBox(height: 22),
@@ -496,15 +541,15 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
         ),
         const SizedBox(height: 16),
         _goalDurationCard(colors),
-
+        const SizedBox(height: 16),
         if (_isInterval) ...[
-          const SizedBox(height: 16),
           _sportSection(colors),
         ] else if (!_useEndTime) ...[
-          const SizedBox(height: 16),
           _deepWorkCard(colors),
         ],
         const SizedBox(height: 28),
+        _PointsPreviewBadge(points: _previewPoints),
+        const SizedBox(height: 12),
         AppButton(
           label: _editing
               ? 'addgoal.save_changes'.tr()
@@ -740,7 +785,7 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
         if (_structuredSets)
           WorkoutBuilder(
             initialPlan: widget.existing?.workout,
-            onChanged: (p) => _workoutPlan = p,
+            onChanged: (p) => setState(() => _workoutPlan = p),
           )
         else
           _intervalCard(colors),
@@ -840,6 +885,51 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   String _formatDate(DateTime d) {
     String two(int n) => n.toString().padLeft(2, '0');
     return '${two(d.month)}/${two(d.day)}/${two(d.year % 100)}';
+  }
+}
+
+/// A small pill-shaped badge shown in the goal-creation form that tells the
+/// user how many points they will earn if they complete the task fully.
+/// Updates reactively whenever [points] changes (driven by setState in the
+/// parent).
+class _PointsPreviewBadge extends StatelessWidget {
+  const _PointsPreviewBadge({required this.points});
+
+  final int points;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: AppColors.forest.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.forest.withValues(alpha: 0.25),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.workspace_premium_rounded,
+            size: 16,
+            color: AppColors.forest,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'addgoal.points_preview'.tr(
+              namedArgs: {'points': '$points'},
+            ),
+            style: AppTextStyles.label.copyWith(
+              color: AppColors.forest,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -1146,6 +1236,62 @@ class _CustomDayChip extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FocusMethodChip extends StatelessWidget {
+  const _FocusMethodChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          decoration: BoxDecoration(
+            color: selected ? colors.primary : colors.surfaceMuted,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? colors.primary : Colors.transparent,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: selected ? Colors.white : colors.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.label.copyWith(
+                    color: selected ? Colors.white : colors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

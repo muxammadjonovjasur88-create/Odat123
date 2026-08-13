@@ -7,6 +7,7 @@ abstract final class AppRoutes {
 
   // Onboarding / auth
   static const welcome = '/'; // 01
+  static const intro = '/intro'; // intro video
   static const loading = '/loading'; // branded wait: auth check / profile load
   static const discover = '/discover'; // 02
   static const signIn = '/sign-in'; // 03
@@ -14,6 +15,8 @@ abstract final class AppRoutes {
 
   // Planning
   static const dailyPlan = '/daily'; // 06 / 07
+  static const eslatma = '/eslatma';
+  static const zametka = eslatma;
   static const weeklyView = '/weekly'; // 08
   static const addGoal = '/add-goal'; // 09
   static const editGoal = '/edit-goal'; // edit an existing task
@@ -52,4 +55,27 @@ abstract final class AppRoutes {
   static const telegramLink = '/telegram-link';
   static const friendsProofs = '/friends-proofs';
   static const taskAlarm = '/task-alarm';
+
+  // Reminders (standalone budilnik)
+  static const reminders = '/reminders';
+
+  // Do'kon (Shop) feature routes
+  static const shop = '/shop';
+  static const shopPurchases = '/shop/purchases';
+  static const couponDetail = '/shop/coupon';
+  static const giftDetail = '/shop/gift';
+  static const shippingForm = '/shop/shipping';
+
+  // Kutubxona (Library) feature routes
+  static const library = '/library';
+
+  // Yugurish (Running) feature routes
+  static const running = '/running';
+  static const runningSummary = '/running/summary';
+
+  // Exercise Vision feature routes
+  static const exerciseSelect = '/exercise/select';
+  static const exerciseCamera = '/exercise/camera';
+  static const exerciseSummary = '/exercise/summary';
 }
+

@@ -36,7 +36,7 @@ class ProgressScreen extends ConsumerWidget {
 
     return Scaffold(
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.stats,
+        current: AppNavTab.dashboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
@@ -93,7 +93,7 @@ class ProgressScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 16),
-            // Self-growth is the hero; points sit quietly below.
+            // Self-growth is the hero.
             const SelfGrowthCard(),
             const SizedBox(height: 16),
             _LeaderboardCard(),

@@ -80,13 +80,7 @@ class LobbiesScreen extends ConsumerWidget {
     final lobbiesAsync = ref.watch(myLobbiesProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('lobby.list_title'.tr()),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      appBar: const FlowaAppBar(showBackButton: true),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),

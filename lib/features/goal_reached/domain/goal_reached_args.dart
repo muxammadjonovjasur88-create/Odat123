@@ -18,6 +18,8 @@ class GoalReachedArgs {
     this.awardedPoints = 0,
     this.fullCompletion = true,
     this.integrityPercent = 1.0,
+    this.pointsError = false,
+    this.errorMessage,
   });
 
   /// Set-based workout result, when the completed task was a structured workout.
@@ -56,4 +58,8 @@ class GoalReachedArgs {
 
   /// Integrity score of the session (1.0 = fully honest, <1.0 = partial).
   final double integrityPercent;
+
+  /// Whether an error occurred while saving points to Firestore.
+  final bool pointsError;
+  final String? errorMessage;
 }

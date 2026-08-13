@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text_styles.dart';
 import '../theme/app_theme.dart';
 
-/// Button variants used throughout Flowa's calm UI.
+/// Button variants used throughout Flowa's UI.
 enum AppButtonVariant { primary, secondary }
 
 class AppButton extends StatefulWidget {
@@ -45,11 +44,7 @@ class _AppButtonState extends State<AppButton> {
     final label = widget.label;
     final expand = widget.expand;
 
-    final Color background = isPrimary ? colors.primary : colors.surface;
     final Color foreground = isPrimary ? colors.onPrimary : colors.textPrimary;
-    final BorderSide side = isPrimary
-        ? BorderSide.none
-        : BorderSide(color: colors.border, width: 1.4);
 
     final child = loading
         ? SizedBox(
@@ -93,27 +88,35 @@ class _AppButtonState extends State<AppButton> {
       curve: AppMotion.standard,
       child: Opacity(
         opacity: enabled ? 1 : 0.5,
-        child: Material(
-          color: background,
-          shape: RoundedRectangleBorder(
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: isPrimary ? colors.primaryGradient : null,
+            color: isPrimary ? null : colors.surface,
             borderRadius: BorderRadius.circular(30),
-            side: side,
+            border: isPrimary
+                ? null
+                : Border.all(color: colors.border, width: 1.4),
           ),
-          elevation: 0,
-          child: InkWell(
-            onTap: enabled ? widget.onPressed : null,
-            onHighlightChanged: enabled
-                ? (v) => setState(() => _pressed = v)
-                : null,
-            borderRadius: BorderRadius.circular(30),
-            splashColor: (isPrimary ? Colors.white : AppColors.forest)
-                .withValues(alpha: 0.12),
-            child: Container(
-              height: 56,
-              width: expand ? double.infinity : null,
-              alignment: Alignment.center,
-              padding: EdgeInsets.symmetric(horizontal: expand ? 24 : 32),
-              child: child,
+          child: Material(
+            color: Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(30),
+            ),
+            elevation: 0,
+            child: InkWell(
+              onTap: enabled ? widget.onPressed : null,
+              onHighlightChanged: enabled
+                  ? (v) => setState(() => _pressed = v)
+                  : null,
+              borderRadius: BorderRadius.circular(30),
+              splashColor: Colors.white.withValues(alpha: 0.15),
+              child: Container(
+                height: 56,
+                width: expand ? double.infinity : null,
+                alignment: Alignment.center,
+                padding: EdgeInsets.symmetric(horizontal: expand ? 24 : 32),
+                child: child,
+              ),
             ),
           ),
         ),

@@ -25,7 +25,6 @@ object BlockerState {
     /** Epoch millis when the session ends; apps unblock automatically after. */
     @Volatile
     var endTimeMillis: Long = 0L
-        private set
 
     /** Set while the blocking overlay is on screen, to avoid relaunch loops. */
     @Volatile
@@ -97,6 +96,15 @@ object BlockerState {
     }
 
     fun isExpired(): Boolean = active && System.currentTimeMillis() >= endTimeMillis
+
+    /**
+     * Updates only [endTimeMillis] (e.g. when the user taps "+5 min" / "−5 min").
+     * Has no effect when blocking is not active.
+     */
+    fun extendEndTime(newEndMillis: Long) {
+        if (!active) return
+        endTimeMillis = newEndMillis
+    }
 
     /** Whether we're inside the [startAtMillis, endTimeMillis) blocking window. */
     fun inWindow(): Boolean {

@@ -56,6 +56,7 @@ class LobbyRepository {
   }
 
   /// Creates a lobby owned by [uid] with a unique-ish join code.
+  /// Season 1 starts immediately at creation with [kDefaultSeasonDays] duration.
   Future<Lobby> createLobby({required String uid, required String name}) async {
     var code = _generateCode();
     for (var i = 0; i < 3; i++) {
@@ -65,13 +66,22 @@ class LobbyRepository {
     }
 
     final cleanName = name.trim().isEmpty ? 'Focus Circle' : name.trim();
+    final now = DateTime.now().toUtc();
+    final seasonStart = _utcMidnight(now);
+
     final ref = await _col.add({
       'name': cleanName,
       'code': code,
       'creatorUid': uid,
       'memberUids': [uid],
       'createdAt': FieldValue.serverTimestamp(),
+      // Legacy field kept for backwards-compat.
       'weekStart': Timestamp.fromDate(_mondayOf(DateTime.now())),
+      // Season fields.
+      'seasonDurationDays': kDefaultSeasonDays,
+      'seasonNumber': 1,
+      'seasonStart': Timestamp.fromDate(seasonStart),
+      'seasonWinners': [],
     });
     final snap = await ref.get();
     return Lobby.fromDoc(snap);
@@ -128,13 +138,75 @@ class LobbyRepository {
     });
   }
 
-  /// If a new week has started since [lobby.weekStart], records the current
-  /// leader as last week's winner and advances the week. Best-effort; only the
-  /// first viewer in the new week triggers the write.
+  /// Rolls the season forward if [lobby.seasonStart] + [lobby.seasonDurationDays]
+  /// is in the past. Records the current leader as the season winner, increments
+  /// [seasonNumber], and advances [seasonStart] to the next season.
+  ///
+  /// Handles multiple consecutive missed rollovers (e.g. app was offline for
+  /// several seasons) via an elapsed-seasons loop.
+  ///
+  /// Best-effort; only the first viewer in the new season triggers the write.
+  Future<void> rollSeasonIfNeeded(
+    Lobby lobby,
+    List<UserProfile> rankedMembers,
+  ) async {
+    final start = lobby.seasonStart;
+    if (start == null || rankedMembers.isEmpty) return;
+
+    final now = DateTime.now().toUtc();
+    if (!now.isAfter(start.add(Duration(days: lobby.seasonDurationDays)))) {
+      return; // Season not over yet.
+    }
+
+    // Count how many full seasons have elapsed since [start].
+    int elapsed = 0;
+    DateTime cursor = start;
+    while (now.isAfter(cursor.add(Duration(days: lobby.seasonDurationDays)))) {
+      cursor = cursor.add(Duration(days: lobby.seasonDurationDays));
+      elapsed++;
+    }
+    if (elapsed == 0) return;
+
+    final top = rankedMembers.first;
+
+    // Prepend the new winner; keep at most kMaxSeasonHistory entries.
+    final newWinner = LobbyWinner(
+      uid: top.uid,
+      name: top.name,
+      avatar: top.avatar,
+      points: top.weeklyPoints,
+      seasonStart: start,
+      seasonNumber: lobby.seasonNumber,
+    );
+    final updatedWinners = [
+      newWinner.toMap(),
+      ...lobby.seasonWinners.take(kMaxSeasonHistory - 1).map((w) => w.toMap()),
+    ];
+
+    await _col.doc(lobby.id).set({
+      'seasonNumber': lobby.seasonNumber + elapsed,
+      'seasonStart': Timestamp.fromDate(cursor),
+      'seasonWinners': updatedWinners,
+      // Keep legacy lastWinner pointing to the most recent winner.
+      'lastWinner': newWinner.toMap(),
+      // Legacy weekStart update.
+      'weekStart': Timestamp.fromDate(_mondayOf(DateTime.now())),
+    }, SetOptions(merge: true));
+  }
+
+  /// Legacy weekly rollover — kept for backwards-compat with old lobby docs
+  /// that don't have [seasonStart] yet. Migrates them to the season system on
+  /// first call.
   Future<void> rollWeekIfNeeded(
     Lobby lobby,
     List<UserProfile> rankedMembers,
   ) async {
+    // If the lobby already has a seasonStart, delegate to the season system.
+    if (lobby.seasonStart != null) {
+      return rollSeasonIfNeeded(lobby, rankedMembers);
+    }
+
+    // Legacy path: migrate old weekly lobby to season system.
     final monday = _mondayOf(DateTime.now());
     final lobbyWeek = lobby.weekStart == null
         ? null
@@ -145,15 +217,23 @@ class LobbyRepository {
       return;
     }
     final top = rankedMembers.first;
+    final winner = LobbyWinner(
+      uid: top.uid,
+      name: top.name,
+      avatar: top.avatar,
+      points: top.weeklyPoints,
+      seasonStart: lobbyWeek,
+      seasonNumber: 1,
+    );
+    // Migrate to season system.
     await _col.doc(lobby.id).set({
       'weekStart': Timestamp.fromDate(monday),
-      'lastWinner': LobbyWinner(
-        uid: top.uid,
-        name: top.name,
-        avatar: top.avatar,
-        points: top.weeklyPoints,
-        weekStart: lobbyWeek,
-      ).toMap(),
+      'lastWinner': winner.toMap(),
+      // Initialize season fields for this lobby.
+      'seasonDurationDays': kDefaultSeasonDays,
+      'seasonNumber': 2,
+      'seasonStart': Timestamp.fromDate(_utcMidnight(DateTime.now().toUtc())),
+      'seasonWinners': [winner.toMap()],
     }, SetOptions(merge: true));
   }
 
@@ -178,6 +258,10 @@ class LobbyRepository {
     ).join();
     return 'FLOWA-$chars';
   }
+
+  /// Returns UTC midnight on [d].
+  static DateTime _utcMidnight(DateTime d) =>
+      DateTime.utc(d.year, d.month, d.day);
 
   static DateTime _mondayOf(DateTime d) {
     final date = DateUtils.dateOnly(d);

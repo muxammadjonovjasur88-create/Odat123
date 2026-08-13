@@ -16,4 +16,34 @@ async function sendTelegramMessage(token, chatId, text) {
   return res.json();
 }
 
-module.exports = { sendTelegramMessage };
+async function sendTelegramMessageWithWebAppButton(token, chatId, text, buttonText, webAppUrl) {
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: text,
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [
+            {
+              text: buttonText,
+              web_app: { url: webAppUrl },
+            },
+          ],
+        ],
+      },
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Telegram API ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+module.exports = { sendTelegramMessage, sendTelegramMessageWithWebAppButton };
+
+

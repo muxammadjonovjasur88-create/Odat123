@@ -4,22 +4,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/models/task.dart';
-import '../../../core/models/user_profile.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/router/nav_helpers.dart';
 import '../../../core/services/task_repository.dart';
 import '../../../core/services/user_repository.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/formatting.dart';
 import '../../../core/widgets/widgets.dart';
 import '../../add_goal/data/task_actions.dart';
+import '../../deep_focus/data/focus_providers.dart';
 import '../../starting_soon/presentation/starting_soon_watcher.dart';
-import '../../streak/presentation/streak_flame.dart';
 import '../../streak/presentation/streak_reminder_scheduler.dart';
 import '../../notifications/data/notification_service.dart';
+import 'active_task_progress_card.dart';
+import 'daily_quests_widget.dart';
 
-/// Screen 06 / 07 — the daily plan home. Shows today's progress ring and a
+/// Screen 06 / 07 — the daily plan home. Shows today's progress card and a
 /// timeline of task cards, or an empty state inviting the user to plan.
 class DailyPlanScreen extends ConsumerWidget {
   const DailyPlanScreen({super.key});
@@ -28,7 +30,6 @@ class DailyPlanScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final today = DateUtils.dateOnly(DateTime.now());
     final tasksAsync = ref.watch(tasksForDayProvider(today));
-    final profile = ref.watch(userProfileProvider).asData?.value;
 
     // Trigger permissions check once home is loaded
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -36,6 +37,8 @@ class DailyPlanScreen extends ConsumerWidget {
     });
 
     return Scaffold(
+      backgroundColor: const Color(0xFF051424),
+      appBar: const FlowaAppBar(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push(AppRoutes.addGoal),
         backgroundColor: context.colors.primary,
@@ -45,7 +48,7 @@ class DailyPlanScreen extends ConsumerWidget {
         child: const Icon(Icons.add_rounded, size: 28),
       ),
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.calendar,
+        current: AppNavTab.dashboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
@@ -58,7 +61,7 @@ class DailyPlanScreen extends ConsumerWidget {
                 message: 'home.load_error'.tr(),
                 onRetry: () => ref.invalidate(tasksForDayProvider(today)),
               ),
-              data: (tasks) => _Content(tasks: tasks, profile: profile),
+              data: (tasks) => _Content(tasks: tasks),
             ),
             // Invisible: opens "Starting Soon" ~5 min before a task begins.
             const StartingSoonWatcher(),
@@ -72,18 +75,57 @@ class DailyPlanScreen extends ConsumerWidget {
 }
 
 class _Content extends ConsumerWidget {
-  const _Content({required this.tasks, required this.profile});
+  const _Content({required this.tasks});
 
   final List<Task> tasks;
-  final UserProfile? profile;
+
+  /// Navigates to the correct focus screen for [task].
+  ///
+  /// • Pomodoro/note tasks → [AppRoutes.deepFocus] (FocusScreen handles the rest)
+  /// • Interval/sport tasks → [AppRoutes.activeFocus]
+  ///
+  /// [FocusScreen] reads [currentFocusTaskProvider] and [focusSessionProvider]
+  /// — timer state is already running in-process, so nothing resets.
+  void _openFocusScreen(BuildContext context, WidgetRef ref, Task task) {
+    try {
+      final profile = ref.read(userProfileProvider).asData?.value;
+      final isInterval = usesIntervalTimer(task, profile);
+      context.go(isInterval ? AppRoutes.activeFocus : AppRoutes.deepFocus);
+    } catch (e, st) {
+      debugPrint('[ActiveCard] _openFocusScreen error: $e\n$st');
+      // Fallback: always land on the deep focus route (safe)
+      if (context.mounted) context.go(AppRoutes.deepFocus);
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
+    final fullDone = tasks.where((t) => t.isCompleted).length;
+    final partial = tasks
+        .where((t) => !t.isCompleted && t.completionPercent > 0)
+        .length;
+    final total = tasks.length;
+    final percent = total == 0 ? 0.0 : (fullDone + partial * 0.5) / total;
+
+    // Find the task currently in progress: within its time window and not yet
+    // fully completed. Prefer the task whose window started most recently.
+    final now = DateTime.now();
+    final activeTask = tasks
+        .where((t) =>
+            !t.isCompleted &&
+            !now.isBefore(t.start) &&
+            now.isBefore(t.end))
+        .fold<Task?>(
+          null,
+          (best, t) =>
+              best == null || t.startMinute > best.startMinute ? t : best,
+        );
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final listHeight = (constraints.maxHeight - 120).clamp(0.0, constraints.maxHeight);
+        final listHeight = (constraints.maxHeight - 140).clamp(0.0, constraints.maxHeight);
 
         return SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -92,16 +134,26 @@ class _Content extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Header(profile: profile),
-                if (profile != null)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 6, 24, 2),
-                    child: StreakCard(
-                      streak: profile!.streak,
-                      freezes: profile!.freezes,
-                      onTap: () => context.push(AppRoutes.profile),
-                    ),
-                  ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(24, 12, 24, 16),
+                  child: DailyQuestsWidget(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: DailyProgressCard(percent: percent),
+                ),
+                const SizedBox(height: 16),
+
+                // ── Active task real-time progress (shown only when a task
+                //    is currently in progress; hides itself when null). ──
+                ActiveTaskProgressCard(
+                  task: activeTask,
+                  // Only provide onTap while the task is genuinely in progress
+                  // (not completed). The card ignores the tap when task == null.
+                  onTap: activeTask != null && !activeTask.isCompleted
+                      ? () => _openFocusScreen(context, ref, activeTask)
+                      : null,
+                ),
 
                 if (tasks.isEmpty)
                   Padding(
@@ -127,65 +179,99 @@ class _Content extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header({required this.profile});
+class DailyProgressCard extends StatelessWidget {
+  const DailyProgressCard({
+    super.key,
+    required this.percent,
+  });
 
-  final UserProfile? profile;
-
-  String get _greeting {
-    final h = DateTime.now().hour;
-    if (h < 12) return 'home.good_morning'.tr();
-    if (h < 17) return 'home.good_afternoon'.tr();
-    return 'home.good_evening'.tr();
-  }
+  final double percent;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final name = profile?.name ?? '';
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Row(
-              children: [
-                Icon(Icons.spa_rounded, size: 20, color: colors.primary),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    name.isEmpty ? _greeting : '$_greeting, $name',
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
-                  ),
-                ),
-              ],
-            ),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xB3122131),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: AppColors.glassEdge,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.neonLime.withValues(alpha: 0.08),
+            blurRadius: 20,
+            spreadRadius: 0,
           ),
-          IconButton(
-            tooltip: 'home.tooltip_blocking'.tr(),
-            icon: Icon(Icons.shield_outlined, color: colors.textSecondary),
-            onPressed: () => context.push(AppRoutes.blocking),
-          ),
-          IconButton(
-            tooltip: 'home.tooltip_weekly'.tr(),
-            icon: Icon(
-              Icons.calendar_view_week_rounded,
-              color: colors.textSecondary,
-            ),
-            onPressed: () => context.push(AppRoutes.weeklyView),
-          ),
-          GestureDetector(
-            onTap: () => context.push(AppRoutes.profile),
-            child: AvatarCircle(
-              avatarKey: profile?.avatar ?? 'leaf',
-              size: 40,
-              photoBase64: profile?.photoBase64,
-              photoUrl: profile?.photoUrl,
-            ),
+          const BoxShadow(
+            color: Color(0x40000000),
+            blurRadius: 10,
+            offset: Offset(0, 3),
           ),
         ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'home.daily_progress'.tr().toUpperCase(),
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              color: AppColors.neonLime,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _GradientProgressBar(
+            percent: percent,
+            height: 10,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GradientProgressBar extends StatelessWidget {
+  const _GradientProgressBar({
+    required this.percent,
+    required this.height,
+  });
+
+  final double percent;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final clamped = percent.clamp(0.0, 1.0);
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D1C2D),
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final activeWidth = constraints.maxWidth * clamped;
+          return Align(
+            alignment: Alignment.centerLeft,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutCubic,
+              width: activeWidth,
+              height: height,
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: BorderRadius.circular(height / 2),
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -198,76 +284,20 @@ class _TimelineList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    final fullDone = tasks.where((t) => t.isCompleted).length;
-    final partial = tasks
-        .where((t) => !t.isCompleted && t.completionPercent > 0)
-        .length;
-    final total = tasks.length;
-    // For the progress ring: count fully done + partial (weighted 0.5)
-    final percent = total == 0
-        ? 0.0
-        : (fullDone + partial * 0.5) / total;
     final categories = tasks.map((t) => t.category).toSet().toList();
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 120),
       children: [
-        Center(
-          child: ProgressRing(
-            percent: percent,
-            size: 150,
-            center: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${(percent * 100).round()}%',
-                  style: AppTextStyles.h1.copyWith(
-                    color: colors.textPrimary,
-                    fontSize: 28,
-                  ),
-                ),
-                Text(
-                  'home.progress'.tr(),
-                  style: AppTextStyles.overline.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
+        if (categories.isNotEmpty) ...[
+          Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [for (final c in categories) AppChip.category(c)],
           ),
-        ),
-        const SizedBox(height: 24),
-        Center(
-          child: Text(
-            'home.focus_ritual'.tr(),
-            style: AppTextStyles.h2.copyWith(color: colors.textPrimary),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          partial > 0
-              ? 'home.progress_message_mixed'.tr(
-                  namedArgs: {
-                    'done': '$fullDone',
-                    'partial': '$partial',
-                    'total': '$total',
-                  },
-                )
-              : 'home.progress_message'.tr(
-                  namedArgs: {'done': '$fullDone', 'total': '$total'},
-                ),
-          textAlign: TextAlign.center,
-          style: AppTextStyles.body.copyWith(color: colors.textSecondary),
-        ),
-        const SizedBox(height: 18),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
-          children: [for (final c in categories) AppChip.category(c)],
-        ),
-        const SizedBox(height: 24),
+          const SizedBox(height: 16),
+        ],
         for (var i = 0; i < tasks.length; i++)
           FadeSlideIn(
             delay: FadeSlideIn.stagger(i),
@@ -468,7 +498,7 @@ class _TimelineTile extends ConsumerWidget {
 /// * **Partial** (0 < pct < 0.95): amber circular progress ring with
 ///   the percentage label inside.
 /// * **None** (pct == 0): category-tinted circle with the pending point value.
-class _StatusBubble extends StatelessWidget {
+class _StatusBubble extends StatefulWidget {
   const _StatusBubble({required this.task, required this.pct});
 
   final Task task;
@@ -476,17 +506,43 @@ class _StatusBubble extends StatelessWidget {
   /// Effective completion ratio: 1.0 if isCompleted, else completionPercent.
   final double pct;
 
+  @override
+  State<_StatusBubble> createState() => _StatusBubbleState();
+}
+
+class _StatusBubbleState extends State<_StatusBubble> {
   static const _size = 58.0;
   // Amber-gold for partial progress — signals "tried but not finished".
   static const _partialColor = Color(0xFFF5A623);
 
+  bool _prevCompleted = false;
+
+  @override
+  void didUpdateWidget(_StatusBubble old) {
+    super.didUpdateWidget(old);
+    // When pct drops below 0.95 (e.g. task reset), reset flag so the
+    // animation can fire again if the task is re-completed.
+    if (widget.pct < 0.95 && _prevCompleted) {
+      _prevCompleted = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final pct = widget.pct;
+    final task = widget.task;
 
     if (pct >= 0.95) {
       // ── FULLY COMPLETED ──────────────────────────────────────────────────
-      return Container(
+      final justCompleted = !_prevCompleted;
+      // Update flag for future rebuilds (safe here; build is always followed
+      // by frame commit before the next build).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) setState(() => _prevCompleted = true);
+      });
+
+      final bubble = Container(
         width: _size,
         height: _size,
         decoration: BoxDecoration(
@@ -500,6 +556,12 @@ class _StatusBubble extends StatelessWidget {
             size: 26,
           ),
         ),
+      );
+
+      return TaskCheckAnimation(
+        triggered: justCompleted,
+        color: colors.primary,
+        child: bubble,
       );
     }
 
@@ -598,41 +660,22 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.cloud_outlined, size: 64, color: colors.textTertiary),
-          const SizedBox(height: 16),
-          Text(
-            'home.empty_title'.tr(),
-            textAlign: TextAlign.center,
-            style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'home.empty_body'.tr(),
-            textAlign: TextAlign.center,
-            style: AppTextStyles.body.copyWith(color: colors.textSecondary),
-          ),
-          const SizedBox(height: 24),
-          AppButton(
-            label: 'home.add_manually'.tr(),
-            icon: Icons.edit_calendar_outlined,
-            variant: AppButtonVariant.secondary,
-            onPressed: () => context.push(AppRoutes.addGoal),
-          ),
-          const SizedBox(height: 12),
-          AppButton(
-            label: 'home.ask_ai'.tr(),
-            icon: Icons.auto_awesome_rounded,
-            onPressed: () => context.push(AppRoutes.aiPlanner),
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AppButton(
+          label: 'home.add_manually'.tr(),
+          icon: Icons.edit_calendar_outlined,
+          variant: AppButtonVariant.secondary,
+          onPressed: () => context.push(AppRoutes.addGoal),
+        ),
+        const SizedBox(height: 12),
+        AppButton(
+          label: 'home.ask_ai'.tr(),
+          icon: Icons.auto_awesome_rounded,
+          onPressed: () => context.push(AppRoutes.aiPlanner),
+        ),
+      ],
     );
   }
 }

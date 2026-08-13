@@ -1,3 +1,4 @@
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,8 +17,7 @@ import '../../premium/presentation/premium_badge.dart';
 import '../data/lobby_repository.dart';
 import '../domain/lobby.dart';
 
-/// A single lobby: its weekly member leaderboard, the join code, the last
-/// week's winner, and a leave action.
+/// A single lobby with its invite code, weekly leaderboard, and a leave action.
 class LobbyDetailScreen extends ConsumerStatefulWidget {
   const LobbyDetailScreen({super.key, required this.lobbyId});
 
@@ -30,6 +30,7 @@ class LobbyDetailScreen extends ConsumerStatefulWidget {
 class _LobbyDetailScreenState extends ConsumerState<LobbyDetailScreen> {
   bool _rolled = false;
   bool _leaving = false;
+
 
   String? get _uid => ref.read(authStateProvider).asData?.value?.uid;
 
@@ -80,7 +81,7 @@ class _LobbyDetailScreenState extends ConsumerState<LobbyDetailScreen> {
     final membersAsync = ref.watch(lobbyMembersProvider(widget.lobbyId));
     final members = membersAsync.asData?.value ?? const <UserProfile>[];
 
-    // React to member data arriving — roll the week once, OUTSIDE build (the
+    // React to member data arriving — roll the season once, OUTSIDE build (the
     // ref.listen callback runs after the frame, never during it).
     ref.listen(lobbyMembersProvider(widget.lobbyId), (_, next) {
       if (_rolled || !mounted) return;
@@ -95,12 +96,8 @@ class _LobbyDetailScreenState extends ConsumerState<LobbyDetailScreen> {
     final lobby = lobbyAsync.asData?.value;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(lobby?.name ?? 'lobby.detail_fallback_title'.tr()),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
+      appBar: FlowaAppBar(
+        showBackButton: true,
         actions: [
           if (lobby != null)
             IconButton(
@@ -128,11 +125,8 @@ class _LobbyDetailScreenState extends ConsumerState<LobbyDetailScreen> {
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               children: [
+                // ── Invite code card ─────────────────────────────────────
                 _CodeCard(lobby: lobby, onCopy: _copy),
-                if (lobby.lastWinner != null) ...[
-                  const SizedBox(height: 14),
-                  _WinnerBanner(winner: lobby.lastWinner!),
-                ],
                 const SizedBox(height: 22),
                 Row(
                   children: [
@@ -162,6 +156,10 @@ class _LobbyDetailScreenState extends ConsumerState<LobbyDetailScreen> {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Code Card
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _CodeCard extends StatelessWidget {
   const _CodeCard({required this.lobby, required this.onCopy});
 
@@ -179,7 +177,8 @@ class _CodeCard extends StatelessWidget {
         children: [
           Text(
             'lobby.detail_invite_code'.tr(),
-            style: AppTextStyles.overline.copyWith(color: colors.textSecondary),
+            style:
+                AppTextStyles.overline.copyWith(color: colors.textSecondary),
           ),
           const SizedBox(height: 8),
           Row(
@@ -195,7 +194,8 @@ class _CodeCard extends StatelessWidget {
               ),
               _RoundAction(
                 icon: Icons.copy_rounded,
-                onTap: () => onCopy(lobby.code, 'lobby.detail_code_copied'.tr()),
+                onTap: () =>
+                    onCopy(lobby.code, 'lobby.detail_code_copied'.tr()),
               ),
               const SizedBox(width: 8),
               _RoundAction(
@@ -210,7 +210,8 @@ class _CodeCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'lobby.detail_share_hint'.tr(),
-            style: AppTextStyles.caption.copyWith(color: colors.textSecondary),
+            style:
+                AppTextStyles.caption.copyWith(color: colors.textSecondary),
           ),
         ],
       ),
@@ -242,56 +243,10 @@ class _RoundAction extends StatelessWidget {
   }
 }
 
-class _WinnerBanner extends StatelessWidget {
-  const _WinnerBanner({required this.winner});
 
-  final LobbyWinner winner;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppCard(
-      color: colors.tintBlue,
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const Text('🎉', style: TextStyle(fontSize: 26)),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'lobby.detail_last_winner'.tr(),
-                  style: AppTextStyles.overline.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'lobby.detail_winner_line'.tr(
-                    namedArgs: {
-                      'name': winner.name,
-                      'points': '${winner.points}',
-                    },
-                  ),
-                  style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'lobby.detail_fresh_week'.tr(),
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// Leaderboard
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _Leaderboard extends StatelessWidget {
   const _Leaderboard({required this.members, required this.currentUid});
@@ -362,64 +317,69 @@ class _MemberRow extends StatelessWidget {
         },
         borderRadius: BorderRadius.circular(14),
         child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 24,
-                  child: leading
-                      ? const Icon(
-                          Icons.emoji_events_rounded,
-                          size: 20,
-                          color: Color(0xFFE3B23C),
-                        )
-                      : Text(
-                          '$rank',
-                          style: AppTextStyles.label.copyWith(
-                            color: colors.textSecondary,
+          children: [
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    child: leading
+                        ? const Icon(
+                            Icons.emoji_events_rounded,
+                            size: 20,
+                            color: Color(0xFFE3B23C),
+                          )
+                        : Text(
+                            '$rank',
+                            style: AppTextStyles.label.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(width: 8),
+                  AvatarCircle(avatarKey: user.avatar, size: 40),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            isMe
+                                ? 'lobby.detail_name_you'.tr(
+                                    namedArgs: {'name': user.name},
+                                  )
+                                : user.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.label.copyWith(
+                              color: colors.textPrimary,
+                            ),
                           ),
                         ),
-                ),
-                const SizedBox(width: 8),
-                AvatarCircle(avatarKey: user.avatar, size: 40),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          isMe
-                              ? 'lobby.detail_name_you'.tr(
-                                  namedArgs: {'name': user.name},
-                                )
-                              : user.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.label.copyWith(
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      if (kPremiumEnabled && user.isPremium) ...[
-                        const SizedBox(width: 6),
-                        const PremiumBadge(),
+                        if (kPremiumEnabled && user.isPremium) ...[
+                          const SizedBox(width: 6),
+                          const PremiumBadge(),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                Text(
-                  '${user.weeklyPoints} ${'common.pts'.tr()}',
-                  style: AppTextStyles.label.copyWith(
-                    color: leading ? AppColors.forest : colors.primary,
+                  Text(
+                    '${user.weeklyPoints} ${'common.pts'.tr()}',
+                    style: AppTextStyles.label.copyWith(
+                      color: leading ? AppColors.forest : colors.primary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
             if (showDivider)
-              Divider(height: 1, color: colors.border, indent: 12, endIndent: 12),
+              Divider(
+                  height: 1,
+                  color: colors.border,
+                  indent: 12,
+                  endIndent: 12),
           ],
         ),
       ),

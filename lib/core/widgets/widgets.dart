@@ -13,5 +13,8 @@ export 'app_states.dart';
 export 'avatar_circle.dart';
 export 'brand_logo.dart';
 export 'fit_scroll.dart';
+export 'flowa_app_bar.dart';
 export 'flowa_loading.dart';
 export 'progress_ring.dart';
+export 'segmented_filter_chip.dart';
+export 'spinning_coin.dart';

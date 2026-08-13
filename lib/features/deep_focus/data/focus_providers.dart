@@ -36,17 +36,29 @@ Future<void> scheduleBackgroundFocus({
 }) async {
   final start = startAt ?? task.start;
   final end = endAt ?? task.end;
-  if (!end.isAfter(DateTime.now())) return;
+  if (!end.isAfter(DateTime.now())) {
+    debugPrint('[scheduleBackgroundFocus] skipped: end time is in the past');
+    return;
+  }
   final shouldBlock =
       settings != null &&
       settings.blockedPackages.isNotEmpty &&
       (task.blockApps || settings.alwaysBlock);
+  final blockSettings = shouldBlock ? settings : null;
+
+  debugPrint(
+    '[scheduleBackgroundFocus] scheduling "${task.title}": '
+    'shouldBlock=$shouldBlock, packages=${blockSettings?.blockedPackages.length ?? 0}, '
+    'strict=${settings?.strictMode ?? false}, '
+    'start=$start, end=$end',
+  );
+
   await service.scheduleSession(
     taskId: taskId,
     title: task.title,
     startAt: start,
     endAt: end,
-    packages: shouldBlock ? settings.blockedPackages.toList() : const [],
+    packages: blockSettings?.blockedPackages.toList() ?? const [],
     // Soft friction by default; strict mode is an opt-in hard wall.
     strict: settings?.strictMode ?? false,
     lang: LocaleStore.effectiveCode(),
@@ -62,6 +74,7 @@ Future<void> beginBackgroundFocusNow({
   required BlockingSettings? settings,
 }) {
   final now = DateTime.now();
+  debugPrint('[beginBackgroundFocusNow] starting immediately for "${task.title}"');
   return scheduleBackgroundFocus(
     service: service,
     taskId: taskId,
@@ -71,6 +84,7 @@ Future<void> beginBackgroundFocusNow({
     endAt: now.add(Duration(minutes: task.durationMinutes)),
   );
 }
+
 
 /// The task the Focus tab should run: today's earliest not-yet-completed task.
 /// Null when nothing is left to focus on.
@@ -89,15 +103,40 @@ final currentFocusTaskProvider = Provider<Task?>((ref) {
 /// checked here — every task defaults to intervalSets=4, so that field alone
 /// cannot distinguish interval from deep-work sessions.
 bool usesIntervalTimer(Task task, UserProfile? profile) =>
-    task.category == AppCategory.sport ||
-    profile?.focusType == 'Sport' ||
-    task.focusMethod == FocusMethod.custom;
+    task.focusMethod != FocusMethod.note &&
+    (task.category == AppCategory.sport ||
+        profile?.focusType == 'Sport' ||
+        task.focusMethod == FocusMethod.custom);
 
 /// Session runs already persisted this process, so a foreground finish and a
 /// native "finished" event can't double-award / double-record. Counted runs
 /// stay claimed for the process; uncounted runs release after a delay so the
 /// user can retry the same task.
 final Set<String> _handled = {};
+
+/// Resets the handled claim for [taskId], allowing subsequent focus sessions to earn points.
+void clearHandledTask(String taskId) {
+  _handled.remove(taskId);
+}
+
+/// Completes a focus session with "Honest Focus" scoring. Stops the background
+/// service, evaluates the integrity [signals], and:
+///
+/// * **counts** the session (marks the task done + awards points) only if the
+///   timer genuinely completed and focus held (full) or mostly held (partial);
+/// * **doesn't count** it (no completion, no points) if quit early or spent in
+///   other apps.
+///
+/// Either way it stores the session record in Firestore, and returns the data
+/// the summary screen needs. Persistence is de-duplicated across the foreground
+/// + background completion paths; the returned summary is always computed from
+/// the live [signals] so it's correct even when another path persisted first.
+ProviderContainer _getContainer(dynamic ref) {
+  if (ref is ProviderContainer) return ref;
+  if (ref is Ref) return ref.container;
+  if (ref is WidgetRef) return ref.container;
+  throw ArgumentError('Expected ProviderContainer, Ref, or WidgetRef, got $ref');
+}
 
 /// Completes a focus session with "Honest Focus" scoring. Stops the background
 /// service, evaluates the integrity [signals], and:
@@ -112,23 +151,41 @@ final Set<String> _handled = {};
 /// + background completion paths; the returned summary is always computed from
 /// the live [signals] so it's correct even when another path persisted first.
 Future<GoalReachedArgs> completeFocusSession(
-  WidgetRef ref,
+  dynamic ref,
   Task task, {
   required FocusSignals signals,
   WorkoutResult? workout,
 }) async {
-  final uid = ref.read(authStateProvider).asData?.value?.uid;
-  final profile = ref.read(userProfileProvider).asData?.value;
+  final container = _getContainer(ref);
+  final uid = container.read(authStateProvider).asData?.value?.uid;
+  final profile = container.read(userProfileProvider).asData?.value;
   final isSport = usesIntervalTimer(task, profile);
 
   final today = DateUtils.dateOnly(DateTime.now());
-  final tasks = ref.read(tasksForDayProvider(today)).asData?.value ?? const [];
+  final tasks = container.read(tasksForDayProvider(today)).asData?.value ?? const [];
 
   // Stop the native foreground session (timer + notification), blocking, and
-  // the ambient focus sound.
-  await ref.read(focusServiceProvider).stopSession();
-  await stopBlocking(ref);
-  await ref.read(ambientSoundProvider.notifier).stopPlayback();
+  // the ambient focus sound. Do this in try-catch so failure doesn't block points.
+  try {
+    debugPrint('[completeFocusSession] Stopping native session...');
+    await container.read(focusServiceProvider).stopSession();
+  } catch (e, st) {
+    debugPrint('[completeFocusSession] ❌ stopSession failed: $e\n$st');
+  }
+
+  try {
+    debugPrint('[completeFocusSession] Stopping blocking...');
+    await stopBlocking(container).timeout(const Duration(seconds: 2));
+  } catch (e, st) {
+    debugPrint('[completeFocusSession] ❌ stopBlocking failed: $e\n$st');
+  }
+
+  try {
+    debugPrint('[completeFocusSession] Stopping ambient sound...');
+    await container.read(ambientSoundProvider.notifier).stopPlayback();
+  } catch (e, st) {
+    debugPrint('[completeFocusSession] ❌ stopPlayback failed: $e\n$st');
+  }
 
   Task? next;
   for (final t in tasks) {
@@ -140,6 +197,11 @@ Future<GoalReachedArgs> completeFocusSession(
 
   var verdict = HonestFocus.evaluate(signals);
   var counted = HonestFocus.counts(verdict);
+  debugPrint(
+    '[completeFocusSession] HonestFocus.evaluate → verdict=$verdict, counted=$counted '
+    'timerCompleted=${signals.timerCompleted} distractingOpens=${signals.distractingOpens} '
+    'awayRatio=${signals.totalSeconds > 0 ? (signals.awaySeconds / signals.totalSeconds).toStringAsFixed(2) : "N/A"}',
+  );
 
   final integrityPercent = SessionIntegrity.calculateScore(
     signals: signals,
@@ -152,16 +214,56 @@ Future<GoalReachedArgs> completeFocusSession(
     verdict = FocusVerdict.incomplete;
   }
 
+  // BUG FIX #1 + #2: plannedMinutes must be the PLANNED duration
+  // (task.durationMinutes ± user's time adjustments), NOT the elapsed
+  // real-time (signals.totalSeconds). Using elapsed time as the denominator
+  // made completionPercent approach 1.0 regardless of how early the user quit.
+  final adjustedPlannedMinutes = (task.durationMinutes + (signals.timeAdjustmentSeconds / 60).round()).clamp(1, 1440);
+
+  // BUG FIX #2: always use adjustedPlannedMinutes as the "planned" denominator
+  // so +/- time adjustments are properly reflected in completionPercent.
   final completionPercent = GamificationMath.calculateTaskCompletionPercent(
-    plannedMinutes: task.durationMinutes,
+    plannedMinutes: adjustedPlannedMinutes,
     actualMinutes: signals.focusedSeconds ~/ 60,
+  );
+  debugPrint(
+    '[completeFocusSession] verdict=$verdict counted=$counted '
+    'integrityPercent=${integrityPercent.toStringAsFixed(2)} '
+    'completionPercent=${completionPercent.toStringAsFixed(2)} '
+    'focusedSeconds=${signals.focusedSeconds} '
+    'taskDurationMinutes=${task.durationMinutes} '
+    'adjustedPlannedMinutes=$adjustedPlannedMinutes '
+    'timeAdjustmentSeconds=${signals.timeAdjustmentSeconds} '
+    'actualMinutes=${signals.focusedSeconds ~/ 60}',
   );
 
   var gained = 0;
   var streak = profile?.streak ?? 0;
   int? milestone;
 
+  var pointsError = false;
+  String? errorMessage;
+
+  final adjustedBasePoints = task.durationMinutes > 0 
+      ? (task.points * (adjustedPlannedMinutes / task.durationMinutes)).round()
+      : task.points;
+  // BUG FIX #3: removed the dangerous fallback that granted task.points in
+  // full even when completionPercent was tiny (e.g. 5%). Now points are always
+  // strictly proportional — 0% completion → 0 points.
+  var expectedGained = (GamificationMath.proportionalPoints(
+    basePoints: adjustedBasePoints,
+    completionPercent: completionPercent,
+  ) * integrityPercent).round();
+
+  // If already handled, we still want to show the correct gained points in the UI.
+  if (counted) gained = expectedGained;
+
   // Claim this session run for persistence (first handler wins).
+  debugPrint(
+    '[completeFocusSession] _handled check: uid=$uid, '
+    'task.id=${task.id}, alreadyHandled=${_handled.contains(task.id)}, '
+    'counted=$counted, gained=$gained, expectedGained=$expectedGained',
+  );
   if (uid != null && _handled.add(task.id)) {
     if (!counted) {
       // Let the user retry an uncounted task after a short window.
@@ -172,48 +274,123 @@ Future<GoalReachedArgs> completeFocusSession(
     }
 
     if (counted) {
-      // Idempotently mark complete + write points (daily / weekly / total).
-      final result = await completeAndAward(
-        ref,
-        task,
-        deep: !isSport,
-        // Full bonus only when blocking was fully respected.
-        blockingEngaged: HonestFocus.blockingRespected(signals),
-        integrityPercent: integrityPercent,
+      try {
+        debugPrint('[completeFocusSession] Step A: completeAndAward starting...');
+        final result = await completeAndAward(
+          container,
+          task,
+          deep: !isSport,
+          blockingEngaged: HonestFocus.blockingRespected(signals),
+          integrityPercent: integrityPercent,
+          completionPercent: completionPercent,
+          plannedMinutesOverride: adjustedPlannedMinutes,
+          focusedMinutesOverride: signals.focusedSeconds ~/ 60,
+        ).timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          debugPrint('[completeFocusSession] ⚠️ completeAndAward timed out after 10s');
+          throw Exception('completeAndAward timeout');
+        },
       );
-      if (result != null) {
-        gained = result.gained;
-        streak = result.streak;
-        milestone = result.milestone;
+        if (result != null) {
+          gained = result.gained;
+          streak = result.streak;
+          milestone = result.milestone;
+          debugPrint('[completeFocusSession] Step A: completeAndAward done. gained=$gained, streak=$streak');
+        } else {
+          // If completeAndAward returned null (task already awarded), reuse
+          // the already-computed completionPercent from the outer scope — it's
+          // already corrected (adjustedPlannedMinutes as denominator).
+          final adjustedBasePoints = task.durationMinutes > 0 
+              ? (task.points * (adjustedPlannedMinutes / task.durationMinutes)).round()
+              : task.points;
+          final basePoints = GamificationMath.proportionalPoints(
+            basePoints: adjustedBasePoints,
+            completionPercent: completionPercent,
+          );
+          gained = (basePoints * integrityPercent).round();
+          debugPrint('[completeFocusSession] Step A: task already awarded, fallback gained=$gained');
+        }
+      } catch (e, st) {
+        debugPrint('[points] ❌ completeAndAward exception/timeout: $e\n$st');
+        pointsError = true;
+        errorMessage = 'Ochko saqlashda xato yuz berdi, internetni tekshiring';
+        // On network error/timeout: reuse already-computed completionPercent
+        // (adjustedPlannedMinutes as denominator) for proportional points.
+        final adjustedBasePoints2 = task.durationMinutes > 0 
+            ? (task.points * (adjustedPlannedMinutes / task.durationMinutes)).round()
+            : task.points;
+        gained = (GamificationMath.proportionalPoints(
+          basePoints: adjustedBasePoints2,
+          completionPercent: completionPercent,
+        ) * integrityPercent).round();
       }
     }
 
     // Store the session result + signals in Firestore (counted or not).
-    await ref
-        .read(focusSessionRepositoryProvider)
-        .record(
-          uid: uid,
-          taskId: task.id,
-          taskTitle: task.title,
-          verdict: verdict,
-          signals: signals,
-          points: gained,
-          workout: workout,
-        );
+    try {
+      debugPrint('[completeFocusSession] Step B: recording session to repository...');
+      await container
+          .read(focusSessionRepositoryProvider)
+          .record(
+            uid: uid,
+            taskId: task.id,
+            taskTitle: task.title,
+            verdict: verdict,
+            signals: signals,
+            points: gained,
+            workout: workout,
+          ).timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => debugPrint('[completeFocusSession] ⚠️ record timed out after 10s'),
+          );
+      debugPrint('[completeFocusSession] Step B: record done');
+    } catch (e, st) {
+      debugPrint('[completeFocusSession] ❌ record exception: $e\n$st');
+      // Secondary record error does not fail the primary point award
+    }
 
     // Persist the completion ratio so the daily plan can show partial progress.
-    // We always write it (even for uncounted sessions) to reflect the real
-    // effort — only overwrite with a higher value so a retry can't lower it.
-    final existing = await ref
-        .read(taskRepositoryProvider)
-        .getTask(uid, task.id);
-    final prevPercent = existing?.completionPercent ?? 0.0;
-    if (completionPercent > prevPercent) {
-      await ref
+    try {
+      debugPrint('[completeFocusSession] Step C: saving completion percent...');
+      final existing = await container
           .read(taskRepositoryProvider)
-          .saveCompletionPercent(uid, task.id, completionPercent);
+          .getTask(uid, task.id)
+          .timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => null,
+          );
+      final prevPercent = existing?.completionPercent ?? 0.0;
+      if (completionPercent > prevPercent) {
+        await container
+            .read(taskRepositoryProvider)
+            .saveCompletionPercent(uid, task.id, completionPercent)
+            .timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => debugPrint('[completeFocusSession] ⚠️ saveCompletionPercent timed out'),
+            );
+      }
+      debugPrint('[completeFocusSession] Step C: saveCompletionPercent done');
+    } catch (e, st) {
+      debugPrint('[completeFocusSession] ❌ saveCompletionPercent exception: $e\n$st');
     }
   }
+
+  debugPrint(
+    '[completeFocusSession] ========== FINAL RESULT ==========\n'
+    '[completeFocusSession] points=$gained\n'
+    '[completeFocusSession] awardedPoints=$gained\n'
+    '[completeFocusSession] verdict=$verdict\n'
+    '[completeFocusSession] counted=$counted\n'
+    '[completeFocusSession] streak=$streak\n'
+    '[completeFocusSession] completionPercent=${completionPercent.toStringAsFixed(2)}\n'
+    '[completeFocusSession] integrityPercent=${integrityPercent.toStringAsFixed(2)}\n'
+    '[completeFocusSession] focusSeconds=${signals.focusedSeconds}\n'
+    '[completeFocusSession] isSport=$isSport\n'
+    '[completeFocusSession] fullCompletion=${completionPercent >= 0.95}\n'
+    '[completeFocusSession] pointsError=$pointsError\n'
+    '[completeFocusSession] ================================',
+  );
 
   return GoalReachedArgs(
     points: gained,
@@ -230,21 +407,24 @@ Future<GoalReachedArgs> completeFocusSession(
     awardedPoints: gained,
     fullCompletion: completionPercent >= 0.95,
     integrityPercent: integrityPercent,
+    pointsError: pointsError,
+    errorMessage: errorMessage,
   );
 }
 
 /// Scores a session that finished in the background (app closed or on another
 /// screen), using its captured integrity [signals].
 Future<void> processBackgroundCompletion(
-  WidgetRef ref,
+  dynamic ref,
   String taskId,
   FocusSignals signals,
 ) async {
-  final uid = ref.read(authStateProvider).asData?.value?.uid;
+  final container = _getContainer(ref);
+  final uid = container.read(authStateProvider).asData?.value?.uid;
   if (uid == null) return;
-  final task = await ref.read(taskRepositoryProvider).getTask(uid, taskId);
+  final task = await container.read(taskRepositoryProvider).getTask(uid, taskId);
   if (task == null) return;
-  await completeFocusSession(ref, task, signals: signals);
+  await completeFocusSession(container, task, signals: signals);
 }
 
 /// Tasks whose points are being written right now (in-flight dedup within the
@@ -259,17 +439,22 @@ final Set<String> _awardingTasks = {};
 /// the focus-session flow — it never awards a task twice. Returns the
 /// [CompletionResult], or null if the task was already awarded / no user.
 Future<CompletionResult?> completeAndAward(
-  WidgetRef ref,
+  dynamic ref,
   Task task, {
   bool deep = false,
   bool blockingEngaged = false,
   double integrityPercent = 1.0,
+  double? completionPercent,
+  int? plannedMinutesOverride,
+  int? focusedMinutesOverride,
+  int timeAdjustmentSeconds = 0,
 }) async {
-  final uid = ref.read(authStateProvider).asData?.value?.uid;
+  final container = _getContainer(ref);
+  final uid = container.read(authStateProvider).asData?.value?.uid;
   if (uid == null) return null;
   if (!_awardingTasks.add(task.id)) return null; // already in flight
   try {
-    final repo = ref.read(taskRepositoryProvider);
+    final repo = container.read(taskRepositoryProvider);
     final fresh = await repo.getTask(uid, task.id);
     if (fresh != null && fresh.pointsAwarded) {
       debugPrint('[points] skip "${task.title}": already awarded');
@@ -277,20 +462,38 @@ Future<CompletionResult?> completeAndAward(
       return null;
     }
 
-    final completionPercent = GamificationMath.calculateTaskCompletionPercent(
-      plannedMinutes: task.durationMinutes,
-      actualMinutes: task.durationMinutes,
+    final plannedMinutes = plannedMinutesOverride ?? (task.durationMinutes + (timeAdjustmentSeconds / 60).round()).clamp(1, 1440);
+
+    final cp = completionPercent ?? GamificationMath.calculateTaskCompletionPercent(
+      plannedMinutes: plannedMinutes,
+      actualMinutes: plannedMinutes,
     );
+    // Base points are proportional to the session's planned minutes (after any
+    // user adjustments), not the original task.points stored at creation time.
+    final adjustedBasePoints = task.durationMinutes > 0 
+        ? (task.points * (plannedMinutes / task.durationMinutes)).round()
+        : task.points;
+
     final basePoints = GamificationMath.proportionalPoints(
-      basePoints: task.points,
-      completionPercent: completionPercent,
+      basePoints: adjustedBasePoints,
+      completionPercent: cp,
     );
     final awardedPoints = (basePoints * integrityPercent).round();
-    final fullCompletion = completionPercent >= 0.95;
+    final fullCompletion = cp >= 0.95;
+    debugPrint(
+      '[completeAndAward] "${task.title}" '
+      'plannedMin=${task.durationMinutes} '
+      'adjustedMin=$plannedMinutes '
+      'basePoints=${task.points} '
+      'adjustedBasePoints=$adjustedBasePoints '
+      'completionPercent=${cp.toStringAsFixed(2)} '
+      'integrityPercent=${integrityPercent.toStringAsFixed(2)} '
+      'awardedPoints=$awardedPoints',
+    );
 
     final today = DateUtils.dateOnly(DateTime.now());
     final tasks =
-        ref.read(tasksForDayProvider(today)).asData?.value ?? const [];
+        container.read(tasksForDayProvider(today)).asData?.value ?? const [];
     final completedIds =
         tasks.where((t) => t.isCompleted).map((t) => t.id).toSet()
           ..add(task.id);
@@ -298,7 +501,7 @@ Future<CompletionResult?> completeAndAward(
 
     // Stamp completed + awarded first (idempotency), then write the points.
     await repo.markAwarded(uid, task.id);
-    final result = await ref
+    final result = await container
         .read(gamificationRepositoryProvider)
         .recordCompletion(
           uid,
@@ -307,9 +510,11 @@ Future<CompletionResult?> completeAndAward(
           totalToday: total,
           deep: deep,
           blockingEngaged: blockingEngaged,
-          completionPercent: completionPercent,
+          completionPercent: cp,
           awardedPoints: awardedPoints,
           fullCompletion: fullCompletion,
+          durationMinutesOverride: plannedMinutes,
+          focusedMinutesOverride: focusedMinutesOverride,
         );
     debugPrint(
       '[points] awarded +${result.gained} for "${task.title}" '
@@ -318,7 +523,7 @@ Future<CompletionResult?> completeAndAward(
     return result;
   } catch (e, st) {
     debugPrint('[points] FAILED to award "${task.title}": $e\n$st');
-    return null;
+    rethrow;
   } finally {
     _awardingTasks.remove(task.id);
   }

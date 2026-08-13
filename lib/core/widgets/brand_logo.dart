@@ -16,10 +16,17 @@ class BrandLogo extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.spa_rounded, size: fontSize + 4, color: c),
+        ClipOval(
+          child: Image.asset(
+            'assets/icon/flowa_icon.png',
+            width: fontSize + 6,
+            height: fontSize + 6,
+            fit: BoxFit.cover,
+          ),
+        ),
         const SizedBox(width: 8),
         Text(
-          'Flowa',
+          'Odat',
           style: AppTextStyles.h3.copyWith(
             color: c,
             fontSize: fontSize,

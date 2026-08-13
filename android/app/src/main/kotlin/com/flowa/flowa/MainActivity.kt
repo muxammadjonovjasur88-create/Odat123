@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Process
 import android.provider.Settings
+import android.util.Log
 import com.flowa.flowa.blocking.AppBlockerAccessibilityService
 import com.flowa.flowa.blocking.BlockerState
 import com.flowa.flowa.blocking.BlockingForegroundService
@@ -21,6 +22,10 @@ import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
+
+    companion object {
+        private const val TAG = "FlowaMain"
+    }
 
     private val blockingChannel = "flowa/blocking"
     private val focusChannel = "flowa/focus"
@@ -40,17 +45,30 @@ class MainActivity : FlutterActivity() {
                     val endTime = call.argument<Number>("endTime")?.toLong() ?: now
                     val strict = call.argument<Boolean>("strict") ?: false
                     val lang = call.argument<String>("lang") ?: "en"
+                    Log.d(TAG, "[blocking/startSession] packages=${packages.size} startAt=$startAt endTime=$endTime strict=$strict lang=$lang")
+                    Log.d(TAG, "[blocking/startSession] usageAccess=${hasUsageAccess()} a11y=${isAccessibilityServiceEnabled()} overlay=${android.provider.Settings.canDrawOverlays(this)}")
+                    if (packages.isEmpty()) {
+                        Log.w(TAG, "[blocking/startSession] WARNING: packages list is EMPTY — nothing to block!")
+                    } else {
+                        Log.d(TAG, "[blocking/startSession] packages=$packages")
+                    }
                     BlockerState.start(packages, startAt, endTime, strict = strict, lang = lang)
+                    Log.d(TAG, "[blocking/startSession] BlockerState armed: active=${BlockerState.active} inWindow=${BlockerState.inWindow()}")
                     SessionStore.save(this, packages, startAt, endTime)
                     BlockingForegroundService.start(this, endTime)
+                    Log.d(TAG, "[blocking/startSession] BlockingForegroundService started")
                     result.success(true)
                 }
+
                 "stopSession" -> {
+                    Log.d(TAG, "[blocking/stopSession] stopping blocking session")
                     BlockerState.stop()
                     SessionStore.clear(this)
                     BlockingForegroundService.stop(this)
+                    Log.d(TAG, "[blocking/stopSession] done")
                     result.success(true)
                 }
+
                 "hasUsageAccess" -> result.success(hasUsageAccess())
                 "openUsageAccessSettings" -> {
                     startActivity(
@@ -117,30 +135,42 @@ class MainActivity : FlutterActivity() {
                     )
                     val strict = call.argument<Boolean>("strict") ?: false
                     val lang = call.argument<String>("lang") ?: "en"
+                    Log.d(TAG, "[focus/scheduleSession] taskId=$taskId title='$title' " +
+                        "packages=${packages.size} strict=$strict startAt=$startAt endAt=$endAt")
+                    if (packages.isEmpty()) {
+                        Log.w(TAG, "[focus/scheduleSession] WARNING: packages is EMPTY — no apps will be blocked!")
+                    }
                     if (endAt <= now) {
+                        Log.w(TAG, "[focus/scheduleSession] endAt is in the past — rejecting")
                         result.success(false)
                         return@setMethodCallHandler
                     }
                     FocusRuntime.save(this, taskId, title, startAt, endAt, packages, strict, lang)
                     if (startAt <= now) {
                         // Begin right away; drop any previously-scheduled alarm.
+                        Log.d(TAG, "[focus/scheduleSession] startAt<=now — starting FocusForegroundService immediately")
                         FocusScheduler.cancel(this)
                         FocusForegroundService.start(
                             this, taskId, title, startAt, endAt, packages, strict, lang,
                         )
                     } else {
                         // Wake up at the scheduled time, even if the app is closed.
+                        Log.d(TAG, "[focus/scheduleSession] startAt is in future — scheduling alarm")
                         FocusScheduler.schedule(this, startAt)
                     }
                     result.success(true)
                 }
+
                 "stopSession" -> {
+                    Log.d(TAG, "[focus/stopSession] stopping focus session")
                     FocusScheduler.cancel(this)
                     FocusForegroundService.stop(this)
                     BlockerState.stop()
                     FocusRuntime.clear(this)
+                    Log.d(TAG, "[focus/stopSession] done")
                     result.success(true)
                 }
+
                 "getActiveSession" -> result.success(FocusRuntime.snapshot(this))
                 "takePendingCompletion" ->
                     result.success(FocusRuntime.takePendingCompletion(this))
@@ -150,6 +180,21 @@ class MainActivity : FlutterActivity() {
                     FocusRuntime.recordAway(this, true)
                     result.success(true)
                 }
+                "adjustTime" -> {
+                    // Flutter's +5 min / −5 min button: shift the native end time.
+                    val deltaSeconds = call.argument<Number>("deltaSeconds")?.toLong() ?: 0L
+                    val deltaMs = deltaSeconds * 1000L
+                    Log.d(TAG, "[focus/adjustTime] deltaSeconds=$deltaSeconds")
+                    if (!FocusRuntime.isActive(this)) {
+                        Log.w(TAG, "[focus/adjustTime] no active session — ignoring")
+                        result.success(false)
+                    } else {
+                        FocusForegroundService.adjustEndAt(this, deltaMs)
+                        Log.d(TAG, "[focus/adjustTime] newEndAt=${FocusRuntime.endAt(this)}")
+                        result.success(true)
+                    }
+                }
+
                 "canScheduleExactAlarms" ->
                     result.success(FocusScheduler.canScheduleExact(this))
                 "openExactAlarmSettings" -> {

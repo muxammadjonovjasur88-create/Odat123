@@ -47,6 +47,10 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == uid;
       }
 
+      match /focus_sessions/{sessionId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
       // likedBy: tracks which users have liked this user's profile
       match /likedBy/{likerUserId} {
         // Signed-in users can read the list of likers (for UI state)
@@ -54,6 +58,15 @@ service cloud.firestore {
         // Only the liker can add/remove their own like
         allow create: if request.auth != null && request.auth.uid == likerUserId;
         allow delete: if request.auth != null && request.auth.uid == likerUserId;
+      }
+
+      match /bookProgress/{bookId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      match /quizResults/{bookId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
       }
     }
 
@@ -105,5 +118,54 @@ service cloud.firestore {
         && request.resource.data.memberUids.size() <= 20;
       allow delete: if request.auth != null && resource.data.creatorUid == request.auth.uid;
     }
+
+    // ---------------------------------------------------------------------------
+    // Shop (Do'kon) feature rules
+    // - shopItems: open to read for all authenticated users; writes blocked (server only)
+    // - purchasedCoupons: users can only read their own purchased coupons; writes blocked
+    // - giftOrders: users can only read their own gift orders; writes blocked
+    // ---------------------------------------------------------------------------
+    match /shopItems/{itemId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /purchasedCoupons/{couponId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    match /giftOrders/{orderId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------------
+    // loginRequests — Telegram orqali avtomatik kirish so'rovlari
+    //
+    // Client o'zining noyob token hujjatini real-time stream orqali tinglashi (read)
+    // mumkin, lekin loginRequests'ga to'g'ridan-to'g'ri yozolmaydi (write: false).
+    // Yozish faqat Cloud Functions (Admin SDK) orqali amalga oshiriladi.
+    // ---------------------------------------------------------------------------
+    match /loginRequests/{token} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------------
+    // Library (Kutubxona) feature rules
+    // - books: open to read for all authenticated users; writes blocked (server only)
+    // - bookQuizzes: open to read for all authenticated users; writes blocked (server only)
+    // ---------------------------------------------------------------------------
+    match /books/{bookId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /bookQuizzes/{bookId} {
+      allow read: if true;
+      allow write: if false;
+    }
   }
 }
+

@@ -9,19 +9,19 @@ import 'app_text_styles.dart';
 abstract final class AppTheme {
   AppTheme._();
 
-  static ThemeData get light => _build(Brightness.light, AppColors.light);
+  static ThemeData get light => _build(Brightness.dark, AppColors.dark);
   static ThemeData get dark => _build(Brightness.dark, AppColors.dark);
 
   static ThemeData _build(Brightness brightness, AppColorScheme c) {
     final colorScheme = ColorScheme(
-      brightness: brightness,
+      brightness: Brightness.dark,
       primary: c.primary,
       onPrimary: c.onPrimary,
-      secondary: AppColors.sage,
+      secondary: c.secondary,
       onSecondary: c.onPrimary,
       surface: c.surface,
       onSurface: c.textPrimary,
-      error: const Color(0xFFB3504B),
+      error: const Color(0xFFFF5252),
       onError: Colors.white,
     );
 
@@ -29,7 +29,7 @@ abstract final class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      brightness: brightness,
+      brightness: Brightness.dark,
       scaffoldBackgroundColor: c.background,
       colorScheme: colorScheme,
       textTheme: textTheme,

@@ -81,16 +81,21 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.spa_rounded,
-                      size: 56,
-                      color: AppColors.forest.withValues(alpha: 0.85),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.asset(
+                          'assets/icon/flowa_icon.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 30),
                 Text(
-                  'Flowa',
+                  'Odat',
                   style: AppTextStyles.h1.copyWith(
                     color: colors.textPrimary,
                     fontSize: 30,

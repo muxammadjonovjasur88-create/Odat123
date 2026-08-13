@@ -23,7 +23,7 @@ class CommunityScreen extends ConsumerWidget {
 
     return Scaffold(
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.stats,
+        current: AppNavTab.leaderboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
@@ -31,7 +31,20 @@ class CommunityScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
           children: [
-            Row(children: [const BrandLogo(), const Spacer()]),
+            Row(
+              children: [
+                if (context.canPop())
+                  IconButton(
+                    onPressed: () => context.pop(),
+                    icon: Icon(
+                      Icons.arrow_back_rounded,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                const BrandLogo(),
+                const Spacer(),
+              ],
+            ),
             const SizedBox(height: 20),
             Center(
               child: Text(
@@ -51,10 +64,65 @@ class CommunityScreen extends ConsumerWidget {
             // Personal weekly growth — the main, non-competitive motivator.
             const SelfGrowthCard(),
             const SizedBox(height: 16),
-            // Private lobbies are the ONLY place points are ranked.
+            const _GlobalLeaderboardEntry(),
+            const SizedBox(height: 12),
+            // Private lobbies for small group competition.
             const _LobbiesEntry(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GlobalLeaderboardEntry extends StatelessWidget {
+  const _GlobalLeaderboardEntry();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return AppCard(
+      color: colors.surface,
+      onTap: () => context.push(AppRoutes.leaderboard),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: colors.tintSage,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.emoji_events_rounded,
+              color: colors.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'leaderboard.title'.tr(),
+                  style: AppTextStyles.label.copyWith(
+                    color: colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Barcha foydalanuvchilar va umumiy ballar reytingi',
+                  style: AppTextStyles.caption.copyWith(
+                    color: colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.chevron_right_rounded, color: colors.textSecondary),
+        ],
       ),
     );
   }

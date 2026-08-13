@@ -69,11 +69,27 @@ class NotificationService {
     _fcmTokenSub = null;
   }
 
-  /// Clears all local notifications, FCM subscriptions, and the local FCM token on logout.
-  Future<void> clearAllUserData() async {
+  /// Clears all local notifications, FCM subscriptions, and the current device
+  /// token on logout. When a uid is provided, it also removes the `fcmToken`
+  /// field from the user's Firestore document so the old account can no longer
+  /// receive notifications on this device.
+  Future<void> clearAllUserData({String? uid}) async {
     if (!_ready) await init();
-    await _plugin.cancelAll();
+
+    try {
+      await _plugin.cancelAll();
+    } catch (_) {}
+
     await cancelFcmSubscription();
+
+    if (uid != null && uid.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'fcmToken': FieldValue.delete(),
+        }, SetOptions(merge: true));
+      } catch (_) {}
+    }
+
     try {
       await FirebaseMessaging.instance.deleteToken();
     } catch (_) {}
@@ -117,34 +133,57 @@ class NotificationService {
         >();
 
     final settingsBox = await Hive.openBox('flowa_settings');
-    final soundPath = settingsBox.get('task_alarm_sound', defaultValue: 'assets/sounds/alarm.wav') as String;
+    final rawSoundPath =
+        settingsBox.get(
+              'task_alarm_sound',
+              defaultValue: 'system_alarm',
+            )
+            as String;
 
-    // Determine whether the sound is a bundled asset (and has a matching
-    // raw resource) or a user-picked file. For assets we use the raw resource
-    // name; for custom files we fall back to a single "custom" channel and
-    // use a file:// URI sound so Android can play it from the device storage.
+    // Migrate from the old low-quality default to the system alarm.
+    final soundPath = rawSoundPath == 'assets/sounds/alarm.wav' 
+        ? 'system_alarm' 
+        : rawSoundPath;
+
+    final bool isSystemAlarm = soundPath == 'system_alarm';
     final bool isAsset = soundPath.startsWith('assets/sounds/');
-    String rawSoundName = 'alarm';
+    
+    String rawSoundName = 'custom';
     String channelId;
     AndroidNotificationSound? androidSound;
 
-    if (isAsset) {
+    if (isSystemAlarm) {
+      channelId = 'task_alarm_channel_system_v2';
+      rawSoundName = 'system_alarm';
+      androidSound = const UriAndroidNotificationSound('content://settings/system/alarm_alert');
+    } else if (isAsset) {
       rawSoundName = soundPath.split('/').last.replaceAll('.wav', '');
       channelId = 'task_alarm_channel_$rawSoundName';
       androidSound = RawResourceAndroidNotificationSound(rawSoundName);
     } else {
       // Custom file chosen by user
-      final fileUri = soundPath.startsWith('file://') ? soundPath : 'file://$soundPath';
+      final fileUri = soundPath.startsWith('file://')
+          ? soundPath
+          : 'file://$soundPath';
       channelId = 'task_alarm_channel_custom';
-      rawSoundName = 'custom';
       androidSound = UriAndroidNotificationSound(fileUri);
     }
 
     // Delete a few legacy channels to avoid clutter
     await android?.deleteNotificationChannel(channelId: 'task_alarm_channel');
-    await android?.deleteNotificationChannel(channelId: 'task_alarm_channel_alarm');
-    await android?.deleteNotificationChannel(channelId: 'task_alarm_channel_alarm_soft');
-    await android?.deleteNotificationChannel(channelId: 'task_alarm_channel_alarm_loud');
+    await android?.deleteNotificationChannel(
+      channelId: 'task_alarm_channel_alarm',
+    );
+    await android?.deleteNotificationChannel(
+      channelId: 'task_alarm_channel_alarm_soft',
+    );
+    await android?.deleteNotificationChannel(
+      channelId: 'task_alarm_channel_alarm_loud',
+    );
+    // Delete the intermediate channel we might have just created in dev
+    await android?.deleteNotificationChannel(
+      channelId: 'task_alarm_channel_sys_alarm',
+    );
 
     // Register our task alarm channel with the chosen sound and vibration pattern
     final alarmChannel = AndroidNotificationChannel(
@@ -178,7 +217,9 @@ class NotificationService {
   /// a one-time dialog prompting the user to grant EXACT ALARM settings on Android.
   Future<void> checkAndRequestPermissions(BuildContext context) async {
     final settingsBox = await Hive.openBox('flowa_settings');
-    final hasAskedNotification = settingsBox.get('asked_notification_permission', defaultValue: false) as bool;
+    final hasAskedNotification =
+        settingsBox.get('asked_notification_permission', defaultValue: false)
+            as bool;
 
     final android = _plugin
         .resolvePlatformSpecificImplementation<
@@ -194,7 +235,9 @@ class NotificationService {
     // Now check exact alarm permission
     final canExact = await android?.canScheduleExactNotifications() ?? true;
     if (!canExact) {
-      final hasAskedExactAlarm = settingsBox.get('asked_exact_alarm_dialog', defaultValue: false) as bool;
+      final hasAskedExactAlarm =
+          settingsBox.get('asked_exact_alarm_dialog', defaultValue: false)
+              as bool;
       if (!hasAskedExactAlarm) {
         if (context.mounted) {
           showDialog(
@@ -204,7 +247,7 @@ class NotificationService {
               title: const Text('Budilnik ruxsati'),
               content: const Text(
                 'Vazifalar boshlanishidan oldin budilnik to\'g\'ri va o\'z vaqtida '
-                'chalinishi uchun sozlamalardan "Alarmlar va eslatmalar" ruxsatini yoqing.'
+                'chalinishi uchun sozlamalardan "Alarmlar va eslatmalar" ruxsatini yoqing.',
               ),
               actions: [
                 TextButton(
@@ -236,12 +279,14 @@ class NotificationService {
         final taskTitle = parts[2];
         final minutesBefore = int.tryParse(parts[3]) ?? 10;
         final notificationId = response.id ?? 0;
-        
+
         Future.microtask(() {
           try {
-            _ref.read(routerProvider).push(
-              '/task-alarm?taskId=$taskId&title=${Uri.encodeComponent(taskTitle)}&minutesBefore=$minutesBefore&notificationId=$notificationId'
-            );
+            _ref
+                .read(routerProvider)
+                .push(
+                  '/task-alarm?taskId=$taskId&title=${Uri.encodeComponent(taskTitle)}&minutesBefore=$minutesBefore&notificationId=$notificationId',
+                );
           } catch (e) {
             // Router might not be ready yet
           }
@@ -249,7 +294,6 @@ class NotificationService {
       }
     }
   }
-
 
   /// Schedules with an exact alarm when allowed, falling back to an inexact one
   /// (which a user can't disable) if exact alarms aren't permitted.
@@ -283,24 +327,40 @@ class NotificationService {
     );
   }
 
-
   Future<NotificationDetails> _getAlarmDetails() async {
     final settingsBox = await Hive.openBox('flowa_settings');
-    final soundPath = settingsBox.get('task_alarm_sound', defaultValue: 'assets/sounds/alarm.wav') as String;
-    // Reuse the same detection logic as in init(): asset vs custom file
+    final rawSoundPath =
+        settingsBox.get(
+              'task_alarm_sound',
+              defaultValue: 'system_alarm',
+            )
+            as String;
+
+    // Migrate from the old low-quality default to the system alarm.
+    final soundPath = rawSoundPath == 'assets/sounds/alarm.wav' 
+        ? 'system_alarm' 
+        : rawSoundPath;
+
+    final bool isSystemAlarm = soundPath == 'system_alarm';
     final bool isAsset = soundPath.startsWith('assets/sounds/');
-    String rawSoundName = 'alarm';
+    
+    String rawSoundName = 'custom';
     String channelId;
     AndroidNotificationSound? androidSound;
 
-    if (isAsset) {
+    if (isSystemAlarm) {
+      channelId = 'task_alarm_channel_system_v2';
+      rawSoundName = 'system_alarm';
+      androidSound = const UriAndroidNotificationSound('content://settings/system/alarm_alert');
+    } else if (isAsset) {
       rawSoundName = soundPath.split('/').last.replaceAll('.wav', '');
       channelId = 'task_alarm_channel_$rawSoundName';
       androidSound = RawResourceAndroidNotificationSound(rawSoundName);
     } else {
-      final fileUri = soundPath.startsWith('file://') ? soundPath : 'file://$soundPath';
+      final fileUri = soundPath.startsWith('file://')
+          ? soundPath
+          : 'file://$soundPath';
       channelId = 'task_alarm_channel_custom';
-      rawSoundName = 'custom';
       androidSound = UriAndroidNotificationSound(fileUri);
     }
 
@@ -329,7 +389,6 @@ class NotificationService {
     );
   }
 
-
   static const _streakDetails = NotificationDetails(
     android: AndroidNotificationDetails(
       'flowa_streak',
@@ -345,14 +404,14 @@ class NotificationService {
   /// the same id just replaces the pending notification.
   Future<void> scheduleTaskReminder(Task task) async {
     await init();
-    
+
     // 10 minutes before reminder
     final when10 = task.start.subtract(const Duration(minutes: 10));
     if (when10.isAfter(DateTime.now())) {
       await _schedule(
         id: _taskNotificationId(task, 10),
         title: '${task.title} 10 daqiqadan so\'ng boshlanadi',
-        body: 'Vazifaga tayyorlaning — Flowa diqqatni jamlashga yordam beradi!',
+        body: 'Vazifaga tayyorlaning — Odat diqqatni jamlashga yordam beradi!',
         when: tz.TZDateTime.from(when10, tz.local),
         details: await _getAlarmDetails(),
         payload: 'task_alarm:${task.id}:${task.title}:10',
@@ -411,7 +470,8 @@ class NotificationService {
 
   /// Stable per-task id derived from its day, start time, and reminder offset minutes.
   int _taskNotificationId(Task task, int minutesBefore) {
-    final key = '${task.date.toIso8601String()}_${task.startMinute}_$minutesBefore';
+    final key =
+        '${task.date.toIso8601String()}_${task.startMinute}_$minutesBefore';
     return key.hashCode & 0x7fffffff;
   }
 }
@@ -419,4 +479,3 @@ class NotificationService {
 final notificationServiceProvider = Provider<NotificationService>(
   (ref) => NotificationService(ref),
 );
-

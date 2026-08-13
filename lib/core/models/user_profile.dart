@@ -18,6 +18,8 @@ class UserProfile {
     this.totalPoints = 0,
     this.weeklyPoints = 0,
     this.weeklyFocusMinutes = 0,
+    this.monthlyPoints = 0,
+    this.monthlyFocusMinutes = 0,
     this.totalFocusMinutes = 0,
     this.totalDeepSessions = 0,
     this.freezes = 0,
@@ -35,6 +37,7 @@ class UserProfile {
     this.displayName,
     this.bio,
     this.currentWeekId,
+    this.currentMonthId,
     this.likesCount = 0,
     this.telegramChatId,
     this.sharedWith = const [],
@@ -55,6 +58,13 @@ class UserProfile {
   final int totalPoints;
   final int weeklyPoints;
   final int weeklyFocusMinutes;
+
+  /// Points earned within the current calendar month. Resets on the 1st.
+  final int monthlyPoints;
+
+  /// Focus minutes logged within the current calendar month.
+  final int monthlyFocusMinutes;
+
   final int totalFocusMinutes;
   final int totalDeepSessions;
 
@@ -91,6 +101,10 @@ class UserProfile {
   final String? displayName;
   final String? bio;
   final String? currentWeekId;
+
+  /// The month ID ("yyyy-MM") during which [monthlyPoints] was accumulated.
+  final String? currentMonthId;
+
   final int likesCount;
 
   /// Telegram bot orqali bog'langan foydalanuvchining chat_id si.
@@ -137,8 +151,11 @@ class UserProfile {
     'totalPoints': 0,
     'weeklyPoints': 0,
     'weeklyFocusMinutes': 0,
+    'monthlyPoints': 0,
+    'monthlyFocusMinutes': 0,
     'totalFocusMinutes': 0,
     'currentWeekId': WeeklyReset.weekIdFor(DateTime.now()),
+    'currentMonthId': MonthlyReset.monthIdFor(DateTime.now()),
     'totalDeepSessions': 0,
     'freezes': 1, // start with one free freeze
     'earnedBadges': <int>[],
@@ -165,6 +182,9 @@ class UserProfile {
       totalPoints: (data['totalPoints'] as num?)?.toInt() ?? 0,
       weeklyPoints: (data['weeklyPoints'] as num?)?.toInt() ?? 0,
       weeklyFocusMinutes: (data['weeklyFocusMinutes'] as num?)?.toInt() ?? 0,
+      monthlyPoints: (data['monthlyPoints'] as num?)?.toInt() ?? 0,
+      monthlyFocusMinutes:
+          (data['monthlyFocusMinutes'] as num?)?.toInt() ?? 0,
       totalFocusMinutes: (data['totalFocusMinutes'] as num?)?.toInt() ?? 0,
       totalDeepSessions: (data['totalDeepSessions'] as num?)?.toInt() ?? 0,
       freezes: (data['freezes'] as num?)?.toInt() ?? 0,
@@ -186,6 +206,7 @@ class UserProfile {
       displayName: data['displayName'] as String?,
       bio: data['bio'] as String?,
       currentWeekId: data['currentWeekId'] as String?,
+      currentMonthId: data['currentMonthId'] as String?,
       likesCount: (data['likesCount'] as num?)?.toInt() ?? 0,
       telegramChatId: data['telegramChatId'] as String?,
       sharedWith:

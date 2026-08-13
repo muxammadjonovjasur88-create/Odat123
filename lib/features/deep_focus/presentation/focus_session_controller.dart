@@ -275,6 +275,8 @@ class FocusSessionState {
     bool clearActualStart = false,
     int? workSeconds,
     int? restSeconds,
+    List<FocusSegment>? segments,
+    int? totalWorkSeconds,
     int? timeAdjustmentSeconds,
   }) {
     return FocusSessionState(
@@ -285,8 +287,8 @@ class FocusSessionState {
       totalSets: totalSets,
       workSeconds: workSeconds ?? this.workSeconds,
       restSeconds: restSeconds ?? this.restSeconds,
-      segments: segments,
-      totalWorkSeconds: totalWorkSeconds,
+      segments: segments ?? this.segments,
+      totalWorkSeconds: totalWorkSeconds ?? this.totalWorkSeconds,
       status: status ?? this.status,
       kind: kind ?? this.kind,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
@@ -315,6 +317,10 @@ class FocusSessionState {
 class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBindingObserver {
   Timer? _ticker;
   StreamSubscription<FocusTick>? _nativeSub;
+  // Pending adjustment requested by the user but awaiting native tick
+  // reconciliation to avoid double-applying deltas.
+  int _pendingAdjustmentSeconds = 0;
+  bool _hasPendingAdjustment = false;
   AppLifecycleState _lifecycleState = AppLifecycleState.resumed;
   DateTime? _pausedAt;
   int _lastCheckInElapsed = 0;
@@ -440,6 +446,7 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
     _nativeSub = ref.read(focusServiceProvider).events().listen((tick) {
       final s = state;
       if (s == null || tick.taskId != s.taskId) return;
+      debugPrint('[FocusController._listenNative] native tick: task=${tick.taskId} remaining=${tick.remainingSeconds} finished=${tick.isFinished} distracting=${tick.distractingOpens} away=${tick.awaySeconds}');
       // If already finished in Flutter, don't overwrite status back to running!
       if (s.isFinished) return;
 
@@ -464,14 +471,47 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
           (s.isRunning || (s.isWaiting && tick.status == 'running')) &&
           !s.isSegmented) {
         // For single-block deep work, mirror native remaining seconds directly.
+        // EXCEPTION: if the user just tapped +/- and we haven't reconciled yet,
+        // skip overwriting remainingSeconds/phaseEndsAt so the adjustment isn't
+        // immediately reverted by the next native tick.
         final now = DateTime.now();
-        // Also capture actualSessionStart if we just transitioned from waiting.
-        next = next.copyWith(
-          status: FocusRunStatus.running,
-          remainingSeconds: tick.remainingSeconds,
-          phaseEndsAt: now.add(Duration(seconds: tick.remainingSeconds)),
-          actualSessionStart: s.actualSessionStart ?? now,
-        );
+        if (_hasPendingAdjustment) {
+          // Keep our Flutter-side adjusted clock until the native service has
+          // caught up (i.e. its remaining time converges to ours within 3 s).
+          // This covers the MethodChannel round-trip delay (~200 ms) plus the
+          // native service's next tick (up to 1 s), so we suppress at most 2
+          // native ticks before resuming normal mirroring.
+          final diff = (s.remainingSeconds - tick.remainingSeconds).abs();
+          if (diff <= 3) {
+            // Native has applied the new endAt — resume normal mirroring.
+            debugPrint('[FocusController] reconcile: native caught up '
+                '(nativeRemaining=${tick.remainingSeconds} flutterRemaining=${s.remainingSeconds} diff=${diff}s) — clearing pendingAdjustment');
+            _pendingAdjustmentSeconds = 0;
+            _hasPendingAdjustment = false;
+            next = next.copyWith(
+              status: FocusRunStatus.running,
+              remainingSeconds: tick.remainingSeconds,
+              phaseEndsAt: now.add(Duration(seconds: tick.remainingSeconds)),
+              actualSessionStart: s.actualSessionStart ?? now,
+            );
+          } else {
+            // Native hasn't caught up yet — keep Flutter's adjusted clock.
+            debugPrint('[FocusController] reconcile: pendingAdjustment=${_pendingAdjustmentSeconds}s, '
+                'diff=${diff}s — keeping Flutter remaining=${s.remainingSeconds} (native=${tick.remainingSeconds})');
+            next = next.copyWith(
+              status: FocusRunStatus.running,
+              actualSessionStart: s.actualSessionStart ?? now,
+            );
+          }
+        } else {
+          // No pending adjustment — mirror native remaining seconds normally.
+          next = next.copyWith(
+            status: FocusRunStatus.running,
+            remainingSeconds: tick.remainingSeconds,
+            phaseEndsAt: now.add(Duration(seconds: tick.remainingSeconds)),
+            actualSessionStart: s.actualSessionStart ?? now,
+          );
+        }
       }
       state = next;
     });
@@ -546,9 +586,12 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
           if (remaining <= 0) {
             // Phase ended — advance and clear check-in
             debugPrint(
-              '[FocusController] _tick: phase ended '
-              '(taskId=${cur.taskId}, kind=${cur.kind}, remaining=$remaining). '
-              'Calling _advance().',
+              '[FocusController] ⏱️ _tick: remaining<=0! '
+              '(taskId=${cur.taskId}, kind=${cur.kind}, remaining=$remaining, '
+              'isInterval=${cur.isInterval}, isSegmented=${cur.isSegmented}, '
+              'phaseIndex=${cur.phaseIndex}, segmentIndex=${cur.segmentIndex}, '
+              'totalSets=${cur.totalSets}, segments.length=${cur.segments.length}). '
+              'Calling _advance(countWork: true).',
             );
             _advance(countWork: true, baseState: nextState.copyWith(isCheckInActive: false));
           } else {
@@ -632,7 +675,16 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
     if (s.isInterval) {
       // ── Interval (sport) session: unchanged ──────────────────────────────
       final next = s.phaseIndex + 1;
-      if (next >= _intervalPhaseCount(s.totalSets)) {
+      final totalPhases = _intervalPhaseCount(s.totalSets);
+      debugPrint(
+        '[FocusController] _advance (interval): nextPhase=$next '
+        'totalPhases=$totalPhases (totalSets=${s.totalSets})',
+      );
+      if (next >= totalPhases) {
+        debugPrint(
+          '[FocusController] ✅ _advance: ALL INTERVAL PHASES DONE → '
+          'status=finished, finishedByTimer=$countWork',
+        );
         state = s.copyWith(
           status: FocusRunStatus.finished,
           remainingSeconds: 0,
@@ -662,8 +714,16 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
           : s.completedWork;
 
       final nextIdx = s.segmentIndex + 1;
+      debugPrint(
+        '[FocusController] _advance (segmented): nextIdx=$nextIdx '
+        'segments.length=${s.segments.length}',
+      );
       if (nextIdx >= s.segments.length) {
         // All segments done → session finished
+        debugPrint(
+          '[FocusController] ✅ _advance: ALL SEGMENTS DONE → '
+          'status=finished, finishedByTimer=$countWork',
+        );
         state = s.copyWith(
           status: FocusRunStatus.finished,
           completedWork: newCompletedCount,
@@ -689,6 +749,10 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
       );
     } else {
       // ── Single-block deep-work: session finished ──────────────────────────
+      debugPrint(
+        '[FocusController] ✅ _advance: SINGLE-BLOCK DONE → '
+        'status=finished, finishedByTimer=$countWork',
+      );
       state = s.copyWith(
         status: FocusRunStatus.finished,
         completedWork: countWork ? s.completedWork + 1 : s.completedWork,
@@ -784,16 +848,60 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
   /// Works for any session type: deep-focus (single or segmented) and interval.
   void adjustTime(int deltaSeconds) {
     final s = state;
-    if (s == null || !s.isRunning || s.phaseEndsAt == null) return;
+    if (s == null) return;
 
+    // Allow adjustments when running or paused so the user can tweak time
+    // even while paused.
+    final isAdjustable = s.isRunning || s.isPaused;
+    if (!isAdjustable) return;
+
+    // Compute the new state using a pure helper so it can be unit-tested.
+    final updated = applyAdjustTimeToState(s, deltaSeconds);
+    final actualDelta = updated.timeAdjustmentSeconds - s.timeAdjustmentSeconds;
+    if (actualDelta == 0) return;
+
+    debugPrint(
+      '[FocusController] adjustTime called: deltaSeconds=$deltaSeconds isRunning=${s.isRunning} isPaused=${s.isPaused} '
+      'remaining:${s.remainingSeconds}→${updated.remainingSeconds} phaseEndsAt:${s.phaseEndsAt}→${updated.phaseEndsAt}',
+    );
+
+    // Apply state update immediately so UI reflects change while awaiting
+    // native confirmation.
+    state = updated;
+
+    // Mark a pending adjustment so the next native tick can reconcile it and
+    // avoid double-counting when native publishes the updated remaining time.
+    _pendingAdjustmentSeconds += actualDelta;
+    _hasPendingAdjustment = true;
+    debugPrint('[FocusController] pendingAdjustment += ${actualDelta}s (total=${_pendingAdjustmentSeconds}s)');
+
+    // ── Sync to native background service ────────────────────────────────────
+    // Without this, the FocusForegroundService keeps counting down to the
+    // original endAt and overwrites our Flutter-side adjustment on every tick.
+    ref.read(focusServiceProvider).adjustTime(deltaSeconds).then((_) {
+      debugPrint('[FocusController] adjustTime: native endAt updated by ${deltaSeconds}s');
+    }).catchError((e) {
+      debugPrint('[FocusController] adjustTime: native update failed — $e');
+    });
+  }
+
+  /// Pure helper: returns a new FocusSessionState reflecting the effect of
+  /// applying [deltaSeconds] to the given state without side effects.
+  /// Useful for unit testing the arithmetic independently of Riverpod.
+  static FocusSessionState applyAdjustTimeToState(FocusSessionState s, int deltaSeconds) {
     // Clamp so we can't go below 60 s remaining.
     final newRemaining = (s.remainingSeconds + deltaSeconds).clamp(60, 24 * 3600);
     final actualDelta = newRemaining - s.remainingSeconds;
-    if (actualDelta == 0) return;
+    if (actualDelta == 0) return s;
 
-    final newPhaseEndsAt = s.phaseEndsAt!.add(Duration(seconds: actualDelta));
+    // If session is paused, phaseEndsAt should stay null (it will be set on resume).
+    // If running, shift phaseEndsAt by actualDelta.
+    final DateTime? newPhaseEndsAt = s.isPaused
+        ? null
+        : (s.phaseEndsAt != null
+            ? s.phaseEndsAt!.add(Duration(seconds: actualDelta))
+            : DateTime.now().add(Duration(seconds: newRemaining)));
 
-    // Keep the "full phase" length in sync so the progress arc stays correct.
     final newWorkSeconds = s.kind == FocusKind.work
         ? (s.workSeconds + actualDelta).clamp(60, 24 * 3600)
         : s.workSeconds;
@@ -801,17 +909,34 @@ class FocusSessionController extends Notifier<FocusSessionState?> with WidgetsBi
         ? (s.restSeconds + actualDelta).clamp(60, 24 * 3600)
         : s.restSeconds;
 
-    debugPrint(
-      '[FocusController] adjustTime: delta=${actualDelta}s '
-      'remaining: ${s.remainingSeconds}→$newRemaining '
-      'phaseEndsAt: ${s.phaseEndsAt}→$newPhaseEndsAt',
-    );
+    List<FocusSegment>? updatedSegments;
+    int? updatedTotalWorkSeconds;
 
-    state = s.copyWith(
+    if (s.isSegmented && s.segmentIndex < s.segments.length) {
+      final curSeg = s.segments[s.segmentIndex];
+      final newSegDuration = (curSeg.seconds + actualDelta).clamp(60, 24 * 3600);
+      final list = List<FocusSegment>.from(s.segments);
+      list[s.segmentIndex] = FocusSegment(
+        kind: curSeg.kind,
+        seconds: newSegDuration,
+      );
+      updatedSegments = list;
+      if (curSeg.kind == FocusKind.work) {
+        // totalWorkSeconds tracks the aggregate of all work-segment durations.
+        // The per-segment minimum (60 s) is already enforced via newSegDuration;
+        // clamp totalWorkSeconds only at 0 to avoid negatives.
+        updatedTotalWorkSeconds = (s.totalWorkSeconds + actualDelta).clamp(0, 24 * 3600);
+      }
+    }
+
+    return s.copyWith(
       remainingSeconds: newRemaining,
       phaseEndsAt: newPhaseEndsAt,
+      clearPhaseEnd: s.isPaused,
       workSeconds: newWorkSeconds,
       restSeconds: newRestSeconds,
+      segments: updatedSegments,
+      totalWorkSeconds: updatedTotalWorkSeconds,
       timeAdjustmentSeconds: s.timeAdjustmentSeconds + actualDelta,
     );
   }

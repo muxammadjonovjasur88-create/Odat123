@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/constants/uzbekistan_regions.dart';
 import '../../../core/models/user_profile.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/router/nav_helpers.dart';
 import '../../../core/services/auth_repository.dart';
+import '../../../core/services/region_controller.dart';
 import '../../../core/services/user_repository.dart';
+import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/widgets.dart';
@@ -15,18 +18,37 @@ import '../data/leaderboard_repository.dart';
 import '../domain/leaderboard_entry.dart';
 import '../domain/leaderboard_rank.dart';
 
-final leaderboardProvider = StreamProvider<List<LeaderboardEntry>>((ref) {
+// ---------------------------------------------------------------------------
+// Tab enum
+// ---------------------------------------------------------------------------
+
+enum LeaderboardTab { global, region }
+
+// ---------------------------------------------------------------------------
+// Providers
+// ---------------------------------------------------------------------------
+
+final _globalLeaderboardProvider = StreamProvider<List<LeaderboardEntry>>((ref) {
+  return ref.watch(leaderboardRepositoryProvider).watchGlobalLeaderboard();
+});
+
+final _regionalLeaderboardProvider =
+    StreamProvider.family<List<LeaderboardEntry>, UzRegion>((ref, region) {
   return ref
       .watch(leaderboardRepositoryProvider)
-      .watchWeeklyLeaderboard(weekId: 'all-time');
+      .watchRegionalLeaderboard(region: region);
 });
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 Widget _buildErrorBanner(BuildContext context, Object error) {
   final colors = context.colors;
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 8),
     child: AppCard(
-      color: colors.surface,
+      color: const Color(0xFF151A27),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Text(
         'Xato: $error',
@@ -38,20 +60,72 @@ Widget _buildErrorBanner(BuildContext context, Object error) {
   );
 }
 
-class LeaderboardScreen extends ConsumerWidget {
+// ---------------------------------------------------------------------------
+// LeaderboardScreen
+// ---------------------------------------------------------------------------
+
+class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
+}
+
+class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
+    with SingleTickerProviderStateMixin {
+  LeaderboardTab _tab = LeaderboardTab.global;
+  late final AnimationController _fadeController;
+  late final Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 260),
+      vsync: this,
+    );
+    _fadeAnim = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOutCubic,
+    );
+    _fadeController.forward();
+  }
+
+  @override
+  void dispose() {
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  void _switchTab(LeaderboardTab tab) {
+    if (tab == _tab) return;
+    _fadeController.reverse().then((_) {
+      if (mounted) {
+        setState(() => _tab = tab);
+        _fadeController.forward();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
     final profile = ref.watch(userProfileProvider).asData?.value;
-    final leaderboardAsync = ref.watch(leaderboardProvider);
     final currentUserId = ref.watch(authStateProvider).asData?.value?.uid;
+    final regionState = ref.watch(regionControllerProvider);
+    final currentRegion = regionState.region;
+
+    // Choose the right stream based on active tab.
+    final AsyncValue<List<LeaderboardEntry>> leaderboardAsync = switch (_tab) {
+      LeaderboardTab.global => ref.watch(_globalLeaderboardProvider),
+      LeaderboardTab.region => currentRegion != null
+          ? ref.watch(_regionalLeaderboardProvider(currentRegion))
+          : const AsyncData([]),
+    };
 
     final entries = leaderboardAsync.asData?.value ?? const [];
-    final rankedEntries = LeaderboardRepository.sortEntriesForDisplay(
-      entries.toList(),
-    );
+    final rankedEntries = LeaderboardRepository.sortEntriesForDisplay(entries);
+
     LeaderboardEntry? currentUserEntry;
     for (final entry in rankedEntries) {
       if (entry.uid == currentUserId) {
@@ -62,8 +136,7 @@ class LeaderboardScreen extends ConsumerWidget {
     final currentRank = currentUserEntry == null
         ? null
         : calculateUserRank(entries: rankedEntries, uid: currentUserId ?? '');
-    final displayCurrentUser =
-        currentUserEntry ??
+    final displayCurrentUser = currentUserEntry ??
         (profile != null && currentUserId != null
             ? LeaderboardEntry(
                 uid: profile.uid,
@@ -71,156 +144,134 @@ class LeaderboardScreen extends ConsumerWidget {
                 avatar: profile.avatar,
                 weeklyPoints: profile.weeklyPoints,
                 weeklyFocusMinutes: profile.weeklyFocusMinutes,
+                monthlyPoints: profile.monthlyPoints,
+                monthlyFocusMinutes: profile.monthlyFocusMinutes,
                 totalPoints: profile.totalPoints,
                 totalFocusMinutes: profile.totalFocusMinutes,
                 photoUrl: profile.photoUrl,
                 photoBase64: profile.photoBase64,
               )
             : null);
-    final topEntries = rankedEntries.take(50).toList();
-    final rows = <_LeaderboardRowModel>[];
-    for (var i = 0; i < topEntries.length; i++) {
-      final entry = topEntries[i];
-      rows.add(
-        _LeaderboardRowModel(
-          rank: i + 1,
-          entry: entry,
-          isCurrentUser: entry.uid == currentUserId,
-        ),
-      );
-    }
-    final hasOtherUsers = rows.any((row) => !row.isCurrentUser);
-    if (displayCurrentUser != null &&
-        !rows.any((row) => row.isCurrentUser) &&
-        currentRank != null) {
-      rows.add(
-        _LeaderboardRowModel(
-          rank: currentRank,
-          entry: displayCurrentUser,
-          isCurrentUser: true,
-        ),
-      );
-    }
+
+    final listEntries = rankedEntries.length > 3
+        ? rankedEntries.skip(3).take(47).toList()
+        : <LeaderboardEntry>[];
+
+    final hasOtherUsers = rankedEntries.any((e) => e.uid != currentUserId);
 
     return Scaffold(
+      backgroundColor: colors.background,
+      appBar: const FlowaAppBar(
+        showBackButton: false,
+        leading: SizedBox.shrink(),
+      ),
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.stats,
+        current: AppNavTab.leaderboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => context.pop(),
-                  icon: Icon(
-                    Icons.arrow_back_rounded,
-                    color: colors.textPrimary,
-                  ),
-                ),
-                const Spacer(),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      'Reyting'.tr(),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: AppTextStyles.h2.copyWith(
-                        color: colors.textPrimary,
-                        fontSize: 17,
+            // ── Tab bar ────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              child: _TabBar(
+                selected: _tab,
+                currentRegion: currentRegion,
+                regionStatus: regionState.status,
+                onGlobal: () => _switchTab(LeaderboardTab.global),
+                onRegion: () {
+                  if (currentRegion == null) {
+                    // Trigger GPS detection if not yet resolved.
+                    ref
+                        .read(regionControllerProvider.notifier)
+                        .detectAndSave();
+                  }
+                  _switchTab(LeaderboardTab.region);
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            // ── Region status banner ───────────────────────────────────────
+            if (_tab == LeaderboardTab.region)
+              _RegionStatusBanner(
+                regionState: regionState,
+                onRetry: () =>
+                    ref.read(regionControllerProvider.notifier).detectAndSave(),
+                onManualPick: (region) =>
+                    ref.read(regionControllerProvider.notifier).setManually(region),
+              ),
+
+            // ── Content ────────────────────────────────────────────────────
+            Expanded(
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: ListView(
+                  key: ValueKey(_tab),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+                  children: [
+                    if (leaderboardAsync.hasError) ...[
+                      _buildErrorBanner(
+                        context,
+                        leaderboardAsync.error ?? 'Unknown error',
                       ),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                const SizedBox(width: 48),
-              ],
-            ),
-            const SizedBox(height: 20),
-            AppCard(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: colors.tintSage.withValues(alpha: 0.75),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Icon(
-                      Icons.emoji_events_rounded,
-                      color: colors.primary,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'leaderboard.week'.tr(),
-                          style: AppTextStyles.caption.copyWith(
-                            color: colors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'leaderboard.subtitle'.tr(),
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: colors.textPrimary,
-                          ),
-                        ),
+                      const SizedBox(height: 12),
+                    ],
+
+                    // Loading skeleton
+                    if (leaderboardAsync.isLoading)
+                      const AppCardSkeletonList()
+                    else ...[
+                      if (rankedEntries.isNotEmpty) ...[
+                        _Podium(entries: rankedEntries.take(3).toList()),
+                        const SizedBox(height: 20),
                       ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 18),
-            if (leaderboardAsync.hasError) ...[
-              _buildErrorBanner(
-                context,
-                leaderboardAsync.error ?? 'Unknown error',
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (rankedEntries.isNotEmpty) ...[
-              _Podium(entries: rankedEntries.take(3).toList()),
-              const SizedBox(height: 16),
-            ],
-            if (displayCurrentUser != null &&
-                !hasOtherUsers &&
-                currentRank != null) ...[
-              _CurrentUserRow(
-                entry: displayCurrentUser,
-                rank: currentRank,
-                profile: profile,
-              ),
-              const SizedBox(height: 12),
-            ],
-            if (displayCurrentUser != null && !hasOtherUsers) ...[
-              const SizedBox(height: 12),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Text(
-                  'leaderboard.empty_state'.tr(),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: colors.textSecondary,
-                  ),
+
+                      if (!hasOtherUsers) ...[
+                        if (displayCurrentUser != null &&
+                            currentRank != null) ...[
+                          _CurrentUserRow(
+                            entry: displayCurrentUser,
+                            rank: currentRank,
+                            profile: profile,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(
+                            _tab == LeaderboardTab.region
+                                ? 'Hali bu viloyatda boshqa foydalanuvchilar yo\'q.'
+                                : 'leaderboard.empty_state'.tr(),
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ] else ...[
+                        for (var i = 0; i < listEntries.length; i++)
+                          _LeaderboardRow(
+                            entry: listEntries[i],
+                            rank: i + 4,
+                            isCurrentUser: listEntries[i].uid == currentUserId,
+                            profile: profile,
+                          ),
+                        if (currentUserEntry == null &&
+                            displayCurrentUser != null) ...[
+                          const SizedBox(height: 12),
+                          _CurrentUserRow(
+                            entry: displayCurrentUser,
+                            rank: currentRank,
+                            profile: profile,
+                          ),
+                        ],
+                      ],
+                    ],
+                  ],
                 ),
-              ),
-            ],
-            ...rows.map(
-              (row) => _LeaderboardRow(
-                entry: row.entry,
-                rank: row.rank,
-                isCurrentUser: row.isCurrentUser,
-                profile: profile,
               ),
             ),
           ],
@@ -229,6 +280,292 @@ class LeaderboardScreen extends ConsumerWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// _TabBar — Global | Mening viloyatim
+// ---------------------------------------------------------------------------
+
+class _TabBar extends StatelessWidget {
+  const _TabBar({
+    required this.selected,
+    required this.currentRegion,
+    required this.regionStatus,
+    required this.onGlobal,
+    required this.onRegion,
+  });
+
+  final LeaderboardTab selected;
+  final UzRegion? currentRegion;
+  final RegionStatus regionStatus;
+  final VoidCallback onGlobal;
+  final VoidCallback onRegion;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A27),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: colors.border),
+      ),
+      child: Row(
+        children: [
+          _TabChip(
+            label: 'Global',
+            icon: Icons.public_rounded,
+            selected: selected == LeaderboardTab.global,
+            onTap: onGlobal,
+          ),
+          _TabChip(
+            label: currentRegion?.displayName ??
+                (regionStatus == RegionStatus.loading
+                    ? 'Aniqlanmoqda...'
+                    : 'Mening viloyatim'),
+            icon: Icons.location_on_rounded,
+            selected: selected == LeaderboardTab.region,
+            onTap: onRegion,
+            showLoading: regionStatus == RegionStatus.loading,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabChip extends StatelessWidget {
+  const _TabChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    this.showLoading = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  final bool showLoading;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: selected
+                ? AppColors.cyanAccent.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            border: selected
+                ? Border.all(
+                    color: AppColors.cyanAccent.withValues(alpha: 0.5),
+                    width: 1,
+                  )
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (showLoading)
+                SizedBox(
+                  width: 12,
+                  height: 12,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: selected
+                        ? AppColors.cyanAccent
+                        : context.colors.textSecondary,
+                  ),
+                )
+              else
+                Icon(
+                  icon,
+                  size: 14,
+                  color: selected
+                      ? AppColors.cyanAccent
+                      : context.colors.textSecondary,
+                ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption.copyWith(
+                    color: selected
+                        ? AppColors.cyanAccent
+                        : context.colors.textSecondary,
+                    fontWeight:
+                        selected ? FontWeight.w700 : FontWeight.w500,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _RegionStatusBanner — shown in regional tab when GPS failed / unavailable
+// ---------------------------------------------------------------------------
+
+class _RegionStatusBanner extends StatelessWidget {
+  const _RegionStatusBanner({
+    required this.regionState,
+    required this.onRetry,
+    required this.onManualPick,
+  });
+
+  final RegionState regionState;
+  final VoidCallback onRetry;
+  final ValueChanged<UzRegion> onManualPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    // If loaded — show info chip with region name
+    if (regionState.status == RegionStatus.loaded &&
+        regionState.region != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+        child: Row(
+          children: [
+            const Icon(Icons.location_on_rounded,
+                color: AppColors.cyanAccent, size: 14),
+            const SizedBox(width: 4),
+            Text(
+              regionState.region!.displayName,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.cyanAccent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // If unavailable — show error + fallback
+    if (regionState.status == RegionStatus.unavailable) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+        child: AppCard(
+          color: const Color(0xFF151A27),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                regionState.errorMessage ?? 'Viloyat aniqlanmadi.',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: colors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  // Retry GPS
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onRetry,
+                      icon: const Icon(Icons.gps_fixed_rounded, size: 14),
+                      label: const Text('GPS qayta',
+                          style: TextStyle(fontSize: 12)),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.cyanAccent,
+                        side: const BorderSide(
+                            color: AppColors.cyanAccent, width: 1),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Manual pick
+                  Expanded(
+                    child: _ManualRegionButton(onPick: onManualPick),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+/// Dropdown button to manually pick a region when GPS fails.
+class _ManualRegionButton extends StatefulWidget {
+  const _ManualRegionButton({required this.onPick});
+
+  final ValueChanged<UzRegion> onPick;
+
+  @override
+  State<_ManualRegionButton> createState() => _ManualRegionButtonState();
+}
+
+class _ManualRegionButtonState extends State<_ManualRegionButton> {
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<UzRegion>(
+      onSelected: widget.onPick,
+      color: const Color(0xFF1F2638),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      itemBuilder: (_) => UzRegion.values
+          .map((r) => PopupMenuItem(
+                value: r,
+                child: Text(
+                  r.displayName,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white,
+                  ),
+                ),
+              ))
+          .toList(),
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.purpleAccent.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: AppColors.purpleAccent.withValues(alpha: 0.5),
+          ),
+        ),
+        child: Text(
+          'Qo\'lda tanlash',
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.purpleAccent,
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _Podium
+// ---------------------------------------------------------------------------
 
 class _Podium extends StatelessWidget {
   const _Podium({required this.entries});
@@ -237,7 +574,6 @@ class _Podium extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final items = entries.isNotEmpty
         ? entries.take(3).toList()
         : const <LeaderboardEntry>[];
@@ -245,18 +581,8 @@ class _Podium extends StatelessWidget {
     final second = items.length > 1 ? items[1] : null;
     final third = items.length > 2 ? items[2] : null;
     final podiumOrder = [second, first, third];
-    final heights = [160.0, 172.0, 158.0];
-    final accents = [
-      colors.tintSage.withValues(alpha: 0.84),
-      colors.primary.withValues(alpha: 0.9),
-      colors.surfaceMuted.withValues(alpha: 0.82),
-    ];
-    final borderColors = [
-      colors.primary.withValues(alpha: 0.2),
-      colors.primaryPressed.withValues(alpha: 0.2),
-      colors.textSecondary.withValues(alpha: 0.24),
-    ];
-    final medals = ['2', '1', '3'];
+    final heights = [160.0, 185.0, 160.0];
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
@@ -264,21 +590,17 @@ class _Podium extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(
-                left: index == 0 ? 0 : 8,
-                right: index == 2 ? 0 : 8,
+                left: index == 0 ? 0 : 6,
+                right: index == 2 ? 0 : 6,
               ),
               child: _PodiumCard(
                 entry: podiumOrder[index],
-                color: accents[index],
-                borderColor: borderColors[index],
                 place: index == 0
                     ? 2
                     : index == 1
-                    ? 1
-                    : 3,
-                medal: medals[index],
+                        ? 1
+                        : 3,
                 height: heights[index],
-                isCenter: index == 1,
               ),
             ),
           ),
@@ -287,204 +609,223 @@ class _Podium extends StatelessWidget {
   }
 }
 
-class _LeafBadge extends StatelessWidget {
-  const _LeafBadge({
-    required this.label,
-    required this.color,
-    required this.borderColor,
-    required this.size,
-    required this.textColor,
-  });
+class _PodiumBadge extends StatelessWidget {
+  const _PodiumBadge({required this.place});
 
-  final String label;
-  final Color color;
-  final Color borderColor;
-  final double size;
-  final Color textColor;
+  final int place;
 
   @override
   Widget build(BuildContext context) {
-    return ClipPath(
-      clipper: _LeafClipper(),
-      child: Container(
-        width: size,
-        height: size,
+    if (place == 1) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
         decoration: BoxDecoration(
-          color: color,
-          border: Border.all(color: borderColor, width: 2),
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: context.colors.primary.withValues(alpha: 0.16),
-              blurRadius: 10,
-              spreadRadius: 1,
+              color: AppColors.cyanAccent.withValues(alpha: 0.3),
+              blurRadius: 6,
             ),
           ],
         ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: AppTextStyles.caption.copyWith(
-            color: textColor,
-            fontWeight: FontWeight.w700,
-          ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('👑 ', style: TextStyle(fontSize: 10)),
+            Text(
+              '1',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    final color = place == 2 ? AppColors.cyanAccent : AppColors.purpleAccent;
+    return Container(
+      width: 26,
+      height: 26,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 1.2),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '$place',
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
         ),
       ),
     );
   }
-}
-
-class _LeafClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    final path = Path();
-    path.moveTo(size.width * 0.5, size.height * 0.08);
-    path.cubicTo(
-      size.width * 0.86,
-      size.height * 0.12,
-      size.width * 0.97,
-      size.height * 0.38,
-      size.width * 0.76,
-      size.height * 0.48,
-    );
-    path.cubicTo(
-      size.width * 0.9,
-      size.height * 0.74,
-      size.width * 0.72,
-      size.height * 0.94,
-      size.width * 0.5,
-      size.height * 0.9,
-    );
-    path.cubicTo(
-      size.width * 0.28,
-      size.height * 0.94,
-      size.width * 0.1,
-      size.height * 0.74,
-      size.width * 0.24,
-      size.height * 0.48,
-    );
-    path.cubicTo(
-      size.width * 0.03,
-      size.height * 0.38,
-      size.width * 0.14,
-      size.height * 0.12,
-      size.width * 0.5,
-      size.height * 0.08,
-    );
-    path.close();
-    return path;
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
 class _PodiumCard extends StatelessWidget {
   const _PodiumCard({
     required this.entry,
-    required this.color,
-    required this.borderColor,
     required this.place,
-    required this.medal,
     required this.height,
-    required this.isCenter,
   });
 
   final LeaderboardEntry? entry;
-  final Color color;
-  final Color borderColor;
   final int place;
-  final String medal;
   final double height;
-  final bool isCenter;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    final subtitle = entry == null ? '' : '${entry!.totalPoints} pts';
-    return Container(
+    final isFirst = place == 1;
+
+    Widget cardBody = Container(
       height: height,
-      padding: const EdgeInsets.fromLTRB(10, 10, 10, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: borderColor, width: 1.2),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow,
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: const Color(0xFF151A27),
+        borderRadius: BorderRadius.circular(isFirst ? 18.5 : 20),
+        border: !isFirst
+            ? Border.all(
+                color: place == 2
+                    ? AppColors.cyanAccent
+                    : AppColors.purpleAccent,
+                width: 1.5,
+              )
+            : null,
+        boxShadow: !isFirst
+            ? [
+                BoxShadow(
+                  color: (place == 2
+                          ? AppColors.cyanAccent
+                          : AppColors.purpleAccent)
+                      .withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  spreadRadius: 0,
+                ),
+              ]
+            : null,
       ),
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Positioned(
-            top: 8,
-            child: _LeafBadge(
-              label: medal,
-              color: switch (place) {
-                1 => colors.primary,
-                2 => colors.primaryPressed.withValues(alpha: 0.86),
-                _ => colors.textSecondary.withValues(alpha: 0.8),
-              },
-              borderColor: colors.surface,
-              size: 34,
-              textColor: colors.onPrimary,
+          _PodiumBadge(place: place),
+          Container(
+            width: isFirst ? 62 : 52,
+            height: isFirst ? 62 : 52,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: isFirst
+                    ? AppColors.cyanAccent
+                    : (place == 2
+                        ? AppColors.cyanAccent
+                        : AppColors.purpleAccent),
+                width: 2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isFirst || place == 2
+                          ? AppColors.cyanAccent
+                          : AppColors.purpleAccent)
+                      .withValues(alpha: 0.25),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: AvatarCircle(
+                avatarKey: entry?.avatar ?? 'leaf',
+                size: isFirst ? 62 : 52,
+                photoBase64: entry?.photoBase64,
+                photoUrl: entry?.photoUrl,
+              ),
             ),
           ),
-          Positioned(
-            top: 42,
-            child: Container(
-              width: isCenter ? 66 : 58,
-              height: isCenter ? 66 : 58,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: colors.primary.withValues(alpha: 0.3),
-                  width: 2,
+          Column(
+            children: [
+              Text(
+                entry?.name ?? '-',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.label.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: isFirst ? 13 : 11.5,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: colors.primary.withValues(
-                      alpha: isCenter ? 0.2 : 0.12,
-                    ),
-                    blurRadius: isCenter ? 18 : 14,
-                    spreadRadius: 2,
+              ),
+              const SizedBox(height: 2),
+              // Region chip inside podium card
+              if (entry?.region != null) ...[
+                Text(
+                  entry!.region!.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.purpleAccent.withValues(alpha: 0.85),
+                    fontSize: 9,
                   ),
-                ],
-              ),
-              child: ClipOval(
-                child: AvatarCircle(
-                  avatarKey: entry?.avatar ?? 'leaf',
-                  size: isCenter ? 66 : 58,
-                  photoBase64: entry?.photoBase64,
-                  photoUrl: entry?.photoUrl,
+                ),
+                const SizedBox(height: 2),
+              ],
+              Text(
+                entry != null ? '${entry!.totalPoints} pts' : '-',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.caption.copyWith(
+                  color: isFirst
+                      ? AppColors.cyanAccent
+                      : (place == 2
+                          ? AppColors.cyanAccent
+                          : AppColors.purpleAccent),
+                  fontWeight: FontWeight.w600,
+                  fontSize: isFirst ? 11.5 : 10.5,
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            bottom: 10,
-            left: 8,
-            right: 8,
-            child: Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.label.copyWith(
-                color: colors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: isCenter ? 12.5 : 11.5,
-              ),
-            ),
+            ],
           ),
         ],
       ),
     );
+
+    if (isFirst) {
+      return Container(
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: AppColors.primaryGradient,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.cyanAccent.withValues(alpha: 0.35),
+              blurRadius: 16,
+              spreadRadius: 1,
+            ),
+            BoxShadow(
+              color: AppColors.purpleAccent.withValues(alpha: 0.25),
+              blurRadius: 16,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(1.5),
+        child: cardBody,
+      );
+    }
+
+    return cardBody;
   }
 }
+
+// ---------------------------------------------------------------------------
+// _CurrentUserRow
+// ---------------------------------------------------------------------------
 
 class _CurrentUserRow extends StatelessWidget {
   const _CurrentUserRow({
@@ -499,29 +840,30 @@ class _CurrentUserRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppCard(
-      color: colors.tintSage,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF151A27),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.cyanAccent.withValues(alpha: 0.5),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.cyanAccent.withValues(alpha: 0.15),
+            blurRadius: 10,
+          ),
+        ],
+      ),
       child: Row(
         children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: colors.primary.withValues(alpha: 0.2),
-                width: 1.2,
-              ),
-            ),
-            child: ClipOval(
-              child: AvatarCircle(
-                avatarKey: entry.avatar,
-                size: 46,
-                photoBase64: entry.photoBase64,
-                photoUrl: entry.photoUrl,
-              ),
+          ClipOval(
+            child: AvatarCircle(
+              avatarKey: entry.avatar,
+              size: 42,
+              photoBase64: entry.photoBase64,
+              photoUrl: entry.photoUrl,
             ),
           ),
           const SizedBox(width: 12),
@@ -532,15 +874,24 @@ class _CurrentUserRow extends StatelessWidget {
                 Text(
                   '${entry.name} • ${'leaderboard.you'.tr()}',
                   style: AppTextStyles.label.copyWith(
-                    color: colors.textPrimary,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  '${entry.totalPoints} pts',
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.textSecondary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      '${entry.totalPoints} pts',
+                      style: AppTextStyles.caption.copyWith(
+                        color: const Color(0xFF9E9E9E),
+                      ),
+                    ),
+                    if (entry.region != null) ...[
+                      const SizedBox(width: 8),
+                      _RegionChip(region: entry.region!),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -548,16 +899,19 @@ class _CurrentUserRow extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: colors.surface,
+              color: AppColors.cyanAccent.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                color: colors.primary.withValues(alpha: 0.16),
+                color: AppColors.cyanAccent,
                 width: 1,
               ),
             ),
             child: Text(
-              rank == null ? '' : '#$rank',
-              style: AppTextStyles.caption.copyWith(color: colors.primary),
+              rank == null ? '50+' : '#$rank',
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.cyanAccent,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -566,17 +920,9 @@ class _CurrentUserRow extends StatelessWidget {
   }
 }
 
-class _LeaderboardRowModel {
-  const _LeaderboardRowModel({
-    required this.rank,
-    required this.entry,
-    required this.isCurrentUser,
-  });
-
-  final int rank;
-  final LeaderboardEntry entry;
-  final bool isCurrentUser;
-}
+// ---------------------------------------------------------------------------
+// _LeaderboardRow
+// ---------------------------------------------------------------------------
 
 class _LeaderboardRow extends StatelessWidget {
   const _LeaderboardRow({
@@ -594,113 +940,162 @@ class _LeaderboardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final borderColor = isCurrentUser
-        ? colors.primary.withValues(alpha: 0.24)
-        : colors.border;
-    return AppCard(
-      color: isCurrentUser ? colors.tintSage : null,
-      border: Border.all(color: borderColor, width: 1.1),
+
+    return InkWell(
       onTap: () {
         final targetPath = isCurrentUser
             ? AppRoutes.profile
             : '${AppRoutes.profile}/${entry.uid}';
         context.push(targetPath);
       },
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: isCurrentUser
-                  ? colors.primary.withValues(alpha: 0.16)
-                  : colors.surfaceMuted,
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: colors.border, width: 1),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              '$rank',
-              style: AppTextStyles.caption.copyWith(color: colors.primary),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: isCurrentUser
+              ? const Color(0xFF151A27).withValues(alpha: 0.7)
+              : Colors.transparent,
+          border: const Border(
+            bottom: BorderSide(
+              color: Color(0xFF151A27),
+              width: 1,
             ),
           ),
-          const SizedBox(width: 12),
-          ClipOval(
-            child: AvatarCircle(
-              avatarKey: entry.avatar,
-              size: 36,
-              photoBase64: entry.photoBase64,
-              photoUrl: entry.photoUrl,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entry.name,
-                  style: AppTextStyles.label.copyWith(
-                    color: colors.textPrimary,
-                  ),
+          borderRadius: isCurrentUser ? BorderRadius.circular(12) : null,
+        ),
+        child: Row(
+          children: [
+            // Rank bubble
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isCurrentUser
+                    ? AppColors.cyanAccent.withValues(alpha: 0.15)
+                    : const Color(0xFF151A27),
+                border: Border.all(
+                  color: isCurrentUser
+                      ? AppColors.cyanAccent.withValues(alpha: 0.5)
+                      : colors.border,
+                  width: 1,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${entry.totalPoints} pts',
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.textSecondary,
-                  ),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                '$rank',
+                style: AppTextStyles.caption.copyWith(
+                  color: isCurrentUser
+                      ? AppColors.cyanAccent
+                      : colors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
                 ),
-              ],
+              ),
             ),
-          ),
-          Text(
-            '${entry.totalPoints} pts',
-            style: AppTextStyles.label.copyWith(color: colors.textPrimary),
-          ),
-        ],
+            const SizedBox(width: 12),
+            ClipOval(
+              child: AvatarCircle(
+                avatarKey: entry.avatar,
+                size: 38,
+                photoBase64: entry.photoBase64,
+                photoUrl: entry.photoUrl,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          entry.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.label.copyWith(
+                            color: Colors.white,
+                            fontWeight: isCurrentUser
+                                ? FontWeight.bold
+                                : FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      if (isCurrentUser) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.cyanAccent.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'leaderboard.you'.tr(),
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.cyanAccent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  // Region chip below name (only in global tab)
+                  if (entry.region != null)
+                    _RegionChip(region: entry.region!),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              '${entry.totalPoints} pts',
+              style: AppTextStyles.label.copyWith(
+                color: const Color(0xFF9E9E9E),
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-String formatWeekLabel(String weekId) {
-  final startDate = DateTime.parse(weekId);
-  final endDate = startDate.add(const Duration(days: 6));
-  final locale = Intl.getCurrentLocale();
-  final startDay = DateFormat('dd', locale).format(startDate);
-  final endDay = DateFormat('dd', locale).format(endDate);
-  final month = switch (locale) {
-    'ru' => [
-      'янв',
-      'фев',
-      'мар',
-      'апр',
-      'май',
-      'июн',
-      'июл',
-      'авг',
-      'сен',
-      'окт',
-      'ноя',
-      'дек',
-    ][startDate.month - 1],
-    'uz' => [
-      'yan',
-      'fev',
-      'mart',
-      'apr',
-      'may',
-      'iyun',
-      'iyul',
-      'avg',
-      'sent',
-      'okt',
-      'noy',
-      'dek',
-    ][startDate.month - 1],
-    _ => DateFormat.MMM(locale).format(startDate),
-  };
-  return '$startDay–$endDay $month';
+// ---------------------------------------------------------------------------
+// _RegionChip — small location badge shown next to a user's name
+// ---------------------------------------------------------------------------
+
+class _RegionChip extends StatelessWidget {
+  const _RegionChip({required this.region});
+
+  final UzRegion region;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.location_on_rounded,
+          size: 10,
+          color: AppColors.purpleAccent.withValues(alpha: 0.7),
+        ),
+        const SizedBox(width: 2),
+        Text(
+          region.displayName,
+          style: AppTextStyles.caption.copyWith(
+            color: AppColors.purpleAccent.withValues(alpha: 0.7),
+            fontSize: 9.5,
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -15,6 +15,7 @@ import '../../../core/widgets/widgets.dart';
 import '../../ambient/data/ambient_sound_controller.dart';
 import '../../ambient/presentation/ambient_sound_bar.dart';
 import '../../deep_focus/data/focus_providers.dart';
+import '../../goal_reached/domain/goal_reached_args.dart';
 import '../../honest_focus/domain/honest_focus.dart';
 import 'workout_session_controller.dart';
 
@@ -53,15 +54,41 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
     setState(() => _finishing = true);
     final session = ref.read(workoutSessionProvider);
     final result = session?.result();
-    final args = await completeFocusSession(
-      ref,
-      widget.task,
-      signals: FocusSignals(
-        timerCompleted: true,
-        totalSeconds: result?.totalSeconds ?? 0,
-      ),
-      workout: result,
-    );
+    GoalReachedArgs? args;
+    try {
+      args = await completeFocusSession(
+        ref,
+        widget.task,
+        signals: FocusSignals(
+          timerCompleted: true,
+          totalSeconds: result?.totalSeconds ?? 0,
+        ),
+        workout: result,
+      ).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () => GoalReachedArgs(
+          points: widget.task.points > 0 ? widget.task.points : 20,
+          taskTitle: widget.task.title,
+          streak: 0,
+          isSport: true,
+          verdict: FocusVerdict.full,
+          workout: result,
+          focusSeconds: result?.totalSeconds ?? 0,
+          awardedPoints: widget.task.points,
+        ),
+      );
+    } catch (e) {
+      args = GoalReachedArgs(
+        points: widget.task.points > 0 ? widget.task.points : 20,
+        taskTitle: widget.task.title,
+        streak: 0,
+        isSport: true,
+        verdict: FocusVerdict.full,
+        workout: result,
+        focusSeconds: result?.totalSeconds ?? 0,
+        awardedPoints: widget.task.points,
+      );
+    }
     _controller.clear();
     if (mounted) context.go(AppRoutes.goalReached, extra: args);
   }
@@ -91,7 +118,7 @@ class _WorkoutScreenState extends ConsumerState<WorkoutScreen> {
 
     return Scaffold(
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.focus,
+        current: AppNavTab.dashboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(

@@ -10,6 +10,14 @@
     "pts": "ball",
     "days_streak": "{count} kun ketma-ket"
   },
+  "nav": {
+    "dashboard": "Dashboard",
+    "note": "Eslatma",
+    "ai": "AI",
+    "leaderboard": "Leaderboard",
+    "profile": "Profile"
+  },
+  "nav_note": "Eslatma",
   "language": {
     "title": "Til",
     "english": "English",
@@ -37,6 +45,7 @@
     "tooltip_weekly": "Haftalik ko'rinish",
     "load_error": "Rejangizni yuklab bo'lmadi.",
     "progress": "JARAYON",
+    "daily_progress": "Kunlik Progress",
     "focus_ritual": "Diqqat marosimi",
     "progress_message": "Bugun siz ajoyib natijaga erishyapsiz. {total} vazifadan {done} tasi bajarildi. Niyatingizda qoling.",
     "progress_message_mixed": "Bugun ajoyib harakat! Jami {total} ta vazifadan {done} tasi to'liq, {partial} tasi qisman bajarildi. Davom eting!",
@@ -46,8 +55,14 @@
     "empty_title": "Hali maqsad yo'q — keling, kuningizni rejalashtiramiz",
     "empty_body": "Har bir ongli marosim bitta qadamdan boshlanadi. Kuningizni tuzish uchun AI yordamchidan foydalaning yoki niyatlaringizni qo'lda kiriting.",
     "add_manually": "Qo'lda qo'shish",
-    "ask_ai": "AI dan so'rash"
+    "ask_ai": "AI dan so'rash",
+    "active_task_label": "HOZIR BAJARILYAPTI",
+    "active_task_done": "BAJARILDI",
+    "active_task_left": "qoldi"
   },
+  "quest_running": "Yugurish",
+  "quest_reading": "Kitob o'qish",
+  "daily_quests_title": "Kunlik kvestlar",
   "focus": {
     "current_task": "JORIY VAZIFA",
     "focusing": "Diqqat",
@@ -65,6 +80,8 @@
     "begin_now": "Hozir boshlash",
     "end": "Tugatish",
     "reset": "Qayta boshlash",
+    "subtract_5m": "-5 daqiqa",
+    "add_5m": "+5 daqiqa",
     "nothing_title": "Hozircha diqqat qilish uchun narsa yo'q",
     "nothing_body": "Kalendaringizda vazifa rejalashtiring, so'ngra diqqat seansini boshlash uchun qayting.",
     "plan_task": "Vazifa rejalashtirish",
@@ -91,7 +108,7 @@
   },
   "settings": {
     "title": "Sozlamalar",
-    "member_default": "Flowa a'zosi",
+    "member_default": "Odat a'zosi",
     "member_since": "{year} yildan beri Zen a'zosi",
     "experience": "Tajriba",
     "notifications": "Bildirishnomalar",
@@ -110,8 +127,8 @@
     "logout": "Focus dan chiqish"
   },
   "premium": {
-    "title": "Flowa Premium",
-    "subtitle": "Xotirjamroq, chuqurroq amaliyot — Flowa'ning to'liq imkoniyatlarini muloyimlik bilan oching.",
+    "title": "Odat Premium",
+    "subtitle": "Xotirjamroq, chuqurroq amaliyot — Odat'ning to'liq imkoniyatlarini muloyimlik bilan oching.",
     "benefit_ai_title": "Cheksiz AI rejalashtirish",
     "benefit_ai_sub": "Xohlagancha maqsad rejalashtiring — kunlik cheklovsiz.",
     "benefit_stats_title": "Oylik chuqur statistika",
@@ -220,7 +237,13 @@
     "points_earned": "To'plangan ballar",
     "reps": "{done}/{total} takror",
     "total_reps": "Jami takrorlar",
-    "total_time": "Umumiy vaqt"
+    "total_time": "Umumiy vaqt",
+    "mood_sheet_title": "Bu sessiyadan keyin qanday his qilyapsiz?",
+    "mood_sheet_subtitle": "Tanlang — bu 2 soniyada bajariladi",
+    "mood_great": "Ajoyib",
+    "mood_hard": "Qiyin bo'ldi",
+    "mood_missed": "Chalg'idim",
+    "mood_skip": "O'tkazib yuborish"
   },
   "progress": {
     "growth_circle": "O'sish doirasi",
@@ -289,7 +312,7 @@
     "error_save": "Profilingizni saqlab bo'lmadi. Yana urinib ko'ring",
     "skip": "O'tkazib yuborish",
     "title": "O'zingiz haqingizda gapiring",
-    "subtitle": "Flowa'ni o'zingizniki qilish uchun bir necha muloyim qadam",
+    "subtitle": "Odat'ni o'zingizniki qilish uchun bir necha muloyim qadam",
     "your_avatar": "Sizning avataringiz",
     "avatar_hint": "Standartini tanlang yoki rasm yuklang",
     "name_label": "Sizni qanday atasak bo'ladi?",
@@ -302,7 +325,7 @@
     "lets_go": "Boshladik",
     "change_later": "Bu sozlamalarni istalgan vaqtda profilingizda o'zgartirishingiz mumkin.",
     "choose_avatar": "Avataringizni tanlang",
-    "premium_avatar_locked": "Premium avatar — Flowa Premium bilan oching 🌿"
+    "premium_avatar_locked": "Premium avatar — Odat Premium bilan oching 🌿"
   },
   "signin": {
     "error_empty_phone": "Telefon raqamingizni kiriting",
@@ -311,6 +334,7 @@
     "mobile_number": "Mobil raqam",
     "or_log_in_with": "Yoki quyidagi orqali davom eting",
     "google": "Google bilan kirish",
+    "telegram": "Telegram orqali kirish",
     "or_phone": "yoki telefon raqami bilan",
     "google_error": "Google orqali kirib bo'lmadi. Qayta urinib ko'ring.",
     "privacy": "Biz faqat xavfsiz kirish uchun Google akkauntingizdan foydalanamiz."
@@ -341,6 +365,7 @@
     "goal_title": "Maqsad nomi",
     "goal_title_hint": "Nimaga e'tibor qaratasiz?",
     "category": "Turkum",
+    "focus_mode": "Fokus turi",
     "date": "Sana",
     "start": "Boshlanish",
     "set_end_time": "Tugash vaqtini belgilash",
@@ -378,7 +403,11 @@
     "duration_until_label": "Maqsad qachon tugaydi?",
     "duration_end_date": "Tugash sanasi",
     "duration_pick_date": "Sana tanlang",
-    "duration_days_note": "Maqsad {count} kunga mo'ljallangan."
+    "duration_days_note": "Maqsad {count} kunga mo'ljallangan.",
+    "mood_confirmation_title": "Kayfiyat bilan tasdiqlayman",
+    "mood_confirmation_desc": "Belgilangan vaqtda kayfiyatingizni so'raymiz (😊/😐/😔)",
+    "mood_confirmation_hint": "Rasm o'rniga kayfiyatni tekshiramiz",
+    "points_preview": "✅ Bajarilsa: +{points} ball"
   },
   "weekly": {
     "overview": "Haftalik ko'rinish",
@@ -389,6 +418,9 @@
     "consistency_peak": "Barqarorlik cho'qqisi",
     "consistency_body": "Bu hafta diqqat maqsadlaringizning {percent}% iga erishdingiz.",
     "nothing_planned": "Bu kun uchun hech narsa rejalashtirilmagan."
+  },
+  "insights": {
+    "weekly_title": "Haftalik tahlil"
   },
   "profile": {
     "zen_master_level": "Zen ustasi · {level}-daraja",
@@ -486,7 +518,7 @@
     "starts_in_one": "'{title}' vazifangiz {count} daqiqadan so'ng boshlanadi.",
     "starts_in_many": "'{title}' vazifangiz {count} daqiqadan so'ng boshlanadi.",
     "sanctuary_mode": "RAQAMLI OSOYISHTALIK REJIMI",
-    "sanctuary_body": "Flowa diqqatingizni saqlashda muloyimlik bilan yordam beradi.",
+    "sanctuary_body": "Odat diqqatingizni saqlashda muloyimlik bilan yordam beradi.",
     "im_ready": "Men tayyorman",
     "not_now": "Hozir emas"
   },
@@ -503,7 +535,7 @@
     "audio_title": "Audio fayllar",
     "audio_desc": "Budilnik va signallar uchun o'z musiqangizni tanlash uchun.",
     "accessibility_title": "Maxsus imkoniyatlar — diqqat bloklash",
-    "accessibility_desc": "Asosiy tugma. Flowa bloklangan ilova ochilishi bilanoq buni sezib, uni to'xtatishi mumkin. Ro'yxatdan \"Flowa Focus Blocking\" ni yoqing. Flowa hech qachon ekran mazmunini o'qimaydi.",
+    "accessibility_desc": "Asosiy tugma. Odat bloklangan ilova ochilishi bilanoq buni sezib, uni to'xtatishi mumkin. Ro'yxatdan \"Odat Focus Blocking\" ni yoqing. Odat hech qachon ekran mazmunini o'qimaydi.",
     "overlay_title": "Boshqa ilovalar ustidan ko'rsatish",
     "overlay_desc": "Xotirjam \"Diqqatni saqlang\" ekrani bloklangan ilova ustida chiqishiga imkon beradi.",
     "miui_popup_title": "MIUI — fonda qalqib chiquvchi oyna",

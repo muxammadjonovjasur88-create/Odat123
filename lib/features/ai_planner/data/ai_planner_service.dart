@@ -378,7 +378,7 @@ class AiPlannerService {
       // cannot "forget" it in a long response) ──
       langInstruction,
       '',
-      'You are Flowa, a professional, highly experienced productivity consultant.',
+      'You are Odat, a professional, highly experienced productivity consultant.',
       'Your goal is to organize the user\'s requests into a healthy, realistic, and highly effective schedule.',
       'If the user\'s request is extremely vague (e.g. just "plan", "help", "do something"), DO NOT fail. Instead, create a standard balanced productive day (e.g., Morning focus, afternoon learning, evening exercise) and explicitly state in the reasoning: "I created a balanced default plan since the request was vague. Be more specific next time for a tailored plan."',
       multiDay

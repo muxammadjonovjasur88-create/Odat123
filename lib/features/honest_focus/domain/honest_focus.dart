@@ -12,6 +12,7 @@ class FocusSignals {
     this.totalSeconds = 0,
     this.checkInsPresented = 0,
     this.checkInsMissed = 0,
+    this.timeAdjustmentSeconds = 0,
   });
 
   /// Whether the full task duration genuinely elapsed in real clock time (the
@@ -36,6 +37,11 @@ class FocusSignals {
   /// Check-ins missed by the user.
   final int checkInsMissed;
 
+  /// Cumulative seconds added (+) or removed (-) by the user via the
+  /// +5 / -5 min buttons during the session. Used to adjust the effective
+  /// planned duration for point scoring.
+  final int timeAdjustmentSeconds;
+
   /// Seconds genuinely spent focused (locked or in Flowa).
   int get focusedSeconds => (totalSeconds - awaySeconds).clamp(0, totalSeconds);
 
@@ -47,6 +53,7 @@ class FocusSignals {
     int? totalSeconds,
     int? checkInsPresented,
     int? checkInsMissed,
+    int? timeAdjustmentSeconds,
   }) => FocusSignals(
     timerCompleted: timerCompleted ?? this.timerCompleted,
     distractingOpens: distractingOpens ?? this.distractingOpens,
@@ -55,6 +62,7 @@ class FocusSignals {
     totalSeconds: totalSeconds ?? this.totalSeconds,
     checkInsPresented: checkInsPresented ?? this.checkInsPresented,
     checkInsMissed: checkInsMissed ?? this.checkInsMissed,
+    timeAdjustmentSeconds: timeAdjustmentSeconds ?? this.timeAdjustmentSeconds,
   );
 
   factory FocusSignals.fromMap(Map<dynamic, dynamic> m) => FocusSignals(

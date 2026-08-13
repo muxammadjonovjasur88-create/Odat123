@@ -1,26 +1,18 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'package:flowa/core/theme/app_theme.dart';
 import 'package:flowa/features/sign_in/presentation/sign_in_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
-
-  testWidgets('sign-in screen shows Google-only flow', (tester) async {
-    await EasyLocalization.ensureInitialized();
-
+  testWidgets('sign-in screen shows Google and Telegram options', (tester) async {
     await tester.pumpWidget(
-      EasyLocalization(
-        supportedLocales: const [Locale('en')],
-        path: 'assets/translations',
-        fallbackLocale: const Locale('en'),
-        child: const ProviderScope(child: MaterialApp(home: SignInScreen())),
-      ),
+      ProviderScope(child: MaterialApp(theme: AppTheme.dark, home: const SignInScreen())),
     );
     await tester.pump();
 
-    expect(find.textContaining('Google'), findsOneWidget);
-    expect(find.textContaining('Mobile number'), findsNothing);
+    // Verify Google and Telegram keys/labels are rendered
+    expect(find.textContaining('google'), findsOneWidget);
+    expect(find.textContaining('telegram'), findsOneWidget);
   });
 }

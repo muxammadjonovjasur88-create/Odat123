@@ -60,4 +60,7 @@ class LocaleStore {
   }
 
   static Future<void> save(String code) async => _box?.put(_key, code);
+
+  static bool hasSeenIntro() => _box?.get('has_seen_intro') as bool? ?? false;
+  static Future<void> setHasSeenIntro() async => _box?.put('has_seen_intro', true);
 }

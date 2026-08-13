@@ -1,84 +1,94 @@
 import 'package:flutter/material.dart';
 
-/// Flowa's Zen palette, extracted from the Figma design PNGs in `design/`.
+/// Flowa's **Zen Kinetic** color system — deep navy dark mode with
+/// Neon Lime (#39FF14) and Electric Cyan (#00F3FF) accents.
 ///
-/// The aesthetic is calm: warm cream backgrounds, soft white cards, and a
-/// grounded sage / forest green primary. Category accents are muted pastels.
-///
-/// Colors are grouped into [light] and [dark] schemes; widgets should read
-/// from the active [AppColorScheme] (via `context` / theme) rather than
-/// referencing raw constants, so light/dark stay consistent.
+/// Generated from the Stitch "Zen Kinetic" design system.
 abstract final class AppColors {
   AppColors._();
 
-  // ---- Brand / accent (shared across light & dark) -------------------------
+  // ── Neon Brand Accents ────────────────────────────────────────────────────
 
-  /// Deep forest green — primary buttons, progress rings, active states.
-  static const Color forest = Color(0xFF4F6F4E);
+  /// Primary Accent — Neon Lime (movement / completion / actions)
+  static const Color neonLime = Color(0xFF39FF14);
 
-  /// Darker forest, used for pressed states and ring strokes.
-  static const Color forestDark = Color(0xFF3C5538);
+  /// Secondary Accent — Electric Cyan (telemetry / flow / data)
+  static const Color cyanAccent = Color(0xFF00F3FF);
 
-  /// Soft sage — secondary accents, subtle highlights.
-  static const Color sage = Color(0xFF8FA98A);
+  /// Legacy alias for compatibility
+  static const Color purpleAccent = Color(0xFFAA00FF);
 
-  // ---- Category accents (muted pastels from the chips) ---------------------
-  // Each has a soft fill + a readable foreground.
-
-  static const Color studyFill = Color(0xFFC6DBEF); // blue
-  static const Color studyText = Color(0xFF3A5A78);
-
-  static const Color sportFill = Color(0xFFC7DDC0); // green
-  static const Color sportText = Color(0xFF3E5C3A);
-
-  static const Color workFill = Color(0xFFE4E3DC); // neutral grey
-  static const Color workText = Color(0xFF5A584F);
-
-  static const Color personalFill = Color(0xFFF4CFAD); // peach
-  static const Color personalText = Color(0xFF8A5A36);
-
-  static const Color wellnessFill = Color(0xFFCBE3C5); // light green
-  static const Color wellnessText = Color(0xFF3E5C3A);
-
-  // ---- Light scheme --------------------------------------------------------
-
-  static const AppColorScheme light = AppColorScheme(
-    background: Color(0xFFF4F1EA), // warm cream
-    surface: Color(0xFFFFFFFF), // white cards
-    surfaceMuted: Color(0xFFEFEDE6), // input fills, inactive chips
-    primary: forest,
-    primaryPressed: forestDark,
-    onPrimary: Color(0xFFFDFDFB),
-    textPrimary: Color(0xFF2D2D2A), // charcoal
-    textSecondary: Color(0xFF8A887F), // warm grey
-    textTertiary: Color(0xFFB5B2A8), // hint / placeholder
-    border: Color(0xFFE6E3DB),
-    shadow: Color(0x14000000),
-    tintSage: Color(0xFFDDEAD6), // soft sage highlight surface
-    tintBlue: Color(0xFFD8E6F2), // soft blue info surface
+  /// Primary gradient: Cyan → Neon Lime (left to right)
+  static const LinearGradient primaryGradient = LinearGradient(
+    colors: [cyanAccent, neonLime],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
   );
 
-  // ---- Dark scheme (from 21_dark_mode.png) ---------------------------------
+  /// Zen glow gradient — used on progress rings and active indicators
+  static const LinearGradient zenGlowGradient = LinearGradient(
+    colors: [Color(0xFF00F3FF), Color(0xFF39FF14)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // ── Glassmorphism Surface Tokens ──────────────────────────────────────────
+
+  /// Glass card surface — semi-transparent slate
+  static const Color glassSurface = Color(0xCC122131);
+
+  /// Glass card border — subtle inner glow
+  static const Color glassBorder = Color(0x1AFFFFFF);
+
+  /// Glass card top/left edge highlight — light hitting glass
+  static const Color glassEdge = Color(0x29FFFFFF);
+
+  // ── Category Accents ──────────────────────────────────────────────────────
+  static const Color studyFill     = Color(0x2600F3FF);
+  static const Color studyText     = Color(0xFF00F3FF);
+
+  static const Color sportFill     = Color(0x2639FF14);
+  static const Color sportText     = Color(0xFF39FF14);
+
+  static const Color workFill      = Color(0x269E9E9E);
+  static const Color workText      = Color(0xFFE0E0E0);
+
+  static const Color personalFill  = Color(0x26FF9100);
+  static const Color personalText  = Color(0xFFFFB74D);
+
+  static const Color wellnessFill  = Color(0x2600E676);
+  static const Color wellnessText  = Color(0xFF69F0AE);
+
+  // ── Zen Kinetic Dark Scheme ───────────────────────────────────────────────
 
   static const AppColorScheme dark = AppColorScheme(
-    background: Color(0xFF181C18), // dark green-black
-    surface: Color(0xFF242823), // elevated olive card
-    surfaceMuted: Color(0xFF2E332D),
-    primary: Color(0xFF5C7C54), // slightly lifted for contrast
-    primaryPressed: forest,
-    onPrimary: Color(0xFFF3F5F0),
-    textPrimary: Color(0xFFECEAE3),
-    textSecondary: Color(0xFF9A988F),
-    textTertiary: Color(0xFF6E6F68),
-    border: Color(0xFF343A33),
-    shadow: Color(0x40000000),
-    tintSage: Color(0xFF2A332A), // dark green-tinted surface
-    tintBlue: Color(0xFF263039), // dark blue-tinted surface
+    background:      Color(0xFF051424),  // Deep Slate Navy void
+    surface:         Color(0xFF0D1C2D),  // surface-container-low
+    surfaceMuted:    Color(0xFF122131),  // surface-container
+    primary:         neonLime,           // Neon Lime — movement / CTA
+    secondary:       cyanAccent,         // Electric Cyan — telemetry
+    primaryPressed:  Color(0xFF2AE500),  // primary-fixed-dim
+    onPrimary:       Color(0xFF053900),  // on-primary (dark for contrast)
+    textPrimary:     Color(0xFFD4E4FA),  // on-surface
+    textSecondary:   Color(0xFFBACCB0),  // on-surface-variant
+    textTertiary:    Color(0xFF85967C),  // outline
+    border:          Color(0xFF273647),  // surface-variant
+    shadow:          Color(0x80000000),
+    tintSage:        Color(0x1A39FF14),  // Lime tint
+    tintBlue:        Color(0x1A00F3FF),  // Cyan tint
+    primaryGradient: primaryGradient,
   );
+
+  /// Light is mapped to dark (global dark mode).
+  static const AppColorScheme light = dark;
+
+  // ── Legacy aliases (keep so existing code compiles) ──────────────────────
+  static const Color forest     = cyanAccent;
+  static const Color forestDark = Color(0xFF00B2CC);
+  static const Color sage       = neonLime;
 }
 
-/// A semantic set of colors for one brightness. Resolved from [AppColors.light]
-/// or [AppColors.dark] and exposed on the theme via [AppColorsExtension].
+/// A semantic set of colors for one brightness.
 @immutable
 class AppColorScheme {
   const AppColorScheme({
@@ -86,6 +96,7 @@ class AppColorScheme {
     required this.surface,
     required this.surfaceMuted,
     required this.primary,
+    this.secondary = AppColors.cyanAccent,
     required this.primaryPressed,
     required this.onPrimary,
     required this.textPrimary,
@@ -95,12 +106,14 @@ class AppColorScheme {
     required this.shadow,
     required this.tintSage,
     required this.tintBlue,
+    this.primaryGradient = AppColors.primaryGradient,
   });
 
   final Color background;
   final Color surface;
   final Color surfaceMuted;
   final Color primary;
+  final Color secondary;
   final Color primaryPressed;
   final Color onPrimary;
   final Color textPrimary;
@@ -109,16 +122,18 @@ class AppColorScheme {
   final Color border;
   final Color shadow;
 
-  /// Soft positive/highlight surface (sage in light, dark-green in dark).
+  /// Lime/green highlight tint
   final Color tintSage;
 
-  /// Soft informational surface (blue in light, dark-blue in dark).
+  /// Cyan informational tint
   final Color tintBlue;
+
+  /// Gradient from cyan to lime
+  final LinearGradient primaryGradient;
 }
 
 /// Theme extension so widgets can read the active [AppColorScheme] with
-/// `Theme.of(context).extension<AppColorsExtension>()` — wrapped by the
-/// `context.colors` getter in `app_theme.dart`.
+/// `Theme.of(context).extension<AppColorsExtension>()` — via `context.colors`.
 @immutable
 class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   const AppColorsExtension(this.scheme);
@@ -136,20 +151,24 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     final b = other.scheme;
     return AppColorsExtension(
       AppColorScheme(
-        background: Color.lerp(a.background, b.background, t)!,
-        surface: Color.lerp(a.surface, b.surface, t)!,
-        surfaceMuted: Color.lerp(a.surfaceMuted, b.surfaceMuted, t)!,
-        primary: Color.lerp(a.primary, b.primary, t)!,
-        primaryPressed: Color.lerp(a.primaryPressed, b.primaryPressed, t)!,
-        onPrimary: Color.lerp(a.onPrimary, b.onPrimary, t)!,
-        textPrimary: Color.lerp(a.textPrimary, b.textPrimary, t)!,
-        textSecondary: Color.lerp(a.textSecondary, b.textSecondary, t)!,
-        textTertiary: Color.lerp(a.textTertiary, b.textTertiary, t)!,
-        border: Color.lerp(a.border, b.border, t)!,
-        shadow: Color.lerp(a.shadow, b.shadow, t)!,
-        tintSage: Color.lerp(a.tintSage, b.tintSage, t)!,
-        tintBlue: Color.lerp(a.tintBlue, b.tintBlue, t)!,
+        background:      Color.lerp(a.background, b.background, t)!,
+        surface:         Color.lerp(a.surface, b.surface, t)!,
+        surfaceMuted:    Color.lerp(a.surfaceMuted, b.surfaceMuted, t)!,
+        primary:         Color.lerp(a.primary, b.primary, t)!,
+        secondary:       Color.lerp(a.secondary, b.secondary, t)!,
+        primaryPressed:  Color.lerp(a.primaryPressed, b.primaryPressed, t)!,
+        onPrimary:       Color.lerp(a.onPrimary, b.onPrimary, t)!,
+        textPrimary:     Color.lerp(a.textPrimary, b.textPrimary, t)!,
+        textSecondary:   Color.lerp(a.textSecondary, b.textSecondary, t)!,
+        textTertiary:    Color.lerp(a.textTertiary, b.textTertiary, t)!,
+        border:          Color.lerp(a.border, b.border, t)!,
+        shadow:          Color.lerp(a.shadow, b.shadow, t)!,
+        tintSage:        Color.lerp(a.tintSage, b.tintSage, t)!,
+        tintBlue:        Color.lerp(a.tintBlue, b.tintBlue, t)!,
+        primaryGradient: LinearGradient.lerp(
+            a.primaryGradient, b.primaryGradient, t)!,
       ),
     );
   }
 }
+

@@ -26,13 +26,7 @@ class PremiumStatsScreen extends ConsumerWidget {
     final locked = enabled && !isPremium;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('premium.deep_stats'.tr()),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
-          onPressed: () => context.pop(),
-        ),
-      ),
+      appBar: const FlowaAppBar(showBackButton: true),
       body: SafeArea(
         child: locked
             ? _LockedUpsell(onUpgrade: () => context.push(AppRoutes.paywall))

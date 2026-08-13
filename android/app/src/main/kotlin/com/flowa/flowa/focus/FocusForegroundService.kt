@@ -17,6 +17,7 @@ import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 import com.flowa.flowa.MainActivity
 import com.flowa.flowa.R
 import com.flowa.flowa.blocking.AppBlockerAccessibilityService
@@ -53,6 +54,7 @@ class FocusForegroundService : Service() {
     }
 
     companion object {
+        private const val TAG = "FlowaFocusSvc"
         private const val CHANNEL_ID = "flowa_focus_session"
         private const val NOTIFICATION_ID = 7311
         // Bumped to "_v2" so the custom sound applies on existing installs — a
@@ -115,6 +117,23 @@ class FocusForegroundService : Service() {
         fun stop(context: Context) {
             context.stopService(Intent(context, FocusForegroundService::class.java))
         }
+
+        /**
+         * Adjusts the session end time by [deltaMs] ms while the service is running.
+         * Updates the persisted [FocusRuntime] endAt so the ticker immediately reads
+         * the new deadline on its very next second, and updates [BlockerState] so
+         * the blocking window tracks the extension/reduction.
+         *
+         * Called from the MethodChannel handler in response to the user tapping
+         * "+5 min" / "−5 min" inside the Flutter UI.
+         */
+        fun adjustEndAt(context: Context, deltaMs: Long) {
+            FocusRuntime.adjustEndAt(context, deltaMs)
+            // Update BlockerState's end window to match the new deadline.
+            val newEnd = FocusRuntime.endAt(context)
+            BlockerState.extendEndTime(newEnd)
+            Log.d(TAG, "adjustEndAt: deltaMs=$deltaMs → newEnd=$newEnd")
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
@@ -131,49 +150,93 @@ class FocusForegroundService : Service() {
             val strict = intent.getBooleanExtra(EXTRA_STRICT, false)
             val lang = intent.getStringExtra(EXTRA_LANG) ?: "en"
 
+            Log.d(TAG, "onStartCommand: taskId=$taskId title='$title' " +
+                "packages=${packages.size} strict=$strict " +
+                "startAt=$startAt endAt=$endAt")
+            if (packages.isEmpty()) {
+                Log.w(TAG, "onStartCommand: WARNING — packages list is EMPTY. No apps will be blocked!")
+            } else {
+                Log.d(TAG, "onStartCommand: blocking packages: $packages")
+            }
+
             FocusRuntime.save(this, taskId, title, startAt, endAt, packages, strict, lang)
             // Activate app blocking for the whole session window. Soft-friction
             // (default) vs hard wall (strict) is read from BlockerState by the
-            // overlay.
+            // overlay. Note: FocusAlarmReceiver may have already called this;
+            // calling again is safe (idempotent) and ensures the service is the
+            // authoritative owner once it is running.
             BlockerState.start(packages, startAt, endAt, title, strict, lang)
-            
-            // Check if we need to immediately pull the user out of a distracting app
-            enforceImmediateFocus()
+            Log.d(TAG, "BlockerState armed: active=${BlockerState.active} " +
+                "inWindow=${BlockerState.inWindow()} " +
+                "accessibilitySvcRunning=${AppBlockerAccessibilityService.running}")
+        } else {
+            Log.w(TAG, "onStartCommand: intent has no EXTRA_END — skipping BlockerState.start()")
         }
 
         startForeground(NOTIFICATION_ID, buildNotification())
         handler.removeCallbacks(ticker)
         handler.post(ticker)
+        // Kick the immediate-focus enforcement AFTER startForeground so we are
+        // allowed to launch activities from the foreground context. Retry for up
+        // to 3 seconds in case the OS hasn't fully propagated the window change.
+        scheduleEnforceImmediateFocus(attemptsLeft = 3)
         return START_STICKY
     }
 
-    private fun enforceImmediateFocus() {
-        val currentPkg = ForegroundAppDetector.current(this) ?: return
-        if (currentPkg == packageName) return
-        
-        // If the current foreground app is a distracting one, pull them back to Flowa
-        if (BlockerState.shouldBlock(currentPkg)) {
-            // First send them HOME to close the distracting app forcefully (works on MIUI)
-            val sentHome = AppBlockerAccessibilityService.performHomeAction()
-            if (!sentHome) {
-                // Fallback if AccessibilityService is not running
-                try {
-                    val homeIntent = Intent(Intent.ACTION_MAIN).apply {
-                        addCategory(Intent.CATEGORY_HOME)
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    startActivity(homeIntent)
-                } catch (_: Exception) {}
+    /**
+     * Schedules up to [attemptsLeft] attempts (1 s apart) to pull the user out
+     * of a distracting app. Stops as soon as the user is no longer in a
+     * blocked app, or all attempts are exhausted. The retry loop covers the
+     * window between the alarm firing and the AccessibilityService / activity
+     * manager fully registering the window change.
+     */
+    private fun scheduleEnforceImmediateFocus(attemptsLeft: Int) {
+        if (attemptsLeft <= 0) return
+        // Run the first attempt immediately; subsequent attempts after 1 s each.
+        val delayMs = if (attemptsLeft == 3) 0L else 1000L
+        handler.postDelayed({
+            val stillBlocked = enforceImmediateFocus()
+            if (stillBlocked) {
+                // User is still in the blocked app — retry after 1 s.
+                scheduleEnforceImmediateFocus(attemptsLeft - 1)
             }
+        }, delayMs)
+    }
 
-            // Immediately launch Flowa MainActivity
+    /**
+     * Attempts to pull the user back to Flowa if they are currently in a
+     * blocked app. Returns true if a blocked app was detected (so the caller
+     * may retry), false if nothing needed to be done.
+     */
+    private fun enforceImmediateFocus(): Boolean {
+        val currentPkg = ForegroundAppDetector.current(this) ?: return false
+        if (currentPkg == packageName) return false
+        if (!BlockerState.shouldBlock(currentPkg)) return false
+
+        Log.d(TAG, "enforceImmediateFocus: user is in blocked app '$currentPkg' — pulling back")
+
+        // First send them HOME to close the distracting app forcefully (works on MIUI)
+        val sentHome = AppBlockerAccessibilityService.performHomeAction()
+        if (!sentHome) {
+            // Fallback if AccessibilityService is not running
             try {
-                val appIntent = Intent(this, MainActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                val homeIntent = Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_HOME)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
-                startActivity(appIntent)
+                startActivity(homeIntent)
             } catch (_: Exception) {}
         }
+
+        // Immediately launch Flowa MainActivity
+        try {
+            val appIntent = Intent(this, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            startActivity(appIntent)
+        } catch (_: Exception) {}
+
+        return true  // blocked app was detected; caller should retry to confirm
     }
 
     private fun tick() {
@@ -300,14 +363,21 @@ class FocusForegroundService : Service() {
     private fun detectAndBlock() {
         // The accessibility service is the primary, instant blocker; only fall
         // back to polling when it isn't enabled.
-        if (AppBlockerAccessibilityService.running) return
+        if (AppBlockerAccessibilityService.running) {
+            // Accessibility service is active — it handles blocking, no polling needed.
+            return
+        }
         if (!BlockerState.inWindow() || BlockerState.overlayShowing) return
-        val pkg = ForegroundAppDetector.current(this) ?: return
+        val pkg = ForegroundAppDetector.current(this) ?: run {
+            Log.w(TAG, "detectAndBlock: ForegroundAppDetector returned null — check Usage Access permission")
+            return
+        }
         if (pkg == packageName) return
         if (BlockerState.shouldBlock(pkg)) {
+            Log.d(TAG, "detectAndBlock: blocking $pkg via UsageAccess polling")
             // A blocked/distracting app was opened during the session. The
             // distraction count is recorded by the overlay (on the hard wall, or
-            // on "Open anyway" for soft friction) — not here — so resisting the
+            // on \"Open anyway\" for soft friction) — not here — so resisting the
             // soft reminder is never penalized.
             BlockerState.overlayShowing = true
             startActivity(

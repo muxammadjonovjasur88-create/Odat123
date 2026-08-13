@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Dark-mode app window background — matches the Flutter forest-dark theme
+    <!-- Dark-mode app window background — matches the Flutter black theme (#000000)
          so there's no flash between the splash and the first Flutter frame. -->
-    <color name="flowa_window_background">#181C18</color>
+    <color name="flowa_window_background">#000000</color>
 </resources>

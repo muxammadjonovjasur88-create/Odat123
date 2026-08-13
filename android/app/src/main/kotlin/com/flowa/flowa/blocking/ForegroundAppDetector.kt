@@ -13,8 +13,12 @@ import android.content.Context
  */
 object ForegroundAppDetector {
 
-    /** Look-back window for the most recent foreground event. */
-    private const val WINDOW_MS = 10_000L
+    /**
+     * Look-back window for the most recent foreground event. It must be long
+     * enough to catch an already-open app that moved to the foreground before
+     * the session started.
+     */
+    private const val WINDOW_MS = 60_000L
 
     /**
      * The package name of the app most recently moved to the foreground, or
@@ -37,6 +41,16 @@ object ForegroundAppDetector {
                 latestPackage = event.packageName
             }
         }
-        return latestPackage
+
+        if (latestPackage != null) return latestPackage
+
+        // Fallback: if the foreground app has been in place for longer than the
+        // event window, use the most recently used package from usage stats.
+        val usageStats = usm.queryUsageStats(
+            UsageStatsManager.INTERVAL_DAILY,
+            now - WINDOW_MS,
+            now,
+        )
+        return usageStats.maxByOrNull { it.lastTimeUsed }?.packageName
     }
 }

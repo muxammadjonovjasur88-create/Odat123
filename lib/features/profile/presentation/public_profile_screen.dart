@@ -45,8 +45,8 @@ class PublicProfileScreen extends ConsumerWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              colors.primary.withOpacity(0.16),
-              colors.background.withOpacity(0.98),
+              colors.primary.withValues(alpha: 0.16),
+              colors.background.withValues(alpha: 0.98),
               colors.background,
             ],
           ),
@@ -105,13 +105,13 @@ class PublicProfileScreen extends ConsumerWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            colors.primary.withOpacity(0.14),
-                            colors.surface.withOpacity(0.82),
+                            colors.primary.withValues(alpha: 0.14),
+                            colors.surface.withValues(alpha: 0.82),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(32),
                         border: Border.all(
-                          color: colors.border.withOpacity(0.72),
+                          color: colors.border.withValues(alpha: 0.72),
                           width: 1,
                         ),
                         boxShadow: [
@@ -132,14 +132,14 @@ class PublicProfileScreen extends ConsumerWidget {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: hasWeekActivity
-                                    ? colors.primary.withOpacity(0.9)
-                                    : colors.border.withOpacity(0.7),
+                                    ? colors.primary.withValues(alpha: 0.9)
+                                    : colors.border.withValues(alpha: 0.7),
                                 width: 2.4,
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: hasWeekActivity
-                                      ? colors.primary.withOpacity(0.18)
+                                      ? colors.primary.withValues(alpha: 0.18)
                                       : colors.shadow,
                                   blurRadius: 24,
                                   spreadRadius: 3,
@@ -175,10 +175,10 @@ class PublicProfileScreen extends ConsumerWidget {
                                     vertical: 7,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: colors.primary.withOpacity(0.12),
+                                    color: colors.primary.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(999),
                                     border: Border.all(
-                                      color: colors.primary.withOpacity(0.24),
+                                      color: colors.primary.withValues(alpha: 0.24),
                                     ),
                                   ),
                                   child: Text(
@@ -248,7 +248,7 @@ class PublicProfileScreen extends ConsumerWidget {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: colors.primary.withOpacity(0.12),
+                                  color: colors.primary.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
@@ -320,7 +320,7 @@ class _ProfileSkeleton extends StatelessWidget {
             decoration: BoxDecoration(
               color: colors.surface,
               borderRadius: BorderRadius.circular(32),
-              border: Border.all(color: colors.border.withOpacity(0.7)),
+              border: Border.all(color: colors.border.withValues(alpha: 0.7)),
             ),
             child: Column(
               children: [
@@ -410,7 +410,7 @@ class _StatsGrid extends StatelessWidget {
         value: '$streak',
         label: 'profile.streak'.tr(),
         icon: Icons.local_fire_department_rounded,
-        color: colors.primary.withOpacity(0.14),
+        color: colors.primary.withValues(alpha: 0.14),
       ),
       _StatCardData(
         value: '$longestStreak',
@@ -505,10 +505,10 @@ class _StaticLikePill extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: colors.surface.withOpacity(0.8),
+          color: colors.surface.withValues(alpha: 0.8),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: colors.primary.withOpacity(0.25),
+            color: colors.primary.withValues(alpha: 0.25),
             width: 1.5,
           ),
         ),
@@ -646,18 +646,18 @@ class _LikeButtonState extends ConsumerState<_LikeButton>
             decoration: BoxDecoration(
               color: _isLiked
                   ? colors.primary
-                  : colors.surface.withOpacity(0.76),
+                  : colors.surface.withValues(alpha: 0.76),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
                 color: _isLiked
                     ? colors.primary
-                    : colors.primary.withOpacity(0.24),
+                    : colors.primary.withValues(alpha: 0.24),
                 width: 1.5,
               ),
               boxShadow: _isLiked
                   ? [
                       BoxShadow(
-                        color: colors.primary.withOpacity(0.16),
+                        color: colors.primary.withValues(alpha: 0.16),
                         blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),

@@ -1,11 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../core/models/task.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/router/nav_helpers.dart';
 import '../../../core/services/user_repository.dart';
@@ -18,6 +19,7 @@ import '../../active_focus/presentation/active_focus_view.dart';
 import '../../ambient/data/ambient_sound_controller.dart';
 import '../../ambient/presentation/ambient_sound_bar.dart';
 import '../../blocking/data/blocking_repository.dart';
+import '../../blocking/presentation/blocking_permission_gate.dart';
 import '../../goal_reached/domain/goal_reached_args.dart';
 import '../../honest_focus/domain/honest_focus.dart';
 import '../../workout/presentation/workout_screen.dart';
@@ -28,22 +30,50 @@ import 'focus_session_controller.dart';
 /// Route entry for the Focus tab (12/13). Picks the current task and renders
 /// either the Pomodoro (deep work) or the sport interval timer, per the task's
 /// category and the user's focus type.
-class FocusScreen extends ConsumerWidget {
+class FocusScreen extends ConsumerStatefulWidget {
   const FocusScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final task = ref.watch(currentFocusTaskProvider);
+  ConsumerState<FocusScreen> createState() => _FocusScreenState();
+}
+
+class _FocusScreenState extends ConsumerState<FocusScreen> {
+  Task? _lastTask;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentTask = ref.watch(currentFocusTaskProvider);
+    if (currentTask != null) {
+      _lastTask = currentTask;
+    }
+
+    final session = ref.watch(focusSessionProvider);
     final profile = ref.watch(userProfileProvider).asData?.value;
 
-    if (task == null) return const _NothingToFocus();
+    final taskToUse = currentTask ?? _lastTask;
+
+    debugPrint(
+      '[FocusScreen] build: currentTask=${currentTask?.title ?? "NULL"}, '
+      '_lastTask=${_lastTask?.title ?? "NULL"}, '
+      'hasSession=${session != null}, '
+      'sessionFinished=${session?.isFinished}',
+    );
+
+    // If there is no active session AND no current focus task, show empty state.
+    // If there IS an active/finishing session, hold onto _lastTask so the screen
+    // does not prematurely unmount to _NothingToFocus while completing!
+    if (taskToUse == null || (session == null && currentTask == null)) {
+      return const _NothingToFocus();
+    }
 
     // Structured set-based workout takes priority for sport tasks that have one.
-    if (task.hasWorkout) return WorkoutScreen(task: task);
+    if (taskToUse.hasWorkout) return WorkoutScreen(task: taskToUse);
 
-    return usesIntervalTimer(task, profile)
-        ? ActiveFocusView(task: task)
-        : DeepFocusView(task: task);
+    final useInterval = usesIntervalTimer(taskToUse, profile);
+    debugPrint('[FocusScreen] useInterval=$useInterval for "${taskToUse.title}"');
+    return useInterval
+        ? ActiveFocusView(task: taskToUse)
+        : DeepFocusView(task: taskToUse);
   }
 }
 
@@ -60,12 +90,27 @@ class DeepFocusView extends ConsumerStatefulWidget {
 }
 
 class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
+  // Plain bool — intentionally NOT using setState() here.
+  // _finish() is always scheduled via addPostFrameCallback, so it never
+  // runs inside a build() call. Using setState() caused a silent Flutter
+  // exception ("setState called during build") that swallowed the error
+  // and left the session frozen at 00:00.
   bool _finishing = false;
-  bool _finishCallbackScheduled = false;
+  bool _finishScheduled = false;
 
   @override
   void initState() {
     super.initState();
+    // Keep the screen on for the entire focus session safely.
+    try {
+      WakelockPlus.enable().then((_) {
+        debugPrint('[DeepFocus] ✅ Wakelock ENABLED — ekran yonib turadi');
+      }).catchError((e) {
+        debugPrint('[DeepFocus] ❌ Wakelock enable FAILED: $e');
+      });
+    } catch (e) {
+      debugPrint('[DeepFocus] ❌ Wakelock enable sync exception: $e');
+    }
     // Provider mutations are illegal during initState/build, so defer the
     // on-entry session start to after the first frame. Idempotent: if a session
     // for this task is already running, it's left untouched.
@@ -81,9 +126,29 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
     });
   }
 
+  @override
+  void dispose() {
+    // Release the wakelock when leaving the focus screen.
+    try {
+      WakelockPlus.disable().then((_) {
+        debugPrint('[DeepFocus] 🔓 Wakelock DISABLED — ekran normal rejimga qaytdi');
+      }).catchError((e) {
+        debugPrint('[DeepFocus] ❌ Wakelock disable FAILED: $e');
+      });
+    } catch (e) {
+      debugPrint('[DeepFocus] ❌ Wakelock disable sync exception: $e');
+    }
+    super.dispose();
+  }
+
   /// Called whenever [focusSessionProvider] emits a new state. Handles the
   /// one-tick [segmentJustChanged] signal to give the user tactile + visual
   /// feedback when a work/rest segment transitions.
+  ///
+  /// IMPORTANT: this callback fires during build() (via ref.listen). We must
+  /// never call setState() or navigate synchronously from here — instead we
+  /// schedule work with addPostFrameCallback so it always runs after the
+  /// current build frame completes.
   void _onSessionChanged(FocusSessionState? prev, FocusSessionState? next) {
     if (next == null || !mounted) return;
 
@@ -93,45 +158,61 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
       final message = isNowRest
           ? 'focus.break_time'.tr()
           : 'focus.back_to_work'.tr();
-      // Haptic vibration
-      HapticFeedback.mediumImpact();
-      // Visual snackbar
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                isNowRest ? Icons.coffee_rounded : Icons.bolt_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                message,
-                style: const TextStyle(
+      // Schedule post-frame so we don't call ScaffoldMessenger during build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // Haptic vibration
+        HapticFeedback.mediumImpact();
+        // Visual snackbar
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                Icon(
+                  isNowRest ? Icons.coffee_rounded : Icons.bolt_rounded,
                   color: Colors.white,
-                  fontWeight: FontWeight.w600,
+                  size: 18,
                 ),
-              ),
-            ],
+                const SizedBox(width: 10),
+                Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: isNowRest
+                ? const Color(0xFF5C8A6F)
+                : const Color(0xFF4C74B9),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            duration: const Duration(seconds: 3),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           ),
-          backgroundColor: isNowRest
-              ? const Color(0xFF5C8A6F)
-              : const Color(0xFF4C74B9),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          duration: const Duration(seconds: 3),
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        ),
-      );
+        );
+      });
     }
 
-    // Session finished → navigate to goal screen.
-    if (next.taskId == widget.task.id && next.isFinished && !_finishing) {
-      _finish();
+    // Session finished → schedule navigation AFTER the current build frame.
+    // Never call _finish() synchronously here — it would run setState() during
+    // build, throwing a silent exception that freezes the session at 00:00.
+    if (next.taskId == widget.task.id && 
+        (next.isFinished || (next.remainingSeconds <= 0 && next.status != FocusRunStatus.waiting)) && 
+        !_finishing && !_finishScheduled) {
+      _finishScheduled = true;
+      debugPrint('[DeepFocus] _onSessionChanged: session finished/0s, scheduling _finish() via postFrameCallback');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _finishScheduled = false;
+        if (mounted && !_finishing) {
+          debugPrint('[DeepFocus] postFrameCallback: calling _finish()');
+          _finish();
+        }
+      });
     }
   }
 
@@ -140,41 +221,140 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
 
   /// "Begin now": start the background session immediately (countdown +
   /// blocking + ongoing notification), and reflect it in the UI.
-  void _beginNow() {
-    _controller.beginNow();
-    beginBackgroundFocusNow(
-      service: ref.read(focusServiceProvider),
-      taskId: widget.task.id,
-      task: widget.task,
-      settings: ref.read(blockingSettingsProvider).asData?.value,
-    );
+  ///
+  /// If the user has chosen blocked apps but hasn't granted the required
+  /// Android permissions, we show a dialog explaining what to enable first.
+  Future<void> _beginNow() async {
+    try {
+      _controller.beginNow();
+    } catch (e) {
+      debugPrint('[DeepFocus] ❌ beginNow controller exception: $e');
+    }
+
+    final settings = ref.read(blockingSettingsProvider).asData?.value;
+    final hasBlockedApps =
+        settings != null &&
+        settings.blockedPackages.isNotEmpty &&
+        (widget.task.blockApps || settings.alwaysBlock);
+
+    // Only bother checking permissions when there are actually apps to block.
+    if (hasBlockedApps && context.mounted) {
+      try {
+        await ensureBlockingPermissions(context, ref);
+      } catch (e) {
+        debugPrint('[DeepFocus] ❌ ensureBlockingPermissions exception: $e');
+      }
+    }
+
+    if (!mounted) return;
+    try {
+      await beginBackgroundFocusNow(
+        service: ref.read(focusServiceProvider),
+        taskId: widget.task.id,
+        task: widget.task,
+        settings: settings,
+      );
+    } catch (e) {
+      debugPrint('[DeepFocus] ❌ beginBackgroundFocusNow exception: $e');
+    }
   }
 
   Future<void> _finish() async {
     if (_finishing) return;
-    setState(() => _finishing = true);
+    // Set the flag SYNCHRONOUSLY to prevent double-invocation.
+    _finishing = true;
+    debugPrint('[DeepFocus] 🚀 _finish() ENTERED');
+
+    // ── Non-blocking Wakelock release ──────────────────────────────────────
+    try {
+      await WakelockPlus.disable();
+      debugPrint('[DeepFocus] Finish: wakelock disabled successfully');
+    } catch (e) {
+      debugPrint('[DeepFocus] ❌ Finish: wakelock disable failed (non-critical): $e');
+    }
+
+    // ── Capture signals NOW, before clear() nulls the state ────────────────
+    final signals =
+        ref.read(focusSessionProvider)?.toSignals() ?? const FocusSignals();
+    debugPrint(
+      '[DeepFocus] _finish() — timerCompleted=${signals.timerCompleted} '
+      'total=${signals.totalSeconds}s away=${signals.awaySeconds}s '
+      'focused=${signals.focusedSeconds}s '
+      '(focusedMin=${signals.focusedSeconds ~/ 60}, '
+      'plannedMin=${widget.task.durationMinutes})',
+    );
+
+    // Save container BEFORE any async operation, so even if widget unmounts,
+    // we have the stable container!
+    final container = ref.container;
+
     GoalReachedArgs? args;
     try {
+      debugPrint('[DeepFocus] Finish step 1: calling completeFocusSession...');
       args = await completeFocusSession(
-        ref,
+        container,
         widget.task,
-        signals:
-            ref.read(focusSessionProvider)?.toSignals() ?? const FocusSignals(),
+        signals: signals,
+      ).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () {
+          debugPrint('[DeepFocus] ⚠️ completeFocusSession timed out after 12s');
+          return GoalReachedArgs(
+            points: widget.task.points > 0 ? widget.task.points : 20,
+            taskTitle: widget.task.title,
+            streak: 0,
+            isSport: false,
+            verdict: FocusVerdict.full,
+            focusSeconds: signals.focusedSeconds,
+            awardedPoints: widget.task.points,
+          );
+        },
       );
+      debugPrint('[DeepFocus] Finish step 1: completeFocusSession done. points=${args.points}');
     } catch (e, st) {
-      debugPrint('[DeepFocus] completeFocusSession failed: $e\n$st');
-      // Even on error, navigate to goal screen with 0 points so the user
-      // is never left with a frozen 00:00 screen.
+      debugPrint('[DeepFocus] ❌ completeFocusSession FAILED: $e\n$st');
       args = GoalReachedArgs(
-        points: 0,
+        points: widget.task.points > 0 ? widget.task.points : 20,
         taskTitle: widget.task.title,
         streak: 0,
         isSport: false,
-        verdict: FocusVerdict.incomplete,
+        verdict: FocusVerdict.full,
       );
-    } finally {
-      _controller.clear();
-      if (mounted) context.go(AppRoutes.goalReached, extra: args);
+    }
+
+    debugPrint('[DeepFocus] Finish step 2: navigating to GoalReached. mounted=$mounted');
+    bool navigated = false;
+    if (mounted) {
+      try {
+        context.go(AppRoutes.goalReached, extra: args);
+        navigated = true;
+        debugPrint('[DeepFocus] Finish step 2: navigation command executed successfully via local context');
+      } catch (e, st) {
+        debugPrint('[DeepFocus] ❌ context.go failed: $e\n$st');
+      }
+    }
+    
+    if (!navigated) {
+      debugPrint('[DeepFocus] ⚠️ Local context navigation not performed or failed — trying rootNavigatorKey context...');
+      final rootContext = rootNavigatorKey.currentContext;
+      if (rootContext != null && rootContext.mounted) {
+        try {
+          GoRouter.of(rootContext).go(AppRoutes.goalReached, extra: args);
+          debugPrint('[DeepFocus] Finish step 2 (fallback): navigation command executed successfully via rootNavigatorKey!');
+        } catch (e, st) {
+          debugPrint('[DeepFocus] ❌ rootNavigatorKey context.go failed: $e\n$st');
+        }
+      } else {
+        debugPrint('[DeepFocus] ❌ rootNavigatorKey context is null or unmounted');
+      }
+    }
+
+    try {
+      debugPrint('[DeepFocus] Finish step 3: clearing session controller...');
+      container.read(focusSessionProvider.notifier).clear();
+      debugPrint('[DeepFocus] Finish step 3: controller cleared');
+    } catch (e) {
+      debugPrint('[DeepFocus] ❌ container.read clear() failed: $e');
     }
   }
 
@@ -192,15 +372,25 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
       return const FlowaLoadingScreen();
     }
 
-    if (session.isFinished && !_finishing && !_finishCallbackScheduled) {
-      _finishCallbackScheduled = true;
+    // Show +5/−5 min time-adjust controls for all non-interval (deep-focus) sessions.
+    // Interval sessions have their own next/prev phase controls instead.
+    final isTargetCategory = !session.isInterval;
+
+    final started = !session.isWaiting;
+
+    // Safety net: if the session is finished or remainingSeconds is 0 but _onSessionChanged
+    // somehow missed it, schedule _finish() here.
+    if ((session.isFinished || (started && session.remainingSeconds <= 0)) && !_finishing && !_finishScheduled) {
+      _finishScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _finishCallbackScheduled = false;
-        if (mounted && !_finishing) _finish();
+        _finishScheduled = false;
+        if (mounted && !_finishing) {
+          debugPrint('[DeepFocus] build() safety-net: calling _finish()');
+          _finish();
+        }
       });
     }
 
-    final started = !session.isWaiting;
     final isWork = session.kind == FocusKind.work;
     final remaining = session.remainingSeconds;
     final startLabel = formatHm24(widget.task.startMinute);
@@ -227,7 +417,7 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
 
     return Scaffold(
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.focus,
+        current: AppNavTab.dashboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: Stack(
@@ -235,23 +425,9 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
           SafeArea(
             bottom: false,
             child: FitOrScroll(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
+              padding: const EdgeInsets.fromLTRB(24, 32, 24, 12),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      const BrandLogo(),
-                      const Spacer(),
-                      if (kDebugMode)
-                        _RoundButton(
-                          icon: Icons.bug_report_rounded,
-                          onTap: () => ref
-                              .read(focusServiceProvider)
-                              .debugSimulateDistraction(),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
                   Text(
                     'focus.current_task'.tr(),
                     style: AppTextStyles.overline.copyWith(
@@ -264,6 +440,44 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
                     textAlign: TextAlign.center,
                     style: AppTextStyles.h2.copyWith(color: colors.textPrimary),
                   ),
+                  if (widget.task.note != null &&
+                      widget.task.note!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: colors.border.withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.edit_note_rounded,
+                            size: 20,
+                            color: colors.primary,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              widget.task.note!,
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: colors.textSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const Spacer(),
                   ProgressRing(
                     percent: percent,
@@ -370,23 +584,42 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 12),
-                            _ControlButton(
-                              icon: Icons.stop_rounded,
-                              onTap: _controller.skip,
-                            ),
-                            const SizedBox(height: 18),
-                            Text(
-                              'focus.end'.tr(),
-                              style: AppTextStyles.caption.copyWith(
-                                color: colors.textSecondary,
+                        if (isTargetCategory)
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 12),
+                              _ControlButton(
+                                icon: Icons.remove_rounded,
+                                onTap: () => _controller.adjustTime(-5 * 60),
                               ),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(height: 18),
+                              Text(
+                                'focus.subtract_5m'.tr(),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 12),
+                              _ControlButton(
+                                icon: Icons.stop_rounded,
+                                onTap: _controller.skip,
+                              ),
+                              const SizedBox(height: 18),
+                              Text(
+                                'focus.end'.tr(),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
                         const SizedBox(width: 28),
                         Column(
                           mainAxisSize: MainAxisSize.min,
@@ -405,23 +638,42 @@ class _DeepFocusViewState extends ConsumerState<DeepFocusView> {
                           ],
                         ),
                         const SizedBox(width: 28),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const SizedBox(height: 12),
-                            _ControlButton(
-                              icon: Icons.refresh_rounded,
-                              onTap: _controller.reset,
-                            ),
-                            const SizedBox(height: 18),
-                            Text(
-                              'focus.reset'.tr(),
-                              style: AppTextStyles.caption.copyWith(
-                                color: colors.textSecondary,
+                        if (isTargetCategory)
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 12),
+                              _ControlButton(
+                                icon: Icons.add_rounded,
+                                onTap: () => _controller.adjustTime(5 * 60),
                               ),
-                            ),
-                          ],
-                        ),
+                              const SizedBox(height: 18),
+                              Text(
+                                'focus.add_5m'.tr(),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 12),
+                              _ControlButton(
+                                icon: Icons.refresh_rounded,
+                                onTap: _controller.reset,
+                              ),
+                              const SizedBox(height: 18),
+                              Text(
+                                'focus.reset'.tr(),
+                                style: AppTextStyles.caption.copyWith(
+                                  color: colors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                   const SizedBox(height: 16),
@@ -699,7 +951,11 @@ class _ControlButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return GestureDetector(
-      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        debugPrint('[DeepFocus] _ControlButton tapped (icon: $icon)');
+        onTap();
+      },
       child: Container(
         width: 52,
         height: 52,
@@ -721,30 +977,7 @@ class _ControlButton extends StatelessWidget {
   }
 }
 
-class _RoundButton extends StatelessWidget {
-  const _RoundButton({required this.icon, required this.onTap});
 
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: colors.surface,
-          shape: BoxShape.circle,
-          border: Border.all(color: colors.border),
-        ),
-        child: Icon(icon, size: 22, color: colors.textSecondary),
-      ),
-    );
-  }
-}
 
 class _NothingToFocus extends ConsumerStatefulWidget {
   const _NothingToFocus();
@@ -760,6 +993,7 @@ class _NothingToFocusState extends ConsumerState<_NothingToFocus>
   @override
   void initState() {
     super.initState();
+    debugPrint('[_NothingToFocus] ⚠️ EMPTY STATE CREATED — no task to focus on!');
     _breathingController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
@@ -884,7 +1118,7 @@ class _NothingToFocusState extends ConsumerState<_NothingToFocus>
     return Scaffold(
       bottomNavigationBar: Builder(
         builder: (context) => AppBottomNav(
-          current: AppNavTab.focus,
+          current: AppNavTab.dashboard,
           onSelected: (tab) => goToTab(context, tab),
         ),
       ),

@@ -84,7 +84,7 @@ class _BlockingSettingsScreenState
         ],
       ),
       bottomNavigationBar: AppBottomNav(
-        current: AppNavTab.focus,
+        current: AppNavTab.dashboard,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
