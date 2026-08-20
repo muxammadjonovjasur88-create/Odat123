@@ -2,6 +2,10 @@
 # Copy dart_defines.example.json → dart_defines.json and fill in your key.
 /dart_defines.json
 *.env
+node_modules/
+**/node_modules/
+dist/
+**/dist/
 
 # Miscellaneous
 *.class

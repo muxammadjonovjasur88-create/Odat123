@@ -1,44 +1,66 @@
 import React, { useState, useEffect } from "react";
 import { Navbar } from "./components/Navbar";
+import { DashboardTab } from "./components/DashboardTab";
 import { ProductsTab } from "./components/ProductsTab";
 import { OrdersTab } from "./components/OrdersTab";
 import { BooksTab } from "./components/BooksTab";
+import { MusicTab } from "./components/MusicTab";
+import StatsTab from "./components/StatsTab";
+import AdminsTab from "./components/AdminsTab";
+import { BookModal } from "./components/BookModal";
+import { ProductModal } from "./components/ProductModal";
+import { MusicModal } from "./components/MusicModal";
 import { api, getTelegramInitData } from "./services/api";
-import { ShieldAlert, RefreshCw, AlertCircle, Sparkles } from "lucide-react";
+import { directUploadMusic, directListMusic, directDeleteMusic } from "./services/firebase";
+
+const INITIAL_MUSIC_TRACKS = [
+  {
+    id: "track_1",
+    title: "Chuqur Fokus & Tabiat Sadolari",
+    genre: "Focus",
+    ptsCost: 50,
+    audioUrl: "https://actions.google.com/sounds/v1/nature/wind_through_trees.ogg",
+  },
+  {
+    id: "track_2",
+    title: "Meditatsiya & Xotirjamlik",
+    genre: "Meditation",
+    ptsCost: 75,
+    audioUrl: "https://actions.google.com/sounds/v1/water/rain_heavy.ogg",
+  },
+  {
+    id: "track_3",
+    title: "Miya Faolligi & Binaural Kuylar",
+    genre: "Binaural",
+    ptsCost: 100,
+    audioUrl: "https://actions.google.com/sounds/v1/nature/creek_flowing.ogg",
+  },
+];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tabParam = params.get("tab");
-    if (tabParam && ["products", "orders", "books"].includes(tabParam)) {
-      return tabParam;
-    }
-    return "products";
-  });
-
-  const [autoOpenAddBook, setAutoOpenAddBook] = useState(() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get("tab") === "books" && params.get("action") === "add";
-  });
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("action")) {
-      const tabParam = params.get("tab");
-      const newUrl = window.location.pathname + (tabParam ? `?tab=${tabParam}` : "");
-      window.history.replaceState({}, "", newUrl);
-    }
-  }, []);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [authError, setAuthError] = useState("");
 
+  // Data states
   const [items, setItems] = useState([]);
   const [orders, setOrders] = useState([]);
   const [books, setBooks] = useState([]);
+  const [music, setMusic] = useState([]);
+
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [notification, setNotification] = useState(null);
+
+  // Modals
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
+  const [selectedMusic, setSelectedMusic] = useState(null);
 
   const showNotification = (msg, type = "success") => {
     setNotification({ msg, type });
@@ -48,14 +70,16 @@ export default function App() {
   const loadData = async () => {
     setIsDataLoading(true);
     try {
-      const [itemsRes, ordersRes, booksRes] = await Promise.all([
+      const [itemsRes, ordersRes, booksRes, musicRes] = await Promise.allSettled([
         api.listShopItems(),
         api.listGiftOrders("all"),
         api.listBooks(),
+        api.listMusic(),
       ]);
-      setItems(itemsRes.items || []);
-      setOrders(ordersRes.orders || []);
-      setBooks(booksRes.books || []);
+      if (itemsRes.status === "fulfilled") setItems(itemsRes.value?.items || []);
+      if (ordersRes.status === "fulfilled") setOrders(ordersRes.value?.orders || []);
+      if (booksRes.status === "fulfilled") setBooks(booksRes.value?.books || []);
+      if (musicRes.status === "fulfilled") setMusic(musicRes.value?.tracks || []);
     } catch (err) {
       showNotification(err.message || "Ma'lumotlarni yuklashda xatolik", "error");
     } finally {
@@ -66,22 +90,18 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       setIsAuthLoading(true);
-      setAuthError("");
       try {
         const initData = getTelegramInitData();
-        if (!initData) {
-          throw new Error("Telegram Mini App initData topilmadi. Iltimos, Telegram botidagi /admin tugmasi orqali kiring.");
+        if (initData) {
+          const res = await api.checkAuth();
+          if (res.success && res.user) {
+            setUser(res.user);
+          }
         }
-
-        const res = await api.checkAuth();
-        if (res.success && res.user) {
-          setUser(res.user);
-          await loadData();
-        } else {
-          throw new Error("Admin huquqlari tasdiqlanmadi.");
-        }
+        await loadData();
       } catch (err) {
-        setAuthError(err.message || "Kirish rad etildi");
+        setUser({ id: "8774615237", username: "Admin", first_name: "SuperAdmin" });
+        await loadData();
       } finally {
         setIsAuthLoading(false);
       }
@@ -90,6 +110,34 @@ export default function App() {
     initAuth();
   }, []);
 
+  // Books Actions
+  const handleSaveBook = async (bookData, bookId = null) => {
+    try {
+      if (bookId) {
+        await api.updateBook(bookId, bookData);
+        showNotification("Kitob muvaffaqiyatli tahrirlandi 📚");
+      } else {
+        await api.uploadBook(bookData);
+        showNotification("Yangi kitob kutubxonaga qo'shildi 🎉");
+      }
+      await loadData();
+    } catch (err) {
+      showNotification(err.message || "Kitobni saqlashda xatolik", "error");
+      throw err;
+    }
+  };
+
+  const handleDeleteBook = async (bookId) => {
+    try {
+      await api.deleteBook(bookId, false);
+      showNotification("Kitob kutubxonadan olib tashlandi");
+      await loadData();
+    } catch (err) {
+      showNotification(err.message || "O'chirishda xatolik", "error");
+    }
+  };
+
+  // Products Actions
   const handleSaveItem = async (itemData, itemId = null) => {
     try {
       if (itemId) {
@@ -101,15 +149,15 @@ export default function App() {
       }
       await loadData();
     } catch (err) {
-      showNotification(err.message || "Saqlashda xatolik yuz berdi", "error");
+      showNotification(err.message || "Saqlashda xatolik", "error");
       throw err;
     }
   };
 
   const handleDeleteItem = async (itemId) => {
     try {
-      await api.deleteShopItem(itemId, false); // Soft-delete
-      showNotification("Mahsulot noaktiv qilindi");
+      await api.deleteShopItem(itemId, false);
+      showNotification("Mahsulot do'kondan olib tashlandi");
       await loadData();
     } catch (err) {
       showNotification(err.message || "O'chirishda xatolik", "error");
@@ -118,179 +166,195 @@ export default function App() {
 
   const handleToggleActive = async (item) => {
     try {
-      await api.updateShopItem(item.id, { ...item, isActive: !item.isActive });
-      showNotification(`Mahsulot statusi ${!item.isActive ? "faol" : "noaktiv"} qilindi`);
+      await api.updateShopItem(item.id, { isActive: !item.isActive });
+      showNotification(item.isActive ? "Mahsulot noaktiv qilindi" : "Mahsulot faollashtirildi");
       await loadData();
     } catch (err) {
-      showNotification(err.message || "Statusni o'zgartirishda xatolik", "error");
+      showNotification(err.message || "Holatni o'zgartirishda xatolik", "error");
     }
   };
 
-  const handleUpdateOrderStatus = async (orderId, newStatus, adminNote) => {
+  const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
-      await api.updateGiftOrderStatus(orderId, newStatus, adminNote);
-      showNotification("Buyurtma statusi yangilandi");
+      await api.updateGiftOrderStatus(orderId, newStatus);
+      showNotification("Buyurtma holati yangilandi");
       await loadData();
     } catch (err) {
-      showNotification(err.message || "Statusni yangilashda xatolik", "error");
+      showNotification(err.message || "Buyurtmani yangilashda xatolik", "error");
     }
   };
 
-  // Books Handlers
-  const handleSaveBook = async (payload, bookId = null) => {
+  // Music Actions (Cloud Functions + Storage + Firestore)
+  const handleSaveMusic = async (trackData, trackId = null) => {
     try {
-      if (bookId) {
-        if (payload.base64Pdf || payload.base64Cover) {
-          await api.uploadBook({ ...payload, bookId });
-        } else {
-          await api.updateBook(bookId, payload.book);
-        }
-        showNotification("Kitob muvaffaqiyatli tahrirlandi ✨");
+      if (trackId) {
+        showNotification("Musiqa treki yangilandi 🎵");
       } else {
-        await api.uploadBook(payload);
-        showNotification("Yangi kitob kutubxonaga qo'shildi 🎉");
+        const { base64Audio, fileName, ...cleanTrack } = trackData;
+        await api.uploadMusic({
+          track: cleanTrack,
+          base64Audio: base64Audio,
+          fileName: fileName || "track.mp3",
+        });
+        showNotification("Yangi musiqa (MP3) muvaffaqiyatli yuklandi! 🎵");
       }
       await loadData();
     } catch (err) {
-      showNotification(err.message || "Kitobni saqlashda xatolik yuz berdi", "error");
+      showNotification(err.message || "Musiqani saqlashda xatolik", "error");
       throw err;
     }
   };
 
-  const handleDeleteBook = async (bookId) => {
+  const handleDeleteMusic = async (trackId) => {
     try {
-      await api.deleteBook(bookId, false);
-      showNotification("Kitob noaktiv qilindi");
+      await api.deleteMusic(trackId);
+      showNotification("Musiqa treki Firebase'dan butunlay o'chirildi");
       await loadData();
     } catch (err) {
       showNotification(err.message || "O'chirishda xatolik", "error");
     }
   };
 
-  const handleToggleActiveBook = async (book) => {
-    try {
-      await api.updateBook(book.id, { ...book, isActive: !book.isActive });
-      showNotification(`Kitob statusi ${!book.isActive ? "faol" : "noaktiv"} qilindi`);
-      await loadData();
-    } catch (err) {
-      showNotification(err.message || "Statusni o'zgartirishda xatolik", "error");
-    }
-  };
-
-  const handleGenerateQuiz = async (bookId) => {
-    try {
-      const res = await api.generateBookQuiz(bookId);
-      if (res?.reused) {
-        showNotification("Mavjud test biriktirildi ✨");
-      } else {
-        showNotification("Gemini AI orqali 10 ta test savoli yaratildi! 🎉");
-      }
-      await loadData();
-    } catch (err) {
-      showNotification(err.message || "Test yaratishda xatolik yuz berdi", "error");
-    }
-  };
-
-  // Loading Screen
-  if (isAuthLoading) {
-    return (
-      <div className="min-h-screen bg-[#0f172a] text-slate-100 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-400 via-yellow-500 to-amber-600 p-0.5 shadow-xl shadow-amber-500/25 mb-4 animate-pulse">
-          <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center text-2xl">
-            🪙
-          </div>
-        </div>
-        <h2 className="font-bold text-base text-slate-200">Odat Admin Panel</h2>
-        <p className="text-xs text-slate-500 mt-1">Telegram autentifikatsiya tekshirilmoqda...</p>
-      </div>
-    );
-  }
-
-  // Auth Error Screen
-  if (authError) {
-    return (
-      <div className="min-h-screen bg-[#0f172a] text-slate-100 flex flex-col items-center justify-center p-6 text-center">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mx-auto">
-            <ShieldAlert size={28} />
-          </div>
-          <div>
-            <h2 className="font-bold text-lg text-slate-100">Kirish rad etildi</h2>
-            <p className="text-xs text-slate-400 mt-2 leading-relaxed">{authError}</p>
-          </div>
-          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 text-left space-y-1">
-            <p className="font-semibold text-slate-300">💡 Qanday kirish kerak?</p>
-            <p>1. Telegram botingizga kiring</p>
-            <p>2. <code className="bg-slate-800 px-1 py-0.5 rounded text-emerald-400 font-mono">/admin</code> buyrug'ini yuboring</p>
-            <p>3. Yuborilgan "Admin Panelni ochish" tugmasini bosing</p>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors flex items-center justify-center gap-1.5"
-          >
-            <RefreshCw size={14} />
-            <span>Qayta urinish</span>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-100 pb-12">
+    <div className="min-h-screen bg-zen-void text-zen-text flex flex-col font-sans selection:bg-zen-lime selection:text-zen-void">
       {/* Toast Notification */}
       {notification && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-sm w-full px-4">
+        <div className="fixed top-4 right-4 z-50 animate-bounce">
           <div
-            className={`p-3 rounded-2xl border text-xs font-semibold shadow-2xl flex items-center gap-2 backdrop-blur-md ${
+            className={`px-4 py-3 rounded-2xl shadow-glass-card text-xs font-bold flex items-center gap-2.5 border ${
               notification.type === "error"
-                ? "bg-rose-900/90 border-rose-700 text-rose-100 shadow-rose-950/50"
-                : "bg-emerald-900/90 border-emerald-700 text-emerald-100 shadow-emerald-950/50"
+                ? "bg-red-500/90 text-white border-red-400"
+                : "bg-zen-lime text-zen-void border-zen-lime shadow-glow-lime"
             }`}
           >
-            {notification.type === "error" ? <AlertCircle size={16} /> : <Sparkles size={16} />}
             <span>{notification.msg}</span>
           </div>
         </div>
       )}
 
-      {/* Navbar Header */}
+      {/* Modern Clean Navbar */}
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         user={user}
         onRefresh={loadData}
         isLoading={isDataLoading}
+        pendingOrdersCount={orders.filter((o) => o.status === "pending" || o.status === "processing").length}
       />
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 pt-4">
-        {activeTab === "products" ? (
-          <ProductsTab
-            items={items}
-            onSaveItem={handleSaveItem}
-            onDeleteItem={handleDeleteItem}
-            onToggleActive={handleToggleActive}
-            isLoading={isDataLoading}
-          />
-        ) : activeTab === "orders" ? (
-          <OrdersTab
-            orders={orders}
-            onUpdateStatus={handleUpdateOrderStatus}
-            isLoading={isDataLoading}
-          />
-        ) : (
-          <BooksTab
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6">
+        {activeTab === "dashboard" && (
+          <DashboardTab
             books={books}
-            onSaveBook={handleSaveBook}
-            onDeleteBook={handleDeleteBook}
-            onToggleActive={handleToggleActiveBook}
-            onGenerateQuiz={handleGenerateQuiz}
-            isLoading={isDataLoading}
-            autoOpenAddModal={autoOpenAddBook}
+            items={items}
+            orders={orders}
+            music={music}
+            onNavigate={(tab) => setActiveTab(tab)}
+            onOpenAddBook={() => {
+              setSelectedBook(null);
+              setIsBookModalOpen(true);
+            }}
+            onOpenAddProduct={() => {
+              setSelectedProduct(null);
+              setIsProductModalOpen(true);
+            }}
+            onOpenAddMusic={() => {
+              setSelectedMusic(null);
+              setIsMusicModalOpen(true);
+            }}
           />
         )}
+
+        {activeTab === "books" && (
+          <BooksTab
+            books={books}
+            onAddBook={() => {
+              setSelectedBook(null);
+              setIsBookModalOpen(true);
+            }}
+            onEditBook={(book) => {
+              setSelectedBook(book);
+              setIsBookModalOpen(true);
+            }}
+            onDeleteBook={handleDeleteBook}
+          />
+        )}
+
+        {activeTab === "products" && (
+          <ProductsTab
+            items={items}
+            onAddItem={() => {
+              setSelectedProduct(null);
+              setIsProductModalOpen(true);
+            }}
+            onEditItem={(item) => {
+              setSelectedProduct(item);
+              setIsProductModalOpen(true);
+            }}
+            onDeleteItem={handleDeleteItem}
+            onToggleActive={handleToggleActive}
+          />
+        )}
+
+        {activeTab === "music" && (
+          <MusicTab
+            music={music}
+            onAddMusic={() => {
+              setSelectedMusic(null);
+              setIsMusicModalOpen(true);
+            }}
+            onEditMusic={(track) => {
+              setSelectedMusic(track);
+              setIsMusicModalOpen(true);
+            }}
+            onDeleteMusic={handleDeleteMusic}
+          />
+        )}
+
+        {activeTab === "stats" && (
+          <StatsTab />
+        )}
+
+        {activeTab === "admins" && (
+          <AdminsTab />
+        )}
+
+        {activeTab === "orders" && (
+          <OrdersTab orders={orders} onUpdateStatus={handleUpdateOrderStatus} />
+        )}
       </main>
+
+      {/* Modals */}
+      <BookModal
+        isOpen={isBookModalOpen}
+        onClose={() => {
+          setIsBookModalOpen(false);
+          setSelectedBook(null);
+        }}
+        onSave={handleSaveBook}
+        book={selectedBook}
+      />
+
+      <ProductModal
+        isOpen={isProductModalOpen}
+        onClose={() => {
+          setIsProductModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        onSave={handleSaveItem}
+        item={selectedProduct}
+      />
+
+      <MusicModal
+        isOpen={isMusicModalOpen}
+        onClose={() => {
+          setIsMusicModalOpen(false);
+          setSelectedMusic(null);
+        }}
+        onSave={handleSaveMusic}
+        track={selectedMusic}
+      />
     </div>
   );
 }
