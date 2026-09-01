@@ -18,3 +18,4 @@ export 'flowa_loading.dart';
 export 'progress_ring.dart';
 export 'segmented_filter_chip.dart';
 export 'spinning_coin.dart';
+export 'beta_ticker_banner.dart';

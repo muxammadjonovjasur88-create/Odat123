@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,14 +48,14 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
       await ref.read(userRepositoryProvider).saveTelegramChatId(uid, chatId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Telegram muvaffaqiyatli ulandi! ✅')),
+          SnackBar(content: Text('settings.telegram_connected'.tr())),
         );
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Xatolik: $e')),
+          SnackBar(content: Text('common.error'.tr(args: [e.toString()]))),
         );
       }
     } finally {
@@ -69,19 +70,16 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Telegram ulanishini uzish'),
-        content: const Text(
-          'Telegramdan ulanishni uzmoqchimisiz? '
-          'Do\'stlar sizning isbot natijalaringiz haqida Telegram xabar olmaydi.',
-        ),
+        title: Text('settings.telegram_unlink'.tr()),
+        content: Text('settings.telegram_unlink_confirm'.tr()),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Bekor qilish'),
+            child: Text('common.cancel'.tr()),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Uzish', style: TextStyle(color: Colors.red)),
+            child: Text('settings.telegram_unlink_btn'.tr(), style: const TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -93,14 +91,14 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
       await ref.read(userRepositoryProvider).disconnectTelegram(uid);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Telegram ulanishi uzildi.')),
+          SnackBar(content: Text('settings.telegram_unlinked'.tr())),
         );
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Xatolik: $e')),
+          SnackBar(content: Text('common.error'.tr(args: [e.toString()]))),
         );
       }
     } finally {
@@ -117,7 +115,7 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Telegram ulanish'),
+        title: Text('settings.telegram_link_title'.tr()),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
@@ -203,7 +201,7 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
                   onTap: () {
                     Clipboard.setData(ClipboardData(text: '/start $uid'));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Kod nusxalandi!')),
+                      SnackBar(content: Text('common.code_copied'.tr())),
                     );
                   },
                   child: Container(
@@ -294,7 +292,7 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
                 ),
                 const SizedBox(height: 14),
                 AppButton(
-                  label: 'Saqlash',
+                  label: 'common.save'.tr(),
                   onPressed: _isLoading ? null : _saveChatId,
                 ),
               ],
@@ -303,9 +301,9 @@ class _TelegramLinkScreenState extends ConsumerState<TelegramLinkScreen> {
               Center(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.link_off_rounded, color: Colors.red),
-                  label: const Text(
-                    'Telegram ulanishini uzish',
-                    style: TextStyle(color: Colors.red),
+                  label: Text(
+                    'settings.telegram_unlink'.tr(),
+                    style: const TextStyle(color: Colors.red),
                   ),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.red),

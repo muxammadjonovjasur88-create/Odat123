@@ -19,9 +19,9 @@ class SquatStrategy implements ExerciseStrategy {
   int? _startTimeMs;
   int _totalDurationSeconds = 0;
 
-  static const double standingAngle = 145.0;
-  static const double squatDepthAngle = 125.0;
-  static const int debounceMs = 250;
+  static const double standingAngle = 140.0;   // Relaxed for beginners
+  static const double squatDepthAngle = 130.0; // Easier depth target
+  static const int debounceMs = 700;           // Faster rep acceptance
 
   @override
   void reset() {
@@ -54,14 +54,16 @@ class SquatStrategy implements ExerciseStrategy {
     final rightKnee = pose.landmarks[PoseLandmarkType.rightKnee];
     final leftAnkle = pose.landmarks[PoseLandmarkType.leftAnkle];
     final rightAnkle = pose.landmarks[PoseLandmarkType.rightAnkle];
+    // Note: leftWrist/rightWrist not used (wrist anti-cheat removed for better UX)
 
     // ANTI-CHEAT: Ensure user is STANDING UPRIGHT (vertically), not lying on the floor doing pushups or plank
     final shoulder = leftShoulder ?? rightShoulder;
     final hip = leftHip ?? rightHip;
-    if (shoulder != null && hip != null) {
+    if (shoulder != null && hip != null && shoulder.likelihood > 0.3 && hip.likelihood > 0.3) {
       final dy = hip.y - shoulder.y; // Positive when standing upright (shoulder above hip)
       final dx = (hip.x - shoulder.x).abs();
-      final isLyingDown = dy < 40.0 || (dx * 1.2 > dy && dy < 150.0);
+      // If user is lying flat on floor (dy < 25 or dx is significantly greater than dy):
+      final isLyingDown = dy < 25.0 || (dx > 50.0 && dx > dy * 1.3);
       if (isLyingDown) {
         return ExerciseEvaluationResult(
           validRepAdded: false,
@@ -74,6 +76,9 @@ class SquatStrategy implements ExerciseStrategy {
       }
     }
 
+    // Wrist anti-cheat removed — caused too many false-positives for beginners
+    // (phone placement, side angles, wide-arm squats all triggered it unfairly).
+
     final hasLeftLeg = leftHip != null &&
         leftKnee != null &&
         leftAnkle != null &&
@@ -83,46 +88,53 @@ class SquatStrategy implements ExerciseStrategy {
         rightAnkle != null &&
         rightKnee.likelihood > 0.2;
 
-    // ANTI-CHEAT RULE 1: Require BOTH legs to be visible in frame
-    if (!hasLeftLeg || !hasRightLeg) {
+    // At least ONE leg must be visible (blurry cameras often miss one side)
+    if (!hasLeftLeg && !hasRightLeg) {
       return ExerciseEvaluationResult(
         validRepAdded: false,
         currentCount: _repCount,
-        feedback: '⚠️ Anti-Cheat: Ikkala oyoq ham kamerada ko‘rinishi kerak',
+        feedback: '⚠️ Oyoq ko\'rinmayapti! Kamerani pastroqqa qarating.',
         formStatus: 'WARNING',
         currentPhase: _currentPhase.name.toUpperCase(),
         bodyVisible: false,
       );
     }
 
-    final leftAngle = AngleCalculator.calculateAngle(
+    final leftAngle = hasLeftLeg ? AngleCalculator.calculateAngle(
       ax: leftHip.x, ay: leftHip.y,
       bx: leftKnee.x, by: leftKnee.y,
       cx: leftAnkle.x, cy: leftAnkle.y,
-    );
-    final rightAngle = AngleCalculator.calculateAngle(
+    ) : 180.0;
+    
+    final rightAngle = hasRightLeg ? AngleCalculator.calculateAngle(
       ax: rightHip.x, ay: rightHip.y,
       bx: rightKnee.x, by: rightKnee.y,
       cx: rightAnkle.x, cy: rightAnkle.y,
-    );
+    ) : 180.0;
+    
     final avgKneeAngle = (leftAngle + rightAngle) / 2.0;
 
-    // ANTI-CHEAT RULE 2: Strict Dual-Leg Symmetry & Single-Leg Lifting Prevention
+    // Symmetry check: widened to 30° to account for natural asymmetry & camera angle
     final angleDiff = (leftAngle - rightAngle).abs();
-    if (angleDiff > 20.0 && (leftAngle < 140.0 || rightAngle < 140.0)) {
+    if (hasLeftLeg && hasRightLeg && angleDiff > 30.0 && (leftAngle < 135.0 || rightAngle < 135.0)) {
       return ExerciseEvaluationResult(
         validRepAdded: false,
         currentCount: _repCount,
-        feedback: '⚠️ Anti-Cheat: Ikkala oyoqda teng cho‘king! Bir oyoqni ko‘tarib aldamang.',
+        feedback: '⚠️ Ikkala oyoqda teng cho\'king! Bir oyoqni ko\'tarib aldamang.',
         formStatus: 'WARNING',
         currentPhase: _currentPhase.name.toUpperCase(),
         bodyVisible: true,
       );
     }
 
-    final bothKneesBent = leftAngle <= 135.0 && rightAngle <= 135.0;
-    final bothKneesDeep = leftAngle <= 125.0 && rightAngle <= 125.0;
-    final bothKneesStanding = leftAngle >= 145.0 && rightAngle >= 145.0;
+    // Use available leg(s) for angle — if only one visible, use that side
+    final availLeftAngle = hasLeftLeg ? leftAngle : rightAngle;
+    final availRightAngle = hasRightLeg ? rightAngle : leftAngle;
+    final avgAngle = (availLeftAngle + availRightAngle) / 2.0;
+
+    final bothKneesBent = avgAngle <= 135.0;
+    final bothKneesDeep = avgAngle <= 130.0; // Relaxed depth
+    final bothKneesStanding = avgAngle >= 140.0; // Relaxed standing
 
     bool validRepAdded = false;
     String feedback = 'Yaxshi davom eting';
@@ -149,7 +161,7 @@ class SquatStrategy implements ExerciseStrategy {
         break;
 
       case SquatPhase.bottom:
-        if (leftAngle > 125.0 || rightAngle > 125.0) {
+        if (avgAngle > 130.0) {
           _currentPhase = SquatPhase.ascending;
         }
         break;

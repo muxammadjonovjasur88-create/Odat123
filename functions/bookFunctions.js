@@ -15,9 +15,9 @@ export function validateBookPdfFile(contentType, bufferLength, bufferSignature) 
   if (contentType && contentType !== "application/pdf" && !contentType.includes("pdf")) {
     throw new Error("Faqat PDF formatidagi fayllar yuklanishi mumkin.");
   }
-  const MAX_SIZE = 50 * 1024 * 1024; // 50MB
+  const MAX_SIZE = 200 * 1024 * 1024; // 200MB
   if (bufferLength > MAX_SIZE) {
-    throw new Error("PDF fayl hajmi 50MB dan oshmasligi kerak.");
+    throw new Error("PDF fayl hajmi 200MB dan oshmasligi kerak.");
   }
   if (bufferSignature && !bufferSignature.startsWith("%PDF-")) {
     throw new Error("Fayl formati yaroqsiz PDF fayl (PDF signaturasi topilmadi).");

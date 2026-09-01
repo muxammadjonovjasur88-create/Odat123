@@ -74,4 +74,4 @@ data.
 - You can disable notifications in Android Settings.
 
 ## Contact
-Questions or deletion requests: **usafarov0777@gmail.com**
+Questions or deletion requests: **muxammadjonovjasur88@gmail.com**

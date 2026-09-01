@@ -4,87 +4,117 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── ODAT Brand Palette ─────────────────────────────────────────────────────
+   Logo colors extracted from ODAT logo:
+   Background : #080B14  (very dark blue-black)
+   Cyan-Blue  : #5BC8FA → #3B9BFF  (clock face & ring start)
+   Violet     : #7B2FFF → #5B21B6  (ring gradient)
+   Silver     : #E2E8F0             (wordmark)
+   Subtitle   : #64B5F6             ("HAR KUNI YAXSHIROQ")
+   ─────────────────────────────────────────────────────────────────────────── */
+
 :root {
   color-scheme: dark;
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+
+  /* ODAT brand tokens */
+  --odat-bg:        #080B14;
+  --odat-surface:   #0D1220;
+  --odat-muted:     #131929;
+  --odat-border:    #1C2540;
+  --odat-cyan:      #5BC8FA;
+  --odat-blue:      #3B9BFF;
+  --odat-violet:    #7B2FFF;
+  --odat-purple:    #5B21B6;
+  --odat-silver:    #E2E8F0;
+  --odat-subtitle:  #64B5F6;
 }
 
 body {
-  background-color: #051424;
-  color: #D4E4FA;
+  background-color: var(--odat-bg);
+  color: var(--odat-silver);
   font-family: var(--font-sans);
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
-  background-image: 
-    radial-gradient(circle at 15% 15%, rgba(0, 243, 255, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(57, 255, 20, 0.04) 0%, transparent 45%);
+  background-image:
+    radial-gradient(circle at 15% 15%, rgba(91, 200, 250, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(123, 47, 255, 0.05) 0%, transparent 45%);
   background-attachment: fixed;
   min-height: 100vh;
 }
 
-/* Glassmorphic Stitch Classes */
+/* Glassmorphic Panel */
 .glass-panel {
-  background: rgba(13, 28, 45, 0.7);
+  background: rgba(13, 18, 32, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(91, 200, 250, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
 }
 
 .glass-panel-interactive {
-  background: rgba(13, 28, 45, 0.65);
+  background: rgba(13, 18, 32, 0.65);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(91, 200, 250, 0.1);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel-interactive:hover {
-  background: rgba(18, 33, 49, 0.85);
-  border-color: rgba(57, 255, 20, 0.3);
+  background: rgba(19, 25, 41, 0.9);
+  border-color: rgba(91, 200, 250, 0.35);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(57, 255, 20, 0.15);
+  box-shadow: 0 12px 30px -10px rgba(91, 200, 250, 0.18);
 }
 
 .glass-input {
-  background: rgba(5, 20, 36, 0.7);
-  border: 1px solid rgba(39, 54, 71, 0.8);
-  color: #D4E4FA;
+  background: rgba(8, 11, 20, 0.75);
+  border: 1px solid rgba(28, 37, 64, 0.9);
+  color: var(--odat-silver);
   transition: all 0.2s ease;
 }
 
 .glass-input:focus {
-  border-color: #00F3FF;
-  box-shadow: 0 0 0 2px rgba(0, 243, 255, 0.2);
+  border-color: var(--odat-cyan);
+  box-shadow: 0 0 0 2px rgba(91, 200, 250, 0.2);
   outline: none;
 }
 
-/* Stitch Neon Text & Glows */
-.text-glow-lime {
-  text-shadow: 0 0 16px rgba(57, 255, 20, 0.6);
-}
-
+/* ODAT Glow Texts */
 .text-glow-cyan {
-  text-shadow: 0 0 16px rgba(0, 243, 255, 0.6);
+  text-shadow: 0 0 16px rgba(91, 200, 250, 0.65);
 }
 
-/* Custom Stitch Scrollbar */
+.text-glow-violet {
+  text-shadow: 0 0 16px rgba(123, 47, 255, 0.65);
+}
+
+/* Gradient text for ODAT brand */
+.text-gradient-odat {
+  background: linear-gradient(135deg, var(--odat-cyan), var(--odat-blue), var(--odat-violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #051424;
+  background: var(--odat-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(39, 54, 71, 0.8);
+  background: rgba(28, 37, 64, 0.9);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(57, 255, 20, 0.4);
+  background: rgba(91, 200, 250, 0.4);
 }
+

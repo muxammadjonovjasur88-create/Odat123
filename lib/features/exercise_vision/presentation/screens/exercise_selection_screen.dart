@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class ExerciseSelectionScreen extends StatelessWidget {
@@ -7,9 +7,9 @@ class ExerciseSelectionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF07090E),
+      backgroundColor: const Color(0xFF080B14),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0C101A),
+        backgroundColor: const Color(0xFF080B14),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
@@ -32,7 +32,7 @@ class ExerciseSelectionScreen extends StatelessWidget {
               const Text(
                 'AI Camera Vision',
                 style: TextStyle(
-                  color: Color(0xFF00F3FF),
+                  color: Color(0xFF5BC8FA),
                   fontSize: 13,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.2,
@@ -55,7 +55,7 @@ class ExerciseSelectionScreen extends StatelessWidget {
                 subtitle: 'Oyoq va bel mushaklarini rivojlantirish',
                 badgeText: '20 takror maqsad',
                 icon: Icons.fitness_center_rounded,
-                accentColor: const Color(0xFF00F3FF),
+                accentColor: const Color(0xFF5BC8FA),
                 onTap: () {
                   context.push(
                     '/exercise/camera',
@@ -74,7 +74,7 @@ class ExerciseSelectionScreen extends StatelessWidget {
                 subtitle: 'Ko\'krak va qo\'l mushaklarini rivojlantirish',
                 badgeText: '15 takror maqsad',
                 icon: Icons.accessibility_new_rounded,
-                accentColor: const Color(0xFF39FF14),
+                accentColor: const Color(0xFF3B9BFF),
                 onTap: () {
                   context.push(
                     '/exercise/camera',
@@ -100,6 +100,44 @@ class ExerciseSelectionScreen extends StatelessWidget {
                     extra: {
                       'exerciseType': 'PLANK',
                       'targetReps': 60,
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // --- CRUNCH / PRESS CARD ---
+              _ExerciseCard(
+                title: 'Press (Qorin muskullari)',
+                subtitle: 'Kuchli press va gavda intizomini shakllantirish',
+                badgeText: '25 takror maqsad',
+                icon: Icons.airline_seat_recline_extra_rounded,
+                accentColor: const Color(0xFFFF0055),
+                onTap: () {
+                  context.push(
+                    '/exercise/camera',
+                    extra: {
+                      'exerciseType': 'CRUNCH',
+                      'targetReps': 25,
+                    },
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // --- PULL-UP / TURNIK CARD ---
+              _ExerciseCard(
+                title: 'Turnik (Pull-up tortilish)',
+                subtitle: 'Yelka, orqa va qo‘l quvvatini kuchaytirish',
+                badgeText: '10 takror maqsad',
+                icon: Icons.sports_gymnastics_rounded,
+                accentColor: const Color(0xFF9D4EDD),
+                onTap: () {
+                  context.push(
+                    '/exercise/camera',
+                    extra: {
+                      'exerciseType': 'PULL_UP',
+                      'targetReps': 10,
                     },
                   );
                 },
@@ -132,7 +170,7 @@ class _ExerciseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFF151A27),
+      color: const Color(0xFF131929),
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,

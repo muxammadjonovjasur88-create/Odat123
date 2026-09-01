@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -35,6 +37,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   logTime('WidgetsFlutterBinding.ensureInitialized');
 
+  // Lock orientation to portrait only (mobile only)
+  if (!kIsWeb) {
+    try {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } catch (_) {}
+  }
+
   // Debug-only: show the exception + stack ON SCREEN (scrollable) instead of the
   // default red screen, so an unexpected crash is diagnosable from a screenshot.
   if (kDebugMode) {
@@ -43,28 +55,52 @@ Future<void> main() async {
 
   // To optimize cold start, we run independent initializations in parallel.
   // Firebase, Supabase, Hive, and EasyLocalization do not depend on each other.
-  final firebaseFuture = Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  ).then((_) => logTime('Firebase.initializeApp (parallel)'));
-
-  final supabaseFuture = Supabase.initialize(
-    url: 'https://xeymuoezdxhjivilqgtu.supabase.co',
-    publishableKey: 'sb_publishable_-arZuPuO6K3oxXHt0mNZnQ_1wHRCiso',
-  ).then((_) => logTime('Supabase.initialize (parallel)'));
-
-  final hiveAndLocaleFuture = () async {
-    await Hive.initFlutter();
-    logTime('Hive.initFlutter (parallel)');
-    
-    if (!Hive.isAdapterRegistered(10)) Hive.registerAdapter(RepeatTypeAdapter());
-    if (!Hive.isAdapterRegistered(11)) Hive.registerAdapter(ReminderAdapter());
-    
-    await LocaleStore.init();
-    logTime('LocaleStore.init (parallel)');
+  final firebaseFuture = () async {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      logTime('Firebase.initializeApp (parallel)');
+    } catch (e) {
+      debugPrint('Firebase.initializeApp warning: $e');
+    }
   }();
 
-  final easyLocalizationFuture = EasyLocalization.ensureInitialized()
-      .then((_) => logTime('EasyLocalization.ensureInitialized (parallel)'));
+  final supabaseFuture = () async {
+    try {
+      await Supabase.initialize(
+        url: 'https://xeymuoezdxhjivilqgtu.supabase.co',
+        publishableKey: 'sb_publishable_-arZuPuO6K3oxXHt0mNZnQ_1wHRCiso',
+      );
+      logTime('Supabase.initialize (parallel)');
+    } catch (e) {
+      debugPrint('Supabase.initialize warning: $e');
+    }
+  }();
+
+  final hiveAndLocaleFuture = () async {
+    try {
+      await Hive.initFlutter();
+      logTime('Hive.initFlutter (parallel)');
+      
+      if (!Hive.isAdapterRegistered(10)) Hive.registerAdapter(RepeatTypeAdapter());
+      if (!Hive.isAdapterRegistered(11)) Hive.registerAdapter(ReminderAdapter());
+      
+      await LocaleStore.init();
+      logTime('LocaleStore.init (parallel)');
+    } catch (e) {
+      debugPrint('Hive.init warning: $e');
+    }
+  }();
+
+  final easyLocalizationFuture = () async {
+    try {
+      await EasyLocalization.ensureInitialized();
+      logTime('EasyLocalization.ensureInitialized (parallel)');
+    } catch (e) {
+      debugPrint('EasyLocalization.ensureInitialized warning: $e');
+    }
+  }();
 
   await Future.wait([
     firebaseFuture,
@@ -74,10 +110,12 @@ Future<void> main() async {
   ]);
   logTime('Parallel init complete');
 
-  try {
-    await RunningBackgroundService.initialize();
-  } catch (e) {
-    debugPrint('RunningBackgroundService init error: $e');
+  if (!kIsWeb) {
+    try {
+      await RunningBackgroundService.initialize();
+    } catch (e) {
+      debugPrint('RunningBackgroundService init error: $e');
+    }
   }
 
   runApp(
@@ -85,9 +123,8 @@ Future<void> main() async {
       supportedLocales: kSupportedLocales,
       path: 'assets/translations',
       fallbackLocale: kFallbackLocale,
-      // Saved choice wins; when null, easy_localization uses the device
-      // language if it's one of the three, otherwise English.
-      startLocale: LocaleStore.savedLocale(),
+      // Saved choice wins; when null, default to Uzbek.
+      startLocale: LocaleStore.savedLocale() ?? const Locale('uz'),
       // We persist the choice ourselves (Hive), not via SharedPreferences.
       saveLocale: false,
       child: const ProviderScope(child: FlowaApp()),
@@ -169,37 +206,52 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
       }
     });
 
-    // Random Proof listeners
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (message.data['type'] == 'proof_request') {
-        final sessionId = message.data['sessionId'];
-        if (sessionId != null) {
-          ref.read(routerProvider).push('/proof-capture/$sessionId');
-        }
-      }
-    });
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      if (message.data['type'] == 'proof_request') {
-        final sessionId = message.data['sessionId'];
-        if (sessionId != null) {
-          ref.read(routerProvider).push('/proof-capture/$sessionId');
-        }
-      }
-    });
-    FirebaseMessaging.instance.getInitialMessage().then((message) {
-      if (message != null && message.data['type'] == 'proof_request') {
-        final sessionId = message.data['sessionId'];
-        if (sessionId != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!kIsWeb) {
+      // Random Proof listeners
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        if (message.data['type'] == 'proof_request') {
+          final sessionId = message.data['sessionId'];
+          if (sessionId != null) {
             ref.read(routerProvider).push('/proof-capture/$sessionId');
-          });
+          }
         }
+      });
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        if (message.data['type'] == 'proof_request') {
+          final sessionId = message.data['sessionId'];
+          if (sessionId != null) {
+            ref.read(routerProvider).push('/proof-capture/$sessionId');
+          }
+        }
+      });
+      FirebaseMessaging.instance.getInitialMessage().then((message) {
+        if (message != null && message.data['type'] == 'proof_request') {
+          final sessionId = message.data['sessionId'];
+          if (sessionId != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ref.read(routerProvider).push('/proof-capture/$sessionId');
+            });
+          }
+        }
+      });
+    }
+  }
+
+  Future<void> _updateOnlineStatus(bool isOnline) async {
+    try {
+      final uid = ref.read(authStateProvider).asData?.value?.uid;
+      if (uid != null) {
+        await FirebaseFirestore.instance.collection('users').doc(uid).set({
+          'isOnline': isOnline,
+          'lastActiveDate': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
       }
-    });
+    } catch (_) {}
   }
 
   @override
   void dispose() {
+    _updateOnlineStatus(false);
     _focusSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -207,17 +259,29 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _onAuthReady();
+    if (state == AppLifecycleState.resumed) {
+      _updateOnlineStatus(true);
+      _onAuthReady();
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+      _updateOnlineStatus(false);
+    }
   }
 
   /// Runs the once-per-open housekeeping that needs a signed-in user.
   Future<void> _onAuthReady() async {
-    final uid = ref.read(authStateProvider).asData?.value?.uid;
-    if (uid != null) {
-      await ref.read(notificationServiceProvider).setupFcm(uid);
+    try {
+      final uid = ref.read(authStateProvider).asData?.value?.uid;
+      if (uid != null) {
+        _updateOnlineStatus(true);
+        if (!kIsWeb) {
+          await ref.read(notificationServiceProvider).setupFcm(uid);
+        }
+      }
+      await _processPendingCompletion();
+      await _refreshStreak();
+    } catch (e) {
+      debugPrint('_onAuthReady error: $e');
     }
-    await _processPendingCompletion();
-    await _refreshStreak();
   }
 
   Future<void> _processPendingCompletion() async {
@@ -245,7 +309,7 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(
-      title: 'Flowa',
+      title: 'ODAT',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

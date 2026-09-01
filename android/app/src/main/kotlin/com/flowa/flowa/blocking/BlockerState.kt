@@ -75,6 +75,7 @@ object BlockerState {
         this.strict = strict
         this.lang = lang
         active = true
+        AppBlockerAccessibilityService.instance?.startWatchdog()
     }
 
     fun stop() {
@@ -85,6 +86,7 @@ object BlockerState {
         strict = false
         synchronized(blockedPackages) { blockedPackages.clear() }
         synchronized(bypassed) { bypassed.clear() }
+        AppBlockerAccessibilityService.instance?.stopWatchdog()
     }
 
     /**
@@ -92,7 +94,9 @@ object BlockerState {
      * "Open anyway" on the soft-friction reminder, so they aren't re-blocked.
      */
     fun allow(pkg: String) {
-        bypassed.add(pkg)
+        if (!strict) {
+            bypassed.add(pkg)
+        }
     }
 
     fun isExpired(): Boolean = active && System.currentTimeMillis() >= endTimeMillis
@@ -119,7 +123,17 @@ object BlockerState {
     /** True when [pkg] should be blocked right now (and not user-bypassed). */
     fun shouldBlock(pkg: String?): Boolean {
         if (pkg == null || !inWindow()) return false
-        if (bypassed.contains(pkg)) return false
+        if (!strict && bypassed.contains(pkg)) return false
+        if (strict) {
+            // Anti-circumvention: Block phone settings and uninstaller while strict discipline is active
+            if (pkg == "com.android.settings" ||
+                pkg == "com.android.packageinstaller" ||
+                pkg == "com.google.android.packageinstaller" ||
+                pkg == "com.miui.securitycenter" ||
+                pkg == "com.samsung.android.lool") {
+                return true
+            }
+        }
         return synchronized(blockedPackages) { blockedPackages.contains(pkg) }
     }
 }

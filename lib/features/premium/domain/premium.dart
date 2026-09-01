@@ -1,13 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Master switch for the entire Premium system.
-///
-/// While `false` (the default), Flowa behaves exactly as before — no paywalls,
-/// no AI-plan limit, no premium-only screens or badges appear anywhere. Flip to
-/// `true` to activate the whole system. Everything premium is gated through this
-/// flag (via `premiumEnabledProvider`) plus the per-user `isPremium`, so turning
-/// the feature on/off — and adding real billing later — stays a one-line change.
-const bool kPremiumEnabled = false;
+const bool kPremiumEnabled = true;
+
+/// Google Play In-App Subscription Product IDs
+const String kPremiumMonthlySku = 'odat_premium_monthly';
+const String kPremiumYearlySku = 'odat_premium_yearly';
 
 /// Free users may generate this many AI plans per calendar day before the
 /// paywall appears.
@@ -18,9 +16,11 @@ const int kFreeAiPlansPerDay = 3;
 const Color kPremiumGold = Color(0xFFC9A24B);
 const Color kPremiumGoldSoft = Color(0xFFEFE3C4);
 
-// Display-only pricing (placeholders). Real Google Play Billing comes later.
-// These hold TRANSLATION KEYS (resolved with `.tr()` where rendered) so the
-// paywall stays fully localized.
+/// Pricing in UZS (O'zbek so'mi)
+const int kMonthlyPriceUzs = 40000;
+const int kYearlyPriceUzs = 390000;
+
+// Display-only pricing keys resolved with `.tr()`
 const String kMonthlyPriceLabel = 'premium.price_monthly';
 const String kMonthlyPeriodLabel = 'premium.per_month';
 const String kYearlyPriceLabel = 'premium.price_yearly';
@@ -65,4 +65,53 @@ const List<PremiumBenefit> kPremiumBenefits = [
 ];
 
 /// The two subscription options offered on the paywall.
-enum PremiumPlan { monthly, yearly }
+enum PremiumPlan {
+  monthly,
+  yearly;
+
+  int get priceUzs => this == PremiumPlan.monthly ? kMonthlyPriceUzs : kYearlyPriceUzs;
+
+  String get formattedPriceUzs => this == PremiumPlan.monthly ? '40 000 so\'m' : '390 000 so\'m';
+
+  Duration get duration => this == PremiumPlan.monthly ? const Duration(days: 30) : const Duration(days: 365);
+}
+
+/// Supported payment gateways for Odat Premium
+enum PremiumPaymentMethod {
+  payme(
+    title: 'Payme',
+    subtitle: 'Karta orqali tezkor to\'lov (UzCard / Humo)',
+    brandColor: Color(0x7B2FFFCC),
+    icon: Icons.account_balance_wallet_rounded,
+  ),
+  click(
+    title: 'Click',
+    subtitle: 'Click Up / Click Evolution orqali',
+    brandColor: Color(0xFF007AFF),
+    icon: Icons.touch_app_rounded,
+  ),
+  uzumCard(
+    title: 'Uzum Bank / Karta',
+    subtitle: 'Humo, UzCard, Visa & MasterCard',
+    brandColor: Color(0xFF7000FF),
+    icon: Icons.credit_card_rounded,
+  ),
+  googlePlay(
+    title: 'Google Play',
+    subtitle: 'Google Play hisobingiz orqali obuna',
+    brandColor: Color(0xFF00875A),
+    icon: Icons.play_arrow_rounded,
+  );
+
+  const PremiumPaymentMethod({
+    required this.title,
+    required this.subtitle,
+    required this.brandColor,
+    required this.icon,
+  });
+
+  final String title;
+  final String subtitle;
+  final Color brandColor;
+  final IconData icon;
+}

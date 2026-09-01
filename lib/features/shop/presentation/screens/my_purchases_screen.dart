@@ -1,8 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -47,10 +48,17 @@ class _MyPurchasesScreenState extends ConsumerState<MyPurchasesScreen>
     return Scaffold(
       appBar: FlowaAppBar(
         showBackButton: true,
+        showShopButton: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           color: colors.textPrimary,
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.dailyPlan);
+            }
+          },
         ),
         actions: const [],
       ),
@@ -62,7 +70,7 @@ class _MyPurchasesScreenState extends ConsumerState<MyPurchasesScreen>
               child: Row(
                 children: [
                   Text(
-                    'Mening xaridlarim',
+                    'shop.my_purchases'.tr(),
                     style: AppTextStyles.h1.copyWith(color: colors.textPrimary),
                   ),
                 ],
@@ -84,7 +92,7 @@ class _MyPurchasesScreenState extends ConsumerState<MyPurchasesScreen>
               child: Row(
                 children: [
                   SegmentedFilterChip(
-                    label: 'Kuponlarim',
+                    label: 'shop.my_coupons'.tr(),
                     icon: Icons.confirmation_number_outlined,
                     isSelected: _tabController.index == 0,
                     expanded: true,
@@ -213,9 +221,9 @@ class _CouponsTabView extends ConsumerWidget {
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: coupon.couponCode));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Promo kod nusxalandi!'),
-                                duration: Duration(seconds: 2),
+                              SnackBar(
+                                content: Text('shop.promo_copied'.tr()),
+                                duration: const Duration(seconds: 2),
                               ),
                             );
                           },

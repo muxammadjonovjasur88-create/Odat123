@@ -12,7 +12,7 @@ String routeForTab(AppNavTab tab) {
     case AppNavTab.zametka:
       return AppRoutes.eslatma;
     case AppNavTab.ai:
-      return AppRoutes.aiPlanner;
+      return AppRoutes.aiAssistant;
     case AppNavTab.leaderboard:
       return AppRoutes.leaderboard;
     case AppNavTab.profile:

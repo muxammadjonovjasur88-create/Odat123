@@ -89,7 +89,7 @@ class PoseDetectorService {
     }
 
     final lm = pose.landmarks;
-    const minVis = 0.3;
+    const minVis = 0.25; // Lowered for blurry/low-light cameras
 
     final hasHead = (lm[PoseLandmarkType.nose]?.likelihood ?? 0) > minVis ||
         ((lm[PoseLandmarkType.leftEye]?.likelihood ?? 0) > minVis &&
@@ -211,11 +211,16 @@ class PoseDetectorService {
     if (image.planes.length == 1) {
       bytes = image.planes.first.bytes;
     } else {
-      final WriteBuffer allBytes = WriteBuffer();
+      int totalLength = 0;
       for (final Plane plane in image.planes) {
-        allBytes.putUint8List(plane.bytes);
+        totalLength += plane.bytes.length;
       }
-      bytes = allBytes.done().buffer.asUint8List();
+      bytes = Uint8List(totalLength);
+      int offset = 0;
+      for (final Plane plane in image.planes) {
+        bytes.setRange(offset, offset + plane.bytes.length, plane.bytes);
+        offset += plane.bytes.length;
+      }
     }
 
     return InputImage.fromBytes(

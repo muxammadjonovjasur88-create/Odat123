@@ -1,3 +1,5 @@
+﻿import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,7 +35,10 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Ochkolaringiz yetarli emas! Sizda: $currentPoints, talab qilinadi: ${widget.item.pointsCost}',
+            'shop.insufficient_points'.tr(namedArgs: {
+              'current': currentPoints.toString(),
+              'required': widget.item.pointsCost.toString(),
+            }),
           ),
           backgroundColor: Colors.redAccent,
         ),
@@ -46,17 +51,20 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: ctx.colors.surface,
         title: Text(
-          'Kuponni xarid qilish',
+          'shop.purchase_coupon'.tr(),
           style: AppTextStyles.h2.copyWith(color: ctx.colors.textPrimary),
         ),
         content: Text(
-          '${widget.item.title} kuponini ${widget.item.pointsCost} ochkoga sotib olishni tasdiqlaysizmi?',
+          'shop.confirm_purchase'.tr(namedArgs: {
+            'title': widget.item.title,
+            'points': widget.item.pointsCost.toString(),
+          }),
           style: AppTextStyles.body.copyWith(color: ctx.colors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Bekor qilish', style: TextStyle(color: ctx.colors.textSecondary)),
+            child: Text('common.cancel'.tr(), style: TextStyle(color: ctx.colors.textSecondary)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -64,7 +72,7 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
               foregroundColor: Colors.black,
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Ha, sotib olish'),
+            child: Text('shop.buy_button'.tr()),
           ),
         ],
       ),
@@ -111,7 +119,7 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Xarid muvaffaqiyatli!',
+              'shop.purchase_success'.tr(),
               style: AppTextStyles.h2.copyWith(color: ctx.colors.textPrimary),
               textAlign: TextAlign.center,
             ),
@@ -121,7 +129,7 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Sizning promo kodingiz:',
+              'shop.promo_code_label'.tr(),
               style: AppTextStyles.body.copyWith(color: ctx.colors.textSecondary),
             ),
             const SizedBox(height: 12),
@@ -149,9 +157,9 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: couponCode));
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Promo kod nusxalandi!'),
-                          duration: Duration(seconds: 2),
+                        SnackBar(
+                          content: Text('shop.promo_copied'.tr()),
+                          duration: const Duration(seconds: 2),
                         ),
                       );
                     },
@@ -161,7 +169,7 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Ushbu kodni "Mening xaridlarim" bo\'limida istalgan vaqtda ko\'rishingiz mumkin.',
+              'shop.view_in_my_purchases'.tr(),
               style: AppTextStyles.caption.copyWith(color: ctx.colors.textTertiary),
               textAlign: TextAlign.center,
             ),
@@ -169,7 +177,7 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
         ),
         actions: [
           AppButton(
-            label: 'Tushunarli',
+            label: 'common.understood'.tr(),
             onPressed: () {
               Navigator.of(ctx).pop();
               context.pop();
@@ -208,17 +216,10 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
                   children: [
                     // Coupon Image
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(22),
                       child: AspectRatio(
                         aspectRatio: 16 / 9,
-                        child: item.imageUrl.isNotEmpty
-                            ? Image.network(
-                                item.imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
-
-                              )
-                            : _buildPlaceholder(),
+                        child: _buildImage(item.imageUrl),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -348,14 +349,55 @@ class _CouponDetailScreenState extends ConsumerState<CouponDetailScreen> {
     );
   }
 
+  Widget _buildImage(String url) {
+    if (url.isEmpty) return _buildPlaceholder();
+
+    if (url.startsWith('data:image') || url.startsWith('data:application')) {
+      try {
+        final commaIndex = url.indexOf(',');
+        final base64Str = commaIndex != -1 ? url.substring(commaIndex + 1) : url;
+        final bytes = base64Decode(base64Str.trim());
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
+        );
+      } catch (_) {
+        return _buildPlaceholder();
+      }
+    }
+
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
+      loadingBuilder: (ctx, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: const Color(0xFF1C2540),
+          child: const Center(
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.cyanAccent,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildPlaceholder() {
     return Container(
-      color: const Color(0xFF1E2638),
-      child: const Center(
+      color: const Color(0xFF1C2540),
+      child: Center(
         child: Icon(
           Icons.confirmation_number_outlined,
           size: 50,
-          color: AppColors.cyanAccent,
+          color: AppColors.cyanAccent.withValues(alpha: 0.5),
         ),
       ),
     );

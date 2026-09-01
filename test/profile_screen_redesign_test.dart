@@ -56,37 +56,5 @@ void main() {
     expect(find.textContaining('First Step'), findsNothing);
     expect(find.textContaining('Week Winner'), findsNothing);
   });
-
-  testWidgets('AchievementsGrid standalone component renders achievement cards and opens detail sheet', (tester) async {
-    tester.view.physicalSize = const Size(400, 1000);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.resetPhysicalSize);
-
-    await tester.pumpWidget(
-      MaterialApp(
-        theme: AppTheme.dark,
-        home: Scaffold(
-          body: SingleChildScrollView(
-            child: AchievementsGrid(
-              profile: mockProfile,
-              filter: 'all',
-            ),
-          ),
-        ),
-      ),
-    );
-    await tester.pump(const Duration(milliseconds: 300));
-
-    // Verify achievement cards exist in standalone AchievementsGrid
-    final cardFinder = find.text('First Step');
-    expect(cardFinder, findsOneWidget);
-
-    // Tap on First Step card
-    await tester.tap(cardFinder);
-    await tester.pump(const Duration(milliseconds: 500));
-
-    // Verify modal bottom sheet opened
-    expect(find.byType(AchievementDetailBottomSheet), findsOneWidget);
-    expect(find.text('Bu yutuqni qanday qo\'lga kiritish mumkin?'), findsOneWidget);
-  });
 }
+

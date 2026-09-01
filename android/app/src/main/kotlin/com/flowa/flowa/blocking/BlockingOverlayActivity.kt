@@ -273,11 +273,26 @@ class BlockingOverlayActivity : Activity() {
     }
 
     private fun goHome() {
-        val home = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
-            addCategory(android.content.Intent.CATEGORY_HOME)
-            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (strict) {
+            val mainApp = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            }
+            if (mainApp != null) {
+                startActivity(mainApp)
+            } else {
+                val home = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
+                    addCategory(android.content.Intent.CATEGORY_HOME)
+                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(home)
+            }
+        } else {
+            val home = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
+                addCategory(android.content.Intent.CATEGORY_HOME)
+                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(home)
         }
-        startActivity(home)
         finish()
         overridePendingTransition(0, 0)
     }
@@ -309,17 +324,16 @@ class BlockingOverlayActivity : Activity() {
             "note" to "Отмечено — сессия фокуса продолжается 🌱",
         )
         "uz" -> mapOf(
-            "soft_headline" to "Baribir ochilsinmi?",
-            "soft_body" to "Siz diqqatda edingiz 🌱 Nafas oling — qolishingiz " +
-                "yoki ochishingiz mumkin.",
-            "strict_headline" to "Diqqatda qolishingizga yordam beramiz",
-            "strict_body" to "Bu ilova diqqat seansi tugaguncha pauzada.",
-            "stay_focused" to "Diqqatda qolish",
+            "soft_headline" to "Siz intizomingizni buzmang!",
+            "soft_body" to "Siz qat‘iy intizomdasiz 🌱 Hali belgilangan vaqtingiz bor, chalg‘imang!",
+            "strict_headline" to "Siz intizomingizni buzmang!",
+            "strict_body" to "Hali belgilangan intizom vaqtingiz tugamadi. Maqsad sari chalg‘imasdan davom eting!",
+            "stay_focused" to "Intizomda qolish",
             "open_anyway" to "Baribir ochish",
-            "go_back" to "Orqaga",
-            "focusing_on" to "DIQQAT MARKAZIDA",
-            "time_left" to "SEANS TUGASHIGA",
-            "note" to "Belgilandi — diqqat seansi davom etmoqda 🌱",
+            "go_back" to "Orqaga qaytish",
+            "focusing_on" to "INTIZOM MARKAZIDA",
+            "time_left" to "INTIZOM TUGASHIGA",
+            "note" to "Qat‘iy intizom seansi davom etmoqda 🌱",
         )
         else -> mapOf(
             "soft_headline" to "Open anyway?",

@@ -12,7 +12,7 @@ const CATEGORY_OPTIONS = [
   "Texnologiya",
 ];
 
-const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB limit for Cloud Functions base64 payload
+const MAX_PDF_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB limit for Cloud Functions base64 payload
 const MAX_COVER_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 export function BookModal({ isOpen, onClose, onSave, book = null }) {
@@ -161,7 +161,13 @@ export function BookModal({ isOpen, onClose, onSave, book = null }) {
     setError("");
     const compressed = await compressImageFile(file);
     setCoverFile(compressed);
-    setCoverPreview(URL.createObjectURL(compressed));
+    
+    // Generate safe Base64 preview for Telegram WebView compatibility
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCoverPreview(reader.result);
+    };
+    reader.readAsDataURL(compressed);
   };
 
   // PDF file selection & client-side validation
@@ -175,7 +181,7 @@ export function BookModal({ isOpen, onClose, onSave, book = null }) {
     }
 
     if (file.size > MAX_PDF_SIZE_BYTES) {
-      setError(`PDF fayl hajmi 10MB limitidan oshmasligi kerak (tanlangan: ${(file.size / (1024 * 1024)).toFixed(1)}MB).`);
+      setError(`PDF fayl hajmi 200MB limitidan oshmasligi kerak (tanlangan: ${(file.size / (1024 * 1024)).toFixed(1)}MB).`);
       return;
     }
 
@@ -223,31 +229,6 @@ export function BookModal({ isOpen, onClose, onSave, book = null }) {
     setUploadStage("Tayyorlanmoqda...");
 
     try {
-      let base64Pdf = null;
-      let base64Cover = null;
-      let pdfName = pdfFile ? pdfFile.name : null;
-      let coverName = coverFile ? coverFile.name : null;
-
-      // 1. Read PDF file if new PDF was selected
-      if (pdfFile) {
-        setUploadStage(`PDF fayli o'qilmoqda (${pdfFileSizeMb} MB)...`);
-        base64Pdf = await readFileAsBase64(pdfFile, (pct) => {
-          setUploadProgress(Math.min(50, Math.round(pct * 0.5)));
-        });
-      }
-
-      // 2. Read Cover Image file if new Cover was selected
-      if (coverFile) {
-        setUploadStage("Muqova rasmi o'qilmoqda...");
-        base64Cover = await readFileAsBase64(coverFile, (pct) => {
-          setUploadProgress(50 + Math.round(pct * 0.2));
-        });
-      }
-
-      // 3. Upload & Save
-      setUploadStage("Serverga yuklanmoqda va saqlanmoqda...");
-      setUploadProgress(75);
-
       const payload = {
         book: {
           title: formData.title.trim(),
@@ -259,14 +240,16 @@ export function BookModal({ isOpen, onClose, onSave, book = null }) {
           coverImageUrl: formData.coverImageUrl,
           pdfUrl: formData.pdfUrl,
         },
-        base64Pdf,
-        pdfFileName: pdfName,
-        base64Cover,
-        coverFileName: coverName,
+        pdfFile: pdfFile || null,
+        coverFile: coverFile || null,
         coverContentType: coverFile ? coverFile.type : "image/jpeg",
       };
 
-      await onSave(payload, isEdit ? book.id : null);
+      await onSave(payload, isEdit ? book.id : null, (stage, pct) => {
+        setUploadStage(stage);
+        setUploadProgress(pct);
+      });
+
       setUploadProgress(100);
       setUploadStage("Muvaffaqiyatli saqlandi!");
       onClose();
@@ -276,6 +259,7 @@ export function BookModal({ isOpen, onClose, onSave, book = null }) {
     } finally {
       setIsUploading(false);
     }
+
   };
 
   return (

@@ -23,7 +23,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.flowa.flowa"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         // Required by flutter_local_notifications (uses Java 8+ APIs on older devices).
@@ -37,9 +37,8 @@ android {
     }
 
     defaultConfig {
-        // Google Play application id (CLAUDE.md). Note: differs from the Kotlin
-        // namespace above, which is fine.
-        applicationId = "com.flowa.app"
+        // Google Play application id matching Firebase credentials
+        applicationId = "com.company.flova"
         // Phone auth + flutter_local_notifications need a reasonably recent API.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
@@ -49,6 +48,12 @@ android {
     }
 
     signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         create("release") {
             if (keystorePropertiesFile.exists()) {
                 keyAlias = keystoreProperties["keyAlias"] as String
@@ -60,14 +65,21 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }

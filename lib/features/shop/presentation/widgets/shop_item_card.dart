@@ -1,8 +1,8 @@
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/widgets.dart';
 import '../../domain/models/shop_item.dart';
 
 class ShopItemCard extends StatelessWidget {
@@ -24,66 +24,67 @@ class ShopItemCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: isOutOfStock ? null : onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Ink(
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
           decoration: BoxDecoration(
             color: colors.surfaceMuted,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: isOutOfStock
                   ? colors.border.withValues(alpha: 0.3)
-                  : colors.border,
+                  : colors.border.withValues(alpha: 0.8),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: colors.shadow.withValues(alpha: 0.1),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
               ),
             ],
           ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Image container with Type Badge & Stock Overlay
-              Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(19),
-                    ),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 10,
-                      child: item.imageUrl.isNotEmpty
-                          ? Image.network(
-                              item.imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
+              // 1. Full Prominent Image Section (Large & Wide)
+              Expanded(
+                flex: 11,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _buildImage(item.imageUrl),
 
-                            )
-                          : _buildPlaceholder(),
-                    ),
-                  ),
-
-                  // Stock overlay when item is sold out
-                  if (isOutOfStock)
-                    Positioned.fill(
+                    // Subtle Bottom Dark Gradient for smooth transition
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 40,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.6),
-                          borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(19),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              colors.surfaceMuted.withValues(alpha: 0.8),
+                            ],
                           ),
                         ),
+                      ),
+                    ),
+
+                    // Sold out overlay if out of stock
+                    if (isOutOfStock)
+                      Container(
+                        color: Colors.black.withValues(alpha: 0.65),
                         alignment: Alignment.center,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.redAccent.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Text(
                             'Tugadi',
@@ -95,171 +96,140 @@ class ShopItemCard extends StatelessWidget {
                           ),
                         ),
                       ),
+
+                    // Top Left: Pill Badge (Sovg'a / Kupon)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: (item.isCoupon
+                                  ? AppColors.cyanAccent
+                                  : AppColors.purpleAccent)
+                              .withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black38,
+                              blurRadius: 4,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              item.isCoupon
+                                  ? Icons.local_offer_rounded
+                                  : Icons.card_giftcard_rounded,
+                              size: 11,
+                              color: Colors.black,
+                            ),
+                            const SizedBox(width: 3.5),
+                            Text(
+                              item.type.label,
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 10.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
 
-                  // Type Badge
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: item.isCoupon
-                            ? AppColors.cyanAccent.withValues(alpha: 0.9)
-                            : AppColors.purpleAccent.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
+                    // Top Right: Discount text if present
+                    if (item.discountText != null && item.discountText!.isNotEmpty)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0D1220).withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: AppColors.cyanAccent.withValues(alpha: 0.4),
+                            ),
                           ),
-                        ],
+                          child: Text(
+                            item.discountText!,
+                            style: const TextStyle(
+                              color: AppColors.cyanAccent,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 10.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              // 2. Bottom Content Section (Title lowered down & Big Bold Points)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Product Title (Lowered down and clean)
+                    Text(
+                      item.title,
+                      style: AppTextStyles.h3.copyWith(
+                        color: isOutOfStock
+                            ? colors.textSecondary
+                            : colors.textPrimary,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Big Prominent Points Badge (Ochko kattaroq va yorqin)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF5BC8FA).withValues(alpha: 0.15),
+                            AppColors.purpleAccent.withValues(alpha: 0.15),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF5BC8FA).withValues(alpha: 0.4),
+                          width: 1,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            item.isCoupon
-                                ? Icons.local_offer_rounded
-                                : Icons.card_giftcard_rounded,
-                            size: 12,
-                            color: Colors.black,
+                          const Icon(
+                            Icons.bolt_rounded,
+                            color: Color(0xFF5BC8FA),
+                            size: 17,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            item.type.label,
-                            style: AppTextStyles.caption.copyWith(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Discount / Stock Tag
-                  if (item.discountText != null && item.discountText!.isNotEmpty)
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-
-                        child: Text(
-                          item.discountText!,
-                          style: const TextStyle(
-                            color: AppColors.cyanAccent,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-
-              // Item details
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (item.partnerName != null &&
-                              item.partnerName!.isNotEmpty) ...[
-                            Text(
-                              item.partnerName!,
-                              style: AppTextStyles.overline.copyWith(
-                                color: colors.textSecondary,
-                                letterSpacing: 0.5,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
-                          ],
-                          Text(
-                            item.title,
-                            style: AppTextStyles.h3.copyWith(
-                              color: isOutOfStock
-                                  ? colors.textSecondary
-                                  : colors.textPrimary,
+                            '${item.pointsCost} PTS',
+                            style: const TextStyle(
+                              color: Color(0xFF5BC8FA),
+                              fontWeight: FontWeight.w900,
                               fontSize: 14,
+                              letterSpacing: 0.3,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-
-                      // Price Tag (Points)
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.sportFill,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(
-                                  color: AppColors.purpleAccent.withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SpinningCoin(size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${item.pointsCost} ochko',
-                                    style: AppTextStyles.label.copyWith(
-                                      color: AppColors.cyanAccent,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            if (item.stock != null && !isOutOfStock) ...[
-                              const SizedBox(width: 8),
-                              Text(
-                                'Qoldi: ${item.stock}',
-                                style: AppTextStyles.caption.copyWith(
-                                  color: colors.textTertiary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -269,14 +239,64 @@ class ShopItemCard extends StatelessWidget {
     );
   }
 
+  Widget _buildImage(String url) {
+    if (url.isEmpty) return _buildPlaceholder();
+
+    if (url.startsWith('data:image') || url.startsWith('data:application')) {
+      try {
+        final commaIndex = url.indexOf(',');
+        final base64Str = commaIndex != -1 ? url.substring(commaIndex + 1) : url;
+        final bytes = base64Decode(base64Str.trim());
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
+        );
+      } catch (_) {
+        return _buildPlaceholder();
+      }
+    }
+
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
+      loadingBuilder: (ctx, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: const Color(0xFF131929),
+          child: const Center(
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.cyanAccent,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildPlaceholder() {
     return Container(
-      color: const Color(0xFF1E2638),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1C2540),
+            Color(0xFF0D1220),
+          ],
+        ),
+      ),
       child: Center(
         child: Icon(
-          item.isCoupon ? Icons.confirmation_number_outlined : Icons.card_giftcard,
-          size: 40,
-          color: AppColors.cyanAccent.withValues(alpha: 0.4),
+          item.isCoupon ? Icons.local_offer_outlined : Icons.card_giftcard_rounded,
+          size: 46,
+          color: AppColors.cyanAccent.withValues(alpha: 0.5),
         ),
       ),
     );

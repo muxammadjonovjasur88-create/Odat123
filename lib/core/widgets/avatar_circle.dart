@@ -1,5 +1,5 @@
 import 'dart:convert';
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../constants/default_avatars.dart';
@@ -19,17 +19,21 @@ class AvatarCircle extends StatelessWidget {
   final String? photoBase64;
   final String? photoUrl;
 
+  static final Map<String, Uint8List> _base64Cache = {};
+
   @override
   Widget build(BuildContext context) {
     if (photoBase64 != null && photoBase64!.isNotEmpty) {
       try {
-        final bytes = base64Decode(photoBase64!);
+        final key = photoBase64!;
+        final bytes = _base64Cache.putIfAbsent(key, () => base64Decode(key));
         return ClipOval(
           child: Image.memory(
             bytes,
             width: size,
             height: size,
             fit: BoxFit.cover,
+            gaplessPlayback: true,
             errorBuilder: (_, _, _) => _fallbackAvatar(),
           ),
         );
@@ -38,13 +42,14 @@ class AvatarCircle extends StatelessWidget {
       }
     }
 
-    if (photoUrl != null && photoUrl!.isNotEmpty) {
+    if (photoUrl != null && photoUrl!.isNotEmpty && photoUrl!.startsWith('http')) {
       return ClipOval(
         child: Image.network(
           photoUrl!,
           width: size,
           height: size,
           fit: BoxFit.cover,
+          gaplessPlayback: true,
           errorBuilder: (_, _, _) => _fallbackAvatar(),
         ),
       );

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -6,11 +6,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/services/auth_repository.dart';
-import '../../../core/services/locale_store.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/beta_ticker_banner.dart';
 
-/// Entry sign-in screen for Odat with Google & Telegram auth options.
+/// Entry sign-in screen for Odat with Telegram auth.
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
 
@@ -19,31 +19,131 @@ class SignInScreen extends ConsumerStatefulWidget {
 }
 
 class _SignInScreenState extends ConsumerState<SignInScreen> {
-  bool _busy = false;
+  bool _agreedToPrivacy = true;
 
-  Future<void> _signInWithGoogle() async {
-    setState(() => _busy = true);
-    try {
-      final credential =
-          await ref.read(authRepositoryProvider).signInWithGoogle();
-      if (credential == null && mounted) {
-        setState(() => _busy = false);
-        return;
-      }
-    } on AuthException catch (e) {
-      if (mounted) {
-        setState(() => _busy = false);
-        _snack(e.message);
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _busy = false);
-        _snack('signin.google_error'.tr());
-      }
-    }
+  void _showPrivacyPolicyModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF0D1220),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Icon(Icons.security_rounded, color: Color(0xFF5BC8FA), size: 26),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'MAXFIYLIK VA XAVFSIZLIK RUXSATNOMASI',
+                    style: TextStyle(color: Colors.white, fontSize: 14.5, fontWeight: FontWeight.w900, letterSpacing: 1),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildPrivacySection(
+                      '1. Nima uchun hisob kerak?',
+                      'Odat ilovasida rivojlanish statistikangiz, ballaringiz va do‘stlar bilan musobaqalaringiz xavfsiz saqlanishi uchun Google yoki Telegram orqali kirish kifoya.',
+                    ),
+                    _buildPrivacySection(
+                      '2. Ilovalarni bloklash xavfsizligi',
+                      'Fokus rejimida chalg‘ituvchi ilovalarni to‘xtatish uchun so‘raladigan maxsus ruxsatlar (Accessibility / Usage Access) faqat qurilmangizning o‘zida ishlaydi. Hech qanday shaxsiy yozishmalar yoki parollar o‘qilmaydi va serverga yuborilmaydi.',
+                    ),
+                    _buildPrivacySection(
+                      '3. Ma’lumotlar daxlsizligi',
+                      'Biz foydalanuvchilarning shaxsiy ma’lumotlarini aslo uchinchi shaxslarga sotmaymiz va reklama tarmoqlariga bermaymiz.',
+                    ),
+                    _buildPrivacySection(
+                      '4. To‘liq Maxfiylik Siyosati',
+                      'Barcha qonuniy shartlar bilan to‘liq tanishish uchun quyidagi rasmiy havolani ochishingiz mumkin:',
+                    ),
+                    const SizedBox(height: 6),
+                    InkWell(
+                      onTap: () => launchUrl(
+                        Uri.parse('https://flowa-4fca9.web.app/privacy.html'),
+                        mode: LaunchMode.externalApplication,
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          '🔗 https://flowa-4fca9.web.app/privacy.html',
+                          style: TextStyle(
+                            color: Color(0xFF5BC8FA),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5BC8FA),
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() => _agreedToPrivacy = true);
+                },
+                child: const Text('ROZIMAN VA TUSHUNDIM', style: TextStyle(fontWeight: FontWeight.w900)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrivacySection(String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 3),
+          Text(body, style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4)),
+        ],
+      ),
+    );
   }
 
   void _onTelegramTap() {
+    if (!_agreedToPrivacy) {
+      _snack('Davom etish uchun maxfiylik siyosatiga rozilik bildiring');
+      return;
+    }
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -67,277 +167,133 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            // Top Bar with Language Selector
-            Positioned(
-              top: 12,
-              right: 16,
-              child: const _LanguageSelector(),
-            ),
-
-            // Center Content
-            Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 104,
-                        height: 104,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colors.surface,
-                          boxShadow: [
-                            BoxShadow(
-                              color: colors.shadow,
-                              blurRadius: 24,
-                              offset: const Offset(0, 12),
+            const BetaTickerBanner(),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colors.surface,
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors.shadow,
+                                blurRadius: 24,
+                                offset: const Offset(0, 12),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(14),
+                            child: ClipOval(
+                              child: Image.asset(
+                                'assets/icon/flowa_icon.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Odat',
+                              style: AppTextStyles.display
+                                  .copyWith(color: colors.primary),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF9100).withValues(alpha: 0.2),
+                                border: Border.all(color: const Color(0xFFFF9100), width: 1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'BETA',
+                                style: TextStyle(
+                                  color: Color(0xFFFFB300),
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/icon/flowa_icon.png',
-                              fit: BoxFit.contain,
+                        const SizedBox(height: 6),
+                        Text(
+                          'signin.title'.tr(),
+                          style: AppTextStyles.h1
+                              .copyWith(color: colors.textPrimary),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'signin.subtitle'.tr(),
+                          style: AppTextStyles.body
+                              .copyWith(color: colors.textSecondary),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+
+                  // Privacy Consent Checkbox
+                  GestureDetector(
+                    onTap: () => setState(() => _agreedToPrivacy = !_agreedToPrivacy),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Checkbox(
+                          value: _agreedToPrivacy,
+                          activeColor: const Color(0xFF5BC8FA),
+                          checkColor: Colors.black,
+                          onChanged: (val) => setState(() => _agreedToPrivacy = val ?? false),
+                        ),
+                        Flexible(
+                          child: GestureDetector(
+                            onTap: _showPrivacyPolicyModal,
+                            child: Text(
+                              'signin.agree_and_accept'.tr(),
+                              style: const TextStyle(
+                                color: Color(0xFF5BC8FA),
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Odat',
-                        style: AppTextStyles.display
-                            .copyWith(color: colors.primary),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'signin.title'.tr(),
-                        style: AppTextStyles.h1
-                            .copyWith(color: colors.textPrimary),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'signin.subtitle'.tr(),
-                        style: AppTextStyles.body
-                            .copyWith(color: colors.textSecondary),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 36),
-
-                      // Google button
-                      _GoogleButton(
-                        label: 'signin.google'.tr(),
-                        loading: _busy,
-                        onPressed: _busy ? null : _signInWithGoogle,
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Telegram button
-                      _TelegramButton(
-                        label: 'signin.telegram'.tr(),
-                        onPressed: _busy ? null : _onTelegramTap,
-                      ),
-                      const SizedBox(height: 20),
-
-                      Text(
-                        'signin.privacy'.tr(),
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: colors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LanguageSelector extends StatelessWidget {
-  const _LanguageSelector();
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final easyLoc = EasyLocalization.of(context);
-    final currentLocale = easyLoc?.locale ?? const Locale('uz');
-    final currentCode = currentLocale.languageCode;
-
-    return PopupMenuButton<Locale>(
-      initialValue: currentLocale,
-      tooltip: 'Tilni tanlang',
-      onSelected: (locale) async {
-        if (easyLoc != null) {
-          await context.setLocale(locale);
-        }
-        await LocaleStore.save(locale.languageCode);
-      },
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      color: colors.surface,
-      elevation: 6,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: colors.border),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.language_rounded, size: 18, color: colors.primary),
-            const SizedBox(width: 6),
-            Text(
-              currentCode.toUpperCase(),
-              style: AppTextStyles.chip.copyWith(
-                color: colors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.arrow_drop_down_rounded,
-              size: 20,
-              color: colors.textSecondary,
-            ),
-          ],
-        ),
-      ),
-      itemBuilder: (context) => kSupportedLocales.map((locale) {
-        final code = locale.languageCode;
-        final name = localeNativeName(code);
-        final isSelected = currentCode == code;
-        final flag = code == 'uz' ? '🇺🇿' : (code == 'ru' ? '🇷🇺' : '🇬🇧');
-        return PopupMenuItem<Locale>(
-          value: locale,
-          child: Row(
-            children: [
-              Text(flag, style: const TextStyle(fontSize: 16)),
-              const SizedBox(width: 10),
-              Text(
-                name,
-                style: AppTextStyles.body.copyWith(
-                  color: isSelected ? colors.primary : colors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _GoogleButton extends StatelessWidget {
-  const _GoogleButton({
-    required this.label,
-    required this.loading,
-    required this.onPressed,
-  });
-
-  final String label;
-  final bool loading;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final isEnabled = onPressed != null;
-
-    return Material(
-      color: colors.surface,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(30),
-        side: BorderSide(color: colors.border, width: 1.4),
-      ),
-      child: InkWell(
-        onTap: isEnabled ? onPressed : null,
-        borderRadius: BorderRadius.circular(30),
-        child: Container(
-          height: 58,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: colors.shadow,
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Center(
-            child: loading
-                ? SizedBox(
-                    height: 22,
-                    width: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      valueColor: AlwaysStoppedAnimation(colors.primary),
+                      ],
                     ),
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const _GoogleG(),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          label,
-                          textAlign: TextAlign.center,
-                          style: AppTextStyles.label.copyWith(
-                            color: colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
+                  const SizedBox(height: 20),
+
+                  // Telegram button
+                  _TelegramButton(
+                    label: 'signin.telegram'.tr(),
+                    onPressed: _onTelegramTap,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
-    );
-  }
-}
-
-class _GoogleG extends StatelessWidget {
-  const _GoogleG();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 24,
-      height: 24,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: const Text(
-        'G',
-        style: TextStyle(
-          color: Color(0xFF4285F4),
-          fontWeight: FontWeight.w700,
-          fontSize: 16,
-          height: 1.0,
-        ),
-      ),
-    );
+    ],
+  ),
+),
+);
   }
 }
 
@@ -358,16 +314,16 @@ class _TelegramButton extends StatelessWidget {
       color: const Color(0xFF26A5E4),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: InkWell(
         onTap: isEnabled ? onPressed : null,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
-          height: 58,
+          height: 56,
           padding: const EdgeInsets.symmetric(horizontal: 20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x3326A5E4),
@@ -385,14 +341,14 @@ class _TelegramButton extends StatelessWidget {
                 size: 22,
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.label.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 15,
+                  letterSpacing: 0.3,
                 ),
               ),
             ],
@@ -510,7 +466,7 @@ class __TelegramWaitingBottomSheetState
   }
 
   Future<void> _openTelegramLink(String token) async {
-    final url = Uri.parse('https://t.me/flowwabuddybot?start=login_$token');
+    final url = Uri.parse('https://t.me/odat_fenix_bot?start=login_$token');
     try {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } catch (_) {

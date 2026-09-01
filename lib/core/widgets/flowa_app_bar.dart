@@ -1,13 +1,16 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../router/app_routes.dart';
 import '../theme/app_theme.dart';
-import '../../features/streak/presentation/streak_header_badge.dart';
+import 'beta_ticker_banner.dart';
+import '../../features/shop/presentation/widgets/fenix_coin_badge.dart';
+import 'total_points_badge.dart';
 
-/// Displays no text-based screen titles, keeping a clean, minimalist layout.
-/// Features a Shop/Store icon (`Icons.storefront_outlined`).
+/// Flowa top navigation bar.
+/// Features a minimalist logo/back button on the left, and Total PTS + Fenix Coins balance + Shop on the right.
+/// Includes the yellow animated BetaTickerBanner by default on all screens.
 class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const FlowaAppBar({
     super.key,
@@ -16,7 +19,9 @@ class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
     this.actions,
     this.coins,
     this.leading,
-    this.showStreak = true,
+    this.showFenixCoins = true,
+    this.showShopButton = true,
+    this.showBetaBanner = true,
   });
 
   final bool showBackButton;
@@ -24,10 +29,12 @@ class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final int? coins;
   final Widget? leading;
-  final bool showStreak;
+  final bool showFenixCoins;
+  final bool showShopButton;
+  final bool showBetaBanner;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(kToolbarHeight + (showBetaBanner ? 26.0 : 0.0));
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,10 +64,25 @@ class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
               }
             },
       );
-    } else if (showStreak) {
-      leadingWidget = const StreakHeaderBadge();
     } else {
-      leadingWidget = const SizedBox.shrink();
+      leadingWidget = Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Text(
+          'ODAT',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+          ),
+        ),
+      );
     }
 
     return AppBar(
@@ -77,23 +99,42 @@ class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Shop / Store icon
-              IconButton(
-                tooltip: 'Shop',
-                icon: const Icon(Icons.storefront_outlined, size: 24),
-                color: colors.textPrimary,
-                onPressed: () {
-                  try {
-                    context.push(AppRoutes.shop);
-                  } catch (_) {}
-                },
-              ),
+              // Total PTS Balance
+              const TotalPointsBadge(),
+              const SizedBox(width: 4),
 
-              if (actions != null) ...actions!,
+              // Fenix Coin Balance with Top-Up Button
+              if (showFenixCoins) ...[
+                const FenixCoinBadge(),
+                const SizedBox(width: 2),
+              ],
+
+              // Shop / Store icon
+              if (showShopButton)
+                IconButton(
+                  tooltip: 'Do‘kon',
+                  icon: const Icon(Icons.storefront_outlined, size: 20),
+                  color: colors.textPrimary,
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    try {
+                      context.push(AppRoutes.shop);
+                    } catch (_) {}
+                  },
+                ),
+
+              ...?actions,
             ],
           ),
         ],
       ),
+      bottom: showBetaBanner
+          ? const PreferredSize(
+              preferredSize: Size.fromHeight(26),
+              child: BetaTickerBanner(),
+            )
+          : null,
     );
   }
 }

@@ -133,10 +133,10 @@ void main() {
 
     test('Calculates points earned with daily quest completion bonus', () {
       final pointsIncomplete = RunningTelemetryCalculator.calculatePointsEarned(distanceKm: 2.0, targetKm: 3.0);
-      expect(pointsIncomplete, equals(60)); // 2 * 30
+      expect(pointsIncomplete, equals(400)); // 2 * 200
 
       final pointsCompleted = RunningTelemetryCalculator.calculatePointsEarned(distanceKm: 3.2, targetKm: 3.0);
-      expect(pointsCompleted, equals(96 + 100)); // 3.2*30 + 100 bonus = 196
+      expect(pointsCompleted, equals(640 + 100)); // 3.2*200 + 100 bonus = 740
     });
   });
 }

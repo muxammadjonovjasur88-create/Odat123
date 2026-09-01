@@ -60,6 +60,16 @@ String formatDuration(int minutes) {
   return '${h}h ${m}m';
 }
 
+/// Compact number formatting (e.g. 1500 -> 1.5k, 1500000 -> 1.5M)
+String formatCompactNumber(num value) {
+  if (value >= 1000000) {
+    return '${(value / 1000000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')}m';
+  } else if (value >= 1000) {
+    return '${(value / 1000).toStringAsFixed(1).replaceAll(RegExp(r'\.0$'), '')}k';
+  }
+  return value.toInt().toString();
+}
+
 /// "September 2024".
 String formatMonthYear(DateTime d) => '${_months[d.month - 1]} ${d.year}';
 

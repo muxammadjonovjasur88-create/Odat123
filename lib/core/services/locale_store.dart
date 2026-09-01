@@ -1,22 +1,22 @@
 import 'package:flutter/widgets.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
-/// The three languages Flowa ships with, in display order.
+/// The languages Odat ships with, in display order.
 const List<Locale> kSupportedLocales = [
-  Locale('en'),
-  Locale('ru'),
   Locale('uz'),
+  Locale('ru'),
+  Locale('en'),
 ];
 
-/// Falls back to English for any unsupported device language.
-const Locale kFallbackLocale = Locale('en');
+/// Falls back to Uzbek for any unsupported device language.
+const Locale kFallbackLocale = Locale('uz');
 
 /// Native (untranslated) name for each language — always shown in its own
 /// script so a user can recognise it regardless of the current app language.
 String localeNativeName(String code) => switch (code) {
   'ru' => 'Русский',
-  'uz' => "O'zbek",
-  _ => 'English',
+  'en' => 'English',
+  _ => "O'zbek",
 };
 
 /// Hive-backed persistence for the chosen app language, so the choice survives
@@ -25,7 +25,7 @@ String localeNativeName(String code) => switch (code) {
 class LocaleStore {
   LocaleStore._();
 
-  static const _boxName = 'flowa_locale';
+  static const _boxName = 'odat_locale';
   static const _key = 'code';
 
   static Box? _box;
@@ -35,8 +35,8 @@ class LocaleStore {
     _box = await Hive.openBox(_boxName);
   }
 
-  /// The saved language code ('en' | 'ru' | 'uz'), or null if never set.
-  static String? savedCode() => _box?.get(_key) as String?;
+  /// The saved language code ('en' | 'ru' | 'uz'), defaulting to 'uz'.
+  static String savedCode() => _box?.get(_key) as String? ?? 'uz';
 
   /// The language actually in effect — the saved choice, else the device
   /// language when it's one of the three, else English. Used to tell the native
@@ -49,18 +49,25 @@ class LocaleStore {
         WidgetsBinding.instance.platformDispatcher.locale.languageCode;
     return kSupportedLocales.any((l) => l.languageCode == device)
         ? device
-        : 'en';
+        : 'uz';
   }
 
-  /// The saved locale, or null to let easy_localization fall back to the
-  /// device language (and then to [kFallbackLocale]).
-  static Locale? savedLocale() {
-    final code = savedCode();
-    return code == null ? null : Locale(code);
+  /// The saved locale, defaulting to Uzbek if never set.
+  static Locale savedLocale() {
+    return Locale(savedCode());
   }
 
   static Future<void> save(String code) async => _box?.put(_key, code);
 
-  static bool hasSeenIntro() => _box?.get('has_seen_intro') as bool? ?? false;
-  static Future<void> setHasSeenIntro() async => _box?.put('has_seen_intro', true);
+  // Har safar ochilganda intro ko'rsatmaslik uchun Hive saqlash
+  static bool hasSeenIntro() => _box?.get('has_seen_intro_v2') as bool? ?? false;
+  static Future<void> setHasSeenIntro() async => _box?.put('has_seen_intro_v2', true);
+
+  // Telegram Obuna kvesti holati
+  static bool hasClaimedTelegramQuest() => _box?.get('claimed_tg_quest') as bool? ?? false;
+  static Future<void> setClaimedTelegramQuest() async => _box?.put('claimed_tg_quest', true);
+
+  // Ruxsatnomalar holati
+  static bool hasGrantedStartupPermissions() => _box?.get('granted_startup_permissions') as bool? ?? false;
+  static Future<void> setGrantedStartupPermissions() async => _box?.put('granted_startup_permissions', true);
 }

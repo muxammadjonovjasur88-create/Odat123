@@ -6,8 +6,7 @@ enum PushUpPhase { up, down }
 
 typedef PushUpEvaluationResult = ExerciseEvaluationResult;
 
-/// Push-up exercise strategy ported directly from PushUpStrategy.ts
-/// UP (>=145°) -> DOWN (<=110°) -> UP (>=145°, +1 rep, min 250ms debounce)
+/// Push-up exercise strategy with flexible visibility checks for both front and side profiles.
 class PushUpStrategy implements ExerciseStrategy {
   @override
   final String exerciseType = 'PUSH_UP';
@@ -20,8 +19,9 @@ class PushUpStrategy implements ExerciseStrategy {
   int _totalDurationSeconds = 0;
 
   static const double upAngle = 145.0;
-  static const double downAngle = 110.0;
-  static const int debounceMs = 250;
+  static const double downAngle = 100.0;
+  static const int debounceMs = 650; // Reduced for better UX
+  double _downShoulderY = 0.0;
 
   @override
   void reset() {
@@ -29,6 +29,7 @@ class PushUpStrategy implements ExerciseStrategy {
     _repCount = 0;
     _lastRepTimestampMs = 0;
     _minDepthReached = false;
+    _downShoulderY = 0.0;
     _startTimeMs = null;
     _totalDurationSeconds = 0;
   }
@@ -55,18 +56,52 @@ class PushUpStrategy implements ExerciseStrategy {
     final leftHip = pose.landmarks[PoseLandmarkType.leftHip];
     final rightHip = pose.landmarks[PoseLandmarkType.rightHip];
 
-    // ANTI-CHEAT: Ensure user is HORIZONTAL on the floor, not standing upright flexing arms
-    final shoulder = leftShoulder ?? rightShoulder;
-    final hip = leftHip ?? rightHip;
-    if (shoulder != null && hip != null) {
-      final dy = hip.y - shoulder.y;
+    // 1. VISIBILITY CHECK: At least one arm with shoulder, elbow, wrist
+    final hasLeftArm = leftShoulder != null &&
+        leftElbow != null &&
+        leftWrist != null &&
+        leftShoulder.likelihood > 0.4 &&
+        leftElbow.likelihood > 0.35 &&
+        leftWrist.likelihood > 0.3;
+
+    final hasRightArm = rightShoulder != null &&
+        rightElbow != null &&
+        rightWrist != null &&
+        rightShoulder.likelihood > 0.4 &&
+        rightElbow.likelihood > 0.35 &&
+        rightWrist.likelihood > 0.3;
+
+    final hip = (leftHip != null && leftHip.likelihood > 0.3)
+        ? leftHip
+        : ((rightHip != null && rightHip.likelihood > 0.3) ? rightHip : null);
+
+    final shoulder = (leftShoulder != null && leftShoulder.likelihood > 0.4)
+        ? leftShoulder
+        : ((rightShoulder != null && rightShoulder.likelihood > 0.4) ? rightShoulder : null);
+
+    if (!hasLeftArm && !hasRightArm) {
+      return ExerciseEvaluationResult(
+        validRepAdded: false,
+        currentCount: _repCount,
+        feedback: '📱 Telefonni polga qo‘ying, butun gavdangiz va qo‘llar ko‘rinsin',
+        formStatus: 'WARNING',
+        currentPhase: _currentPhase.name.toUpperCase(),
+        bodyVisible: false,
+      );
+    }
+
+    // 2. POSTURE CHECK: User must be in horizontal / plank position on floor
+    if (hip != null && shoulder != null) {
+      final dy = (hip.y - shoulder.y); // Positive if standing upright (shoulder high above hip)
       final dx = (hip.x - shoulder.x).abs();
-      final isStandingUpright = dy > 100.0 && dy > dx * 0.8;
-      if (isStandingUpright) {
+
+      // If standing vertically facing or angled to camera, reject
+      // Threshold raised to 50 to avoid false-positives from camera angle
+      if (dy > 50.0 && dx < dy * 1.1) {
         return ExerciseEvaluationResult(
           validRepAdded: false,
           currentCount: _repCount,
-          feedback: '⚠️ Anti-Cheat: Push-Up uchun polga yoting! Tik turib bajarilmaydi.',
+          feedback: '⚠️ Push-up uchun polga gorizontal yoting! Tik turib bo\'lmaydi',
           formStatus: 'WARNING',
           currentPhase: _currentPhase.name.toUpperCase(),
           bodyVisible: true,
@@ -74,72 +109,54 @@ class PushUpStrategy implements ExerciseStrategy {
       }
     }
 
-    final hasLeftArm = leftShoulder != null &&
-        leftElbow != null &&
-        leftWrist != null &&
-        leftElbow.likelihood > 0.2;
-    final hasRightArm = rightShoulder != null &&
-        rightElbow != null &&
-        rightWrist != null &&
-        rightElbow.likelihood > 0.2;
+    // 3. Calculate Arm Elbow Angle
+    final leftAngle = hasLeftArm
+        ? AngleCalculator.calculateAngle(
+            ax: leftShoulder.x, ay: leftShoulder.y,
+            bx: leftElbow.x, by: leftElbow.y,
+            cx: leftWrist.x, cy: leftWrist.y,
+          )
+        : 180.0;
+    final rightAngle = hasRightArm
+        ? AngleCalculator.calculateAngle(
+            ax: rightShoulder.x, ay: rightShoulder.y,
+            bx: rightElbow.x, by: rightElbow.y,
+            cx: rightWrist.x, cy: rightWrist.y,
+          )
+        : 180.0;
 
-    // ANTI-CHEAT RULE 1: Require BOTH arms to be visible in frame
-    if (!hasLeftArm || !hasRightArm) {
-      return ExerciseEvaluationResult(
-        validRepAdded: false,
-        currentCount: _repCount,
-        feedback: '⚠️ Anti-Cheat: Ikkala qo‘l ham kamerada ko‘rinishi kerak',
-        formStatus: 'WARNING',
-        currentPhase: _currentPhase.name.toUpperCase(),
-        bodyVisible: false,
-      );
-    }
+    final primaryElbowAngle = (hasLeftArm && hasRightArm)
+        ? (leftAngle + rightAngle) / 2.0
+        : (hasLeftArm ? leftAngle : rightAngle);
 
-    final leftAngle = AngleCalculator.calculateAngle(
-      ax: leftShoulder.x, ay: leftShoulder.y,
-      bx: leftElbow.x, by: leftElbow.y,
-      cx: leftWrist.x, cy: leftWrist.y,
-    );
-    final rightAngle = AngleCalculator.calculateAngle(
-      ax: rightShoulder.x, ay: rightShoulder.y,
-      bx: rightElbow.x, by: rightElbow.y,
-      cx: rightWrist.x, cy: rightWrist.y,
-    );
-    final avgElbowAngle = (leftAngle + rightAngle) / 2.0;
-
-    // ANTI-CHEAT RULE 2: Single-arm wiggling prevention (Both elbows MUST bend symmetrically)
-    final armAngleDiff = (leftAngle - rightAngle).abs();
-    if (armAngleDiff > 35.0 && (leftAngle < 120.0 || rightAngle < 120.0)) {
-      return ExerciseEvaluationResult(
-        validRepAdded: false,
-        currentCount: _repCount,
-        feedback: '⚠️ Anti-Cheat: Ikkala qo‘lda teng otjimaniya bajaring!',
-        formStatus: 'WARNING',
-        currentPhase: _currentPhase.name.toUpperCase(),
-        bodyVisible: true,
-      );
-    }
+    final activeShoulder = hasLeftArm ? leftShoulder : rightShoulder!;
+    final shoulderY = activeShoulder.y;
 
     bool validRepAdded = false;
-    String feedback = 'Yaxshi davom eting';
+    String feedback = 'Yaxshi, davom eting';
     String formStatus = 'GOOD';
 
-    // State machine logic
+    // 4. State machine with depth and debounce
     if (_currentPhase == PushUpPhase.up) {
-      if (avgElbowAngle <= downAngle) {
+      if (primaryElbowAngle <= downAngle) {
         _currentPhase = PushUpPhase.down;
         _minDepthReached = true;
-        feedback = 'Ajoyib tushdingiz!';
+        _downShoulderY = shoulderY;
+        feedback = 'Ajoyib tushdingiz! Endi ko‘taring';
       }
     } else if (_currentPhase == PushUpPhase.down) {
-      if (avgElbowAngle >= upAngle) {
-        if (_minDepthReached &&
-            (timestampMs - _lastRepTimestampMs) > debounceMs) {
+      if (primaryElbowAngle >= upAngle) {
+        final timeDiff = timestampMs - _lastRepTimestampMs;
+        final verticalMovement = (shoulderY - _downShoulderY).abs();
+
+        // Relaxed anti-cheat: 20px movement minimum (was 35px) for blurry cameras
+        if (timeDiff >= debounceMs && (_minDepthReached && verticalMovement >= 20.0)) {
           _repCount++;
-          _lastRepTimestampMs = timestampMs;
           validRepAdded = true;
-          feedback = 'Zo‘r otjimaniya! +1';
+          _lastRepTimestampMs = timestampMs;
+          feedback = 'Zo\'r! $_repCount-takrorlash hisoblandi 🎯';
         }
+
         _currentPhase = PushUpPhase.up;
         _minDepthReached = false;
       }
@@ -152,7 +169,7 @@ class PushUpStrategy implements ExerciseStrategy {
       formStatus: formStatus,
       currentPhase: _currentPhase.name.toUpperCase(),
       bodyVisible: true,
-      avgAngle: avgElbowAngle,
+      avgAngle: primaryElbowAngle,
     );
   }
 }

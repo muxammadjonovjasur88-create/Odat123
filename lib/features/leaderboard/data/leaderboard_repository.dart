@@ -39,16 +39,22 @@ class LeaderboardRepository {
         .snapshots()
         .map((snapshot) {
           debugPrint('[leaderboard] global docs=${snapshot.docs.length}');
-          final entries = snapshot.docs.map(LeaderboardEntry.fromDoc).toList();
+          final entries = snapshot.docs
+              .map(LeaderboardEntry.fromDoc)
+              .where((u) =>
+                  u.name.trim().isNotEmpty &&
+                  !u.isParent &&
+                  !u.uid.startsWith('mock_') &&
+                  !u.uid.startsWith('test_') &&
+                  !u.name.toLowerCase().contains('test') &&
+                  !u.name.toLowerCase().contains('mock'))
+              .toList();
           final ranked = sortEntriesForDisplay(entries).take(50).toList();
           return ranked;
         });
   }
 
   /// Watches the regional leaderboard for [region], ordered by totalPoints.
-  ///
-  /// Requires a Firestore composite index on (region ASC, totalPoints DESC).
-  /// See firestore.indexes.json.
   Stream<List<LeaderboardEntry>> watchRegionalLeaderboard({
     required UzRegion region,
   }) {
@@ -63,7 +69,16 @@ class LeaderboardRepository {
           debugPrint(
             '[leaderboard] region=${region.firestoreKey} docs=${snapshot.docs.length}',
           );
-          final entries = snapshot.docs.map(LeaderboardEntry.fromDoc).toList();
+          final entries = snapshot.docs
+              .map(LeaderboardEntry.fromDoc)
+              .where((u) =>
+                  u.name.trim().isNotEmpty &&
+                  !u.isParent &&
+                  !u.uid.startsWith('mock_') &&
+                  !u.uid.startsWith('test_') &&
+                  !u.name.toLowerCase().contains('test') &&
+                  !u.name.toLowerCase().contains('mock'))
+              .toList();
           final ranked = sortEntriesForDisplay(entries).take(50).toList();
           return ranked;
         });

@@ -1,5 +1,5 @@
 import React from "react";
-import { LayoutDashboard, BookOpen, ShoppingBag, Music, PackageCheck, RefreshCw, BarChart3, ShieldCheck } from "lucide-react";
+import { LayoutDashboard, BookOpen, ShoppingBag, Music, Headphones, PackageCheck, RefreshCw, BarChart3, ShieldCheck } from "lucide-react";
 
 export function Navbar({ activeTab, setActiveTab, user, onRefresh, isLoading, pendingOrdersCount = 0 }) {
   return (
@@ -96,6 +96,18 @@ export function Navbar({ activeTab, setActiveTab, user, onRefresh, isLoading, pe
         >
           <Music size={15} />
           <span>Musiqa (MP3)</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("audiobooks")}
+          className={`flex-1 min-w-[130px] py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 ${
+            activeTab === "audiobooks"
+              ? "bg-cyan-500 text-black shadow-lg shadow-cyan-500/20"
+              : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+          }`}
+        >
+          <Headphones size={15} />
+          <span>Audio Kitoblar</span>
         </button>
 
         <button

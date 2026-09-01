@@ -11,7 +11,7 @@ function checkAuth(req, res) {
 }
 
 async function notifyFriends(userId, taskId) {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const token = process.env.TELEGRAM_BOT_TOKEN || "8855349705:AAGMa9cMyo62Fh8gThoC1xtuRyQwnwu6N4U";
   if (!token) return;
 
   const userDoc = await db.collection("users").doc(userId).get();

@@ -175,7 +175,7 @@ export function ProductModal({ isOpen, onClose, onSave, item = null }) {
         requiresShipping: formData.type === "gift",
       };
 
-      await onSave(payload);
+      await onSave(payload, item?.id);
       onClose();
     } catch (err) {
       setError(err.message || "Saqlashda xatolik yuz berdi");

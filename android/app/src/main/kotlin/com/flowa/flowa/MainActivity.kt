@@ -2,6 +2,7 @@ package com.flowa.flowa
 
 import android.app.AppOpsManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -39,7 +40,27 @@ class MainActivity : FlutterActivity() {
         MethodChannel(messenger, blockingChannel).setMethodCallHandler { call, result ->
             when (call.method) {
                 "startSession" -> {
-                    val packages = call.argument<List<String>>("packages") ?: emptyList()
+                    val defaultDistractingApps = listOf(
+                        "com.instagram.android",
+                        "org.telegram.messenger",
+                        "org.thunderdog.challegram",
+                        "com.zhiliaoapp.musically",
+                        "com.ss.android.ugc.trill",
+                        "com.facebook.katana",
+                        "com.twitter.android",
+                        "com.google.android.youtube",
+                        "com.whatsapp",
+                        "com.dts.freefireth",
+                        "com.tencent.ig",
+                        "com.pubg.krmobile",
+                        "com.activision.callofduty.shooter",
+                        "com.mobile.legends",
+                        "com.supercell.brawlstars",
+                        "com.supercell.clashofclans",
+                        "com.supercell.clashroyale"
+                    )
+                    val rawPackages = call.argument<List<String>>("packages") ?: emptyList()
+                    val packages = if (rawPackages.isEmpty()) defaultDistractingApps else rawPackages
                     val now = System.currentTimeMillis()
                     val startAt = call.argument<Number>("startAt")?.toLong() ?: now
                     val endTime = call.argument<Number>("endTime")?.toLong() ?: now
@@ -47,14 +68,9 @@ class MainActivity : FlutterActivity() {
                     val lang = call.argument<String>("lang") ?: "en"
                     Log.d(TAG, "[blocking/startSession] packages=${packages.size} startAt=$startAt endTime=$endTime strict=$strict lang=$lang")
                     Log.d(TAG, "[blocking/startSession] usageAccess=${hasUsageAccess()} a11y=${isAccessibilityServiceEnabled()} overlay=${android.provider.Settings.canDrawOverlays(this)}")
-                    if (packages.isEmpty()) {
-                        Log.w(TAG, "[blocking/startSession] WARNING: packages list is EMPTY — nothing to block!")
-                    } else {
-                        Log.d(TAG, "[blocking/startSession] packages=$packages")
-                    }
                     BlockerState.start(packages, startAt, endTime, strict = strict, lang = lang)
                     Log.d(TAG, "[blocking/startSession] BlockerState armed: active=${BlockerState.active} inWindow=${BlockerState.inWindow()}")
-                    SessionStore.save(this, packages, startAt, endTime)
+                    SessionStore.save(this, packages, startAt, endTime, strict = strict, lang = lang)
                     BlockingForegroundService.start(this, endTime)
                     Log.d(TAG, "[blocking/startSession] BlockingForegroundService started")
                     result.success(true)
@@ -116,6 +132,50 @@ class MainActivity : FlutterActivity() {
                     openMiuiOtherPermissions()
                     result.success(null)
                 }
+                "moveTaskToBack" -> {
+                    moveTaskToBack(true)
+                    result.success(null)
+                }
+                "getPhoneUsageSeconds" -> {
+                    val start = call.argument<Number>("startTime")?.toLong() ?: 0L
+                    val end = call.argument<Number>("endTime")?.toLong() ?: 0L
+                    result.success(getPhoneUsageSeconds(start, end))
+                }
+
+                "getAppUsageStats" -> {
+                    val start = call.argument<Number>("startTime")?.toLong() ?: 0L
+                    val end = call.argument<Number>("endTime")?.toLong() ?: System.currentTimeMillis()
+                    Thread {
+                        val stats = getAppUsageStatsList(start, end)
+                        runOnUiThread { result.success(stats) }
+                    }.start()
+                }
+
+                "saveAppLimits" -> {
+                    val limitsJson = call.argument<String>("limitsJson") ?: "{}"
+                    val prefs = getSharedPreferences("odat_digital_wellbeing", Context.MODE_PRIVATE)
+                    prefs.edit().putString("app_limits", limitsJson).apply()
+                    result.success(true)
+                }
+
+                "getAppLimits" -> {
+                    val prefs = getSharedPreferences("odat_digital_wellbeing", Context.MODE_PRIVATE)
+                    val limitsJson = prefs.getString("app_limits", "{}") ?: "{}"
+                    result.success(limitsJson)
+                }
+
+                "startDigitalDetox" -> {
+                    val durationMin = call.argument<Number>("durationMinutes")?.toInt() ?: 30
+                    val packages = call.argument<List<String>>("packages") ?: emptyList()
+                    val strict = call.argument<Boolean>("strict") ?: true
+                    val lang = call.argument<String>("lang") ?: "uz"
+                    val now = System.currentTimeMillis()
+                    val endAt = now + (durationMin * 60 * 1000L)
+                    BlockerState.start(packages, now, endAt, strict = strict, lang = lang)
+                    SessionStore.save(this, packages, now, endAt, strict = strict, lang = lang)
+                    BlockingForegroundService.start(this, endAt)
+                    result.success(true)
+                }
 
                 else -> result.notImplemented()
             }
@@ -125,21 +185,36 @@ class MainActivity : FlutterActivity() {
         MethodChannel(messenger, focusChannel).setMethodCallHandler { call, result ->
             when (call.method) {
                 "scheduleSession" -> {
+                    val defaultDistractingApps = listOf(
+                        "com.instagram.android",
+                        "org.telegram.messenger",
+                        "org.thunderdog.challegram",
+                        "com.zhiliaoapp.musically",
+                        "com.ss.android.ugc.trill",
+                        "com.facebook.katana",
+                        "com.twitter.android",
+                        "com.google.android.youtube",
+                        "com.whatsapp",
+                        "com.dts.freefireth",
+                        "com.tencent.ig",
+                        "com.pubg.krmobile",
+                        "com.activision.callofduty.shooter",
+                        "com.mobile.legends",
+                        "com.supercell.brawlstars",
+                        "com.supercell.clashofclans",
+                        "com.supercell.clashroyale"
+                    )
                     val taskId = call.argument<String>("taskId") ?: ""
                     val title = call.argument<String>("title") ?: "Focus"
                     val now = System.currentTimeMillis()
                     val startAt = call.argument<Number>("startAt")?.toLong() ?: now
                     val endAt = call.argument<Number>("endAt")?.toLong() ?: now
-                    val packages = ArrayList(
-                        call.argument<List<String>>("packages") ?: emptyList(),
-                    )
+                    val rawPackages = call.argument<List<String>>("packages") ?: emptyList()
+                    val packages = ArrayList(if (rawPackages.isEmpty()) defaultDistractingApps else rawPackages)
                     val strict = call.argument<Boolean>("strict") ?: false
                     val lang = call.argument<String>("lang") ?: "en"
                     Log.d(TAG, "[focus/scheduleSession] taskId=$taskId title='$title' " +
                         "packages=${packages.size} strict=$strict startAt=$startAt endAt=$endAt")
-                    if (packages.isEmpty()) {
-                        Log.w(TAG, "[focus/scheduleSession] WARNING: packages is EMPTY — no apps will be blocked!")
-                    }
                     if (endAt <= now) {
                         Log.w(TAG, "[focus/scheduleSession] endAt is in the past — rejecting")
                         result.success(false)
@@ -309,4 +384,151 @@ class MainActivity : FlutterActivity() {
     } catch (_: Throwable) {
         false
     }
+
+    private fun getPhoneUsageSeconds(startTime: Long, endTime: Long): Long {
+        if (startTime <= 0L || endTime <= startTime) return 0L
+        try {
+            val usm = getSystemService(USAGE_STATS_SERVICE) as? android.app.usage.UsageStatsManager ?: return 0L
+            val events = usm.queryEvents(startTime, endTime)
+            var totalTimeMs = 0L
+            var lastScreenOnTime = 0L
+            val event = android.app.usage.UsageEvents.Event()
+
+            while (events.hasNextEvent()) {
+                events.getNextEvent(event)
+                // Event type 15 = SCREEN_INTERACTIVE, Event type 16 = SCREEN_NON_INTERACTIVE
+                if (event.eventType == 15) {
+                    lastScreenOnTime = event.timeStamp
+                } else if (event.eventType == 16) {
+                    if (lastScreenOnTime > 0L) {
+                        totalTimeMs += (event.timeStamp - lastScreenOnTime)
+                        lastScreenOnTime = 0L
+                    }
+                }
+            }
+            if (lastScreenOnTime > 0L && lastScreenOnTime < endTime) {
+                totalTimeMs += (endTime - lastScreenOnTime)
+            }
+
+            if (totalTimeMs == 0L) {
+                val stats = usm.queryUsageStats(
+                    android.app.usage.UsageStatsManager.INTERVAL_DAILY,
+                    startTime,
+                    endTime
+                )
+                if (stats != null) {
+                    for (usageStats in stats) {
+                        val activeTime = usageStats.totalTimeInForeground
+                        if (activeTime > 0L) {
+                            totalTimeMs += activeTime
+                        }
+                    }
+                }
+            }
+
+            val maxDuration = endTime - startTime
+            val finalTimeMs = if (totalTimeMs > maxDuration) maxDuration else totalTimeMs
+            return finalTimeMs / 1000L
+        } catch (e: Exception) {
+            Log.e(TAG, "Error calculating phone usage: ${e.message}")
+            return 0L
+        }
+    }
+
+    private fun getAppUsageStatsList(startTime: Long, endTime: Long): List<Map<String, Any>> {
+        if (startTime <= 0L || endTime <= startTime) return emptyList()
+        val resultList = mutableListOf<Map<String, Any>>()
+        try {
+            val usm = getSystemService(USAGE_STATS_SERVICE) as? android.app.usage.UsageStatsManager ?: return emptyList()
+            val pm = packageManager
+            val stats = usm.queryUsageStats(
+                android.app.usage.UsageStatsManager.INTERVAL_DAILY,
+                startTime,
+                endTime
+            ) ?: return emptyList()
+
+            val aggregated = mutableMapOf<String, Long>()
+            val lastUsedMap = mutableMapOf<String, Long>()
+
+            for (u in stats) {
+                if (u.totalTimeInForeground > 0L) {
+                    val current = aggregated.getOrDefault(u.packageName, 0L)
+                    aggregated[u.packageName] = current + u.totalTimeInForeground
+                    if (u.lastTimeUsed > lastUsedMap.getOrDefault(u.packageName, 0L)) {
+                        lastUsedMap[u.packageName] = u.lastTimeUsed
+                    }
+                }
+            }
+
+            for ((pkg, timeMs) in aggregated) {
+                if (timeMs < 60000L) continue // Ignore less than 1 minute
+                val appInfo = try {
+                    pm.getApplicationInfo(pkg, 0)
+                } catch (_: Throwable) {
+                    null
+                } ?: continue
+
+                // Exclude system launchers and self
+                if (pkg == packageName) continue
+
+                val label = pm.getApplicationLabel(appInfo).toString()
+                val minutes = (timeMs / 60000L).toInt()
+
+                val category = classifyAppCategory(pkg, label)
+
+                resultList.add(
+                    mapOf(
+                        "packageName" to pkg,
+                        "appName" to label,
+                        "usageMinutes" to minutes,
+                        "usageSeconds" to (timeMs / 1000L),
+                        "lastTimeUsed" to (lastUsedMap[pkg] ?: 0L),
+                        "category" to category
+                    )
+                )
+            }
+
+            resultList.sortByDescending { (it["usageMinutes"] as? Int) ?: 0 }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting app usage stats: ${e.message}")
+        }
+        return resultList
+    }
+
+    private fun classifyAppCategory(pkg: String, label: String): String {
+        val lowerPkg = pkg.lowercase()
+        val lowerLabel = label.lowercase()
+
+        if (lowerPkg.contains("instagram") || lowerPkg.contains("telegram") || lowerPkg.contains("tiktok") ||
+            lowerPkg.contains("musically") || lowerPkg.contains("facebook") || lowerPkg.contains("twitter") ||
+            lowerPkg.contains("whatsapp") || lowerPkg.contains("snapchat") || lowerPkg.contains("vkontakte") ||
+            lowerLabel.contains("instagram") || lowerLabel.contains("telegram") || lowerLabel.contains("tiktok")
+        ) {
+            return "social"
+        }
+
+        if (lowerPkg.contains("youtube") || lowerPkg.contains("netflix") || lowerPkg.contains("spotify") ||
+            lowerPkg.contains("twitch") || lowerPkg.contains("music") || lowerPkg.contains("video") ||
+            lowerPkg.contains("cinema") || lowerLabel.contains("youtube")
+        ) {
+            return "entertainment"
+        }
+
+        if (lowerPkg.contains("pubg") || lowerPkg.contains("freefire") || lowerPkg.contains("brawlstars") ||
+            lowerPkg.contains("clash") || lowerPkg.contains("game") || lowerPkg.contains("roblox") ||
+            lowerPkg.contains("minecraft") || lowerPkg.contains("cod") || lowerPkg.contains("genshin")
+        ) {
+            return "games"
+        }
+
+        if (lowerPkg.contains("notion") || lowerPkg.contains("trello") || lowerPkg.contains("word") ||
+            lowerPkg.contains("excel") || lowerPkg.contains("docs") || lowerPkg.contains("notes") ||
+            lowerPkg.contains("duolingo") || lowerPkg.contains("study") || lowerPkg.contains("book")
+        ) {
+            return "productivity"
+        }
+
+        return "other"
+    }
 }
+

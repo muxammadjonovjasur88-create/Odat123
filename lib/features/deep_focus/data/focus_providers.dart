@@ -10,6 +10,7 @@ import '../../../core/services/task_repository.dart';
 import '../../../core/services/user_repository.dart';
 import '../../ambient/data/ambient_sound_controller.dart';
 import '../../blocking/data/blocking_session.dart';
+import '../../blocking/domain/blockable_app.dart';
 import '../../blocking/domain/blocking_settings.dart';
 import '../../gamification/data/gamification_repository.dart';
 import '../../gamification/domain/gamification_math.dart';
@@ -40,15 +41,13 @@ Future<void> scheduleBackgroundFocus({
     debugPrint('[scheduleBackgroundFocus] skipped: end time is in the past');
     return;
   }
-  final shouldBlock =
-      settings != null &&
-      settings.blockedPackages.isNotEmpty &&
-      (task.blockApps || settings.alwaysBlock);
-  final blockSettings = shouldBlock ? settings : null;
+  final packagesToPass = (settings != null && settings.blockedPackages.isNotEmpty)
+      ? settings.blockedPackages.toList()
+      : kBlockableApps.map((a) => a.packageName).toList();
 
   debugPrint(
     '[scheduleBackgroundFocus] scheduling "${task.title}": '
-    'shouldBlock=$shouldBlock, packages=${blockSettings?.blockedPackages.length ?? 0}, '
+    'packages=${packagesToPass.length}, '
     'strict=${settings?.strictMode ?? false}, '
     'start=$start, end=$end',
   );
@@ -58,7 +57,7 @@ Future<void> scheduleBackgroundFocus({
     title: task.title,
     startAt: start,
     endAt: end,
-    packages: blockSettings?.blockedPackages.toList() ?? const [],
+    packages: packagesToPass,
     // Soft friction by default; strict mode is an opt-in hard wall.
     strict: settings?.strictMode ?? false,
     lang: LocaleStore.effectiveCode(),

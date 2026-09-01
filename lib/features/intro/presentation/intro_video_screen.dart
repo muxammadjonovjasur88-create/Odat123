@@ -1,4 +1,5 @@
-import 'dart:async';
+﻿import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
@@ -16,7 +17,7 @@ class IntroVideoScreen extends StatefulWidget {
 
 class _IntroVideoScreenState extends State<IntroVideoScreen>
     with SingleTickerProviderStateMixin {
-  late final VideoPlayerController _controller;
+  VideoPlayerController? _controller;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
   bool _initialized = false;
@@ -26,8 +27,12 @@ class _IntroVideoScreenState extends State<IntroVideoScreen>
   @override
   void initState() {
     super.initState();
-    // Hide status bar & navigation bar for edge-to-edge video playback
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    if (!kIsWeb) {
+      // Hide status bar & navigation bar for edge-to-edge video playback
+      try {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      } catch (_) {}
+    }
 
     _pulseController = AnimationController(
       vsync: this,
@@ -41,37 +46,36 @@ class _IntroVideoScreenState extends State<IntroVideoScreen>
       ),
     );
 
-    // If returning user has already seen the intro, skip video immediately to prevent startup waiting
-    if (LocaleStore.hasSeenIntro()) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _navigateToNext();
-      });
-      return;
-    }
-
-    // Safety fallback: if video asset decoding takes > 1.5s, skip directly to welcome
-    _fallbackTimer = Timer(const Duration(milliseconds: 1500), () {
+    // Safety fallback: if video asset fails to load after 6s, navigate forward
+    _fallbackTimer = Timer(const Duration(seconds: 6), () {
       if (!_initialized && !_navigated && mounted) {
+        debugPrint('IntroVideoScreen fallback timer triggered');
         _navigateToNext();
       }
     });
 
+    _initVideo();
+  }
+
+  void _initVideo() {
     _controller = VideoPlayerController.asset('assets/intro/intro.mp4')
       ..initialize().then((_) {
         if (!mounted) return;
         setState(() => _initialized = true);
-        _controller.play();
+        _controller?.play();
       }).catchError((error, stackTrace) {
         debugPrint('IntroVideoScreen Error initializing VideoPlayer: $error');
         _navigateToNext();
       });
-    _controller.addListener(_onVideoEnd);
+    _controller?.addListener(_onVideoEnd);
   }
 
   void _onVideoEnd() {
-    if (_controller.value.isInitialized &&
-        _controller.value.position >= _controller.value.duration &&
-        _controller.value.duration > Duration.zero) {
+    final c = _controller;
+    if (c != null &&
+        c.value.isInitialized &&
+        c.value.position >= c.value.duration &&
+        c.value.duration > Duration.zero) {
       _navigateToNext();
     }
   }
@@ -81,19 +85,25 @@ class _IntroVideoScreenState extends State<IntroVideoScreen>
     _navigated = true;
     _fallbackTimer?.cancel();
     LocaleStore.setHasSeenIntro();
-    // Restore system UI overlays before navigating away
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    context.go(AppRoutes.welcome);
+    if (!kIsWeb) {
+      try {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      } catch (_) {}
+    }
+    context.go(AppRoutes.languageSelect);
   }
 
   @override
   void dispose() {
     _fallbackTimer?.cancel();
-    // Restore system UI overlays when leaving this screen
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    if (!kIsWeb) {
+      try {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      } catch (_) {}
+    }
     _pulseController.dispose();
-    _controller.removeListener(_onVideoEnd);
-    _controller.dispose();
+    _controller?.removeListener(_onVideoEnd);
+    _controller?.dispose();
     super.dispose();
   }
 
@@ -109,18 +119,18 @@ class _IntroVideoScreenState extends State<IntroVideoScreen>
             opacity: _initialized ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 450),
             curve: Curves.easeIn,
-            child: _initialized && _controller.value.isInitialized
+            child: _initialized && _controller != null && _controller!.value.isInitialized
                 ? SizedBox.expand(
                     child: FittedBox(
                       fit: BoxFit.cover,
                       child: SizedBox(
-                        width: _controller.value.size.width > 0
-                            ? _controller.value.size.width
+                        width: _controller!.value.size.width > 0
+                            ? _controller!.value.size.width
                             : 1,
-                        height: _controller.value.size.height > 0
-                            ? _controller.value.size.height
+                        height: _controller!.value.size.height > 0
+                            ? _controller!.value.size.height
                             : 1,
-                        child: VideoPlayer(_controller),
+                        child: VideoPlayer(_controller!),
                       ),
                     ),
                   )
@@ -144,37 +154,12 @@ class _IntroVideoScreenState extends State<IntroVideoScreen>
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) => const Icon(
                           Icons.access_time_filled_rounded,
-                          color: Color(0xFF00F3FF),
+                          color: Color(0xFF5BC8FA),
                           size: 72,
                         ),
                       ),
                     ),
                   ),
-          ),
-
-          // Skip Button overlay
-          Positioned(
-            top: 48,
-            right: 20,
-            child: SafeArea(
-              child: TextButton.icon(
-                onPressed: _navigateToNext,
-                style: TextButton.styleFrom(
-                  backgroundColor: const Color(0x990A0E17),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    side: const BorderSide(color: Color(0x4400F3FF)),
-                  ),
-                ),
-                icon: const Icon(Icons.skip_next_rounded, size: 18, color: Color(0xFF00F3FF)),
-                label: const Text(
-                  "O'tkazib yuborish",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
           ),
         ],
       ),

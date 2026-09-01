@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/services/user_repository.dart';
+import '../../../reminders/presentation/providers/reminders_provider.dart';
 import '../../data/exercise_repository.dart';
 import '../../domain/models/exercise_session.dart';
 
@@ -53,6 +54,11 @@ class _ExerciseSummaryScreenState
     if (userId != 'anonymous') {
       try {
         await ref.read(exerciseRepositoryProvider).saveExerciseSession(session);
+        
+        final reminderId = widget.sessionData['reminderId'] as String?;
+        if (reminderId != null) {
+          await ref.read(remindersProvider.notifier).markCompleted(reminderId);
+        }
       } catch (e) {
         debugPrint('Error saving exercise session: $e');
       }
@@ -86,9 +92,9 @@ class _ExerciseSummaryScreenState
         : (exerciseType.toUpperCase() == 'PLANK' ? 'PLANK' : 'SQUAT');
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07090E),
+      backgroundColor: const Color(0xFF080B14),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0C101A),
+        backgroundColor: const Color(0xFF080B14),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
@@ -114,7 +120,7 @@ class _ExerciseSummaryScreenState
                   gradient: LinearGradient(
                     colors: isPlank
                         ? [const Color(0xFFFF9F00), const Color(0xFFFF0055)]
-                        : [const Color(0xFF39FF14), const Color(0xFF00F3FF)],
+                        : [const Color(0xFF3B9BFF), const Color(0xFF5BC8FA)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -163,7 +169,7 @@ class _ExerciseSummaryScreenState
                       isPlank ? 'PLANK DAVOMIYLIGI' : 'TAKRORLAR',
                       isPlank ? plankHoldText : '$reps ta',
                       isPlank ? Icons.timer_rounded : Icons.fitness_center_rounded,
-                      isPlank ? const Color(0xFFFF9F00) : const Color(0xFF00F3FF),
+                      isPlank ? const Color(0xFFFF9F00) : const Color(0xFF5BC8FA),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -188,7 +194,7 @@ class _ExerciseSummaryScreenState
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Color(0xFF00F3FF),
+                        color: Color(0xFF5BC8FA),
                       ),
                     ),
                     SizedBox(width: 10),
@@ -211,7 +217,7 @@ class _ExerciseSummaryScreenState
                     context.go('/daily');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF39FF14),
+                    backgroundColor: const Color(0xFF3B9BFF),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -241,7 +247,7 @@ class _ExerciseSummaryScreenState
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF151A27),
+        color: const Color(0xFF131929),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFF262D40)),
       ),

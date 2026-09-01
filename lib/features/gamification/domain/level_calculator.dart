@@ -48,4 +48,15 @@ class LevelCalculator {
     final stepCount = level - 1;
     return minutesPerLevelStep * stepCount * (stepCount + 1) ~/ 2;
   }
+
+  /// Returns the prestigious Title/Unvon for the current level (Phase Q)
+  static String getTitleForLevel(int level) {
+    if (level < 5) return 'Boshlovchi Sayohatchi';
+    if (level < 10) return 'Intizomli Talaba';
+    if (level < 20) return 'Fokus Ustasi';
+    if (level < 35) return 'Qat’iy Lider';
+    if (level < 50) return 'Titan Yenguvchi';
+    return 'Afsonaviy Feniks';
+  }
 }
+

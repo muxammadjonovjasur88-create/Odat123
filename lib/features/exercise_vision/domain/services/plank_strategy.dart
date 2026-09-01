@@ -45,24 +45,62 @@ class PlankStrategy implements ExerciseStrategy {
 
     final shoulder = leftShoulder ?? rightShoulder;
     final hip = leftHip ?? rightHip;
+    final leftLegPt = leftAnkle ?? leftKnee;
+    final rightLegPt = rightAnkle ?? rightKnee;
+    final legPt = leftLegPt ?? rightLegPt;
 
-    if (shoulder == null || hip == null) {
+    if (shoulder == null || hip == null || legPt == null ||
+        shoulder.likelihood < 0.5 || hip.likelihood < 0.5 || legPt.likelihood < 0.5) {
       return ExerciseEvaluationResult(
         validRepAdded: false,
         currentCount: _validDurationSeconds.floor(),
-        feedback: 'Kamerada tanangiz (yelka va bel) ko‘rinishi kerak',
+        feedback: 'Kamerada to‘liq gavdangiz (bosh, bel va oyoqlar) ko‘rinishi shart',
         formStatus: 'WARNING',
         currentPhase: 'PAUSED',
         bodyVisible: false,
       );
     }
 
-    // ANTI-CHEAT RULE 1: Must be HORIZONTAL on floor, not standing upright
-    final dy = hip.y - shoulder.y;
-    final dx = (hip.x - shoulder.x).abs();
-    final isStandingUpright = dy > 90.0 && dy > dx * 0.7;
+    final leftWrist = pose.landmarks[PoseLandmarkType.leftWrist];
+    final rightWrist = pose.landmarks[PoseLandmarkType.rightWrist];
+    final leftElbow = pose.landmarks[PoseLandmarkType.leftElbow];
+    final rightElbow = pose.landmarks[PoseLandmarkType.rightElbow];
 
-    if (isStandingUpright) {
+    final armPt = leftWrist ?? rightWrist ?? leftElbow ?? rightElbow;
+    if (armPt == null || armPt.likelihood < 0.3) {
+      return ExerciseEvaluationResult(
+        validRepAdded: false,
+        currentCount: _validDurationSeconds.floor(),
+        feedback: '⚠️ Qo‘llar va tirsaklar polga tiralgan bo‘lishi shart',
+        formStatus: 'WARNING',
+        currentPhase: 'PAUSED',
+        bodyVisible: false,
+      );
+    }
+
+    // Arms must be below or level with shoulders on the floor (not raised into the air)
+    if (armPt.y < shoulder.y - 20.0) {
+      return ExerciseEvaluationResult(
+        validRepAdded: false,
+        currentCount: _validDurationSeconds.floor(),
+        feedback: '⚠️ Anti-Cheat: Qo‘llarni havoda ko‘tarmang! Polga tayaning.',
+        formStatus: 'WARNING',
+        currentPhase: 'PAUSED',
+        bodyVisible: true,
+      );
+    }
+
+    // ANTI-CHEAT RULE 1: Must be HORIZONTAL on floor, not standing upright
+    final dy = (hip.y - shoulder.y).abs();
+    final dx = (hip.x - shoulder.x).abs();
+    final legDy = (legPt.y - hip.y).abs();
+    final legDx = (legPt.x - hip.x).abs();
+
+    // If torso and legs are aligned vertically (standing or sitting upright)
+    final isTorsoVertical = dy > 40.0 && dy > dx * 1.0;
+    final isLegsVertical = legDy > 40.0 && legDy > legDx * 1.0;
+
+    if (isTorsoVertical || isLegsVertical) {
       return ExerciseEvaluationResult(
         validRepAdded: false,
         currentCount: _validDurationSeconds.floor(),
@@ -74,8 +112,6 @@ class PlankStrategy implements ExerciseStrategy {
     }
 
     // Calculate spine line angle: Shoulder -> Hip -> Knee/Ankle
-    final leftLegPt = leftAnkle ?? leftKnee ?? leftHip;
-    final rightLegPt = rightAnkle ?? rightKnee ?? rightHip;
 
     double avgSpineAngle;
     if (leftShoulder != null && leftHip != null && rightShoulder != null && rightHip != null && leftLegPt != null && rightLegPt != null) {

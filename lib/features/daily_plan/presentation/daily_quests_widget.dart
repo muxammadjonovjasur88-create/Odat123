@@ -1,220 +1,799 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../core/router/app_routes.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/services/user_repository.dart';
+import '../../../core/widgets/bouncy_scale.dart';
 
-/// Zen Kinetic Daily Quests — glassmorphism quest cards with neon lime/cyan
-/// telemetry accents. Each quest card features glowing borders, icon halos,
-/// and a premium pill badge — the Stitch "Zen Kinetic" design system.
-class DailyQuestsWidget extends StatelessWidget {
+import '../../gamification/presentation/widgets/lucky_wheel_modal.dart';
+import '../../gamification/presentation/widgets/streak_calendar_modal.dart';
+import '../../music/presentation/widgets/music_section_widget.dart';
+import '../../profile/presentation/widgets/social_subscription_modal.dart';
+
+/// Zen Kinetic Daily Quests & Mission Hub
+/// Top: Animated Wallpaper Carousel + 31-Day Streak & Wheel
+/// 4 Big Interactive Category Cards:
+/// 1) 🏋️‍♂️ Mashg'ulotlar
+/// 2) 📚 Bilim Olish (Kitoblar & Qat'iy Intizom)
+/// 3) 💎 Qo'shimcha PTS
+/// 4) ⚔️ Janglar
+class DailyQuestsWidget extends ConsumerStatefulWidget {
   const DailyQuestsWidget({super.key});
+
+  @override
+  ConsumerState<DailyQuestsWidget> createState() => _DailyQuestsWidgetState();
+}
+
+class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _shareReferral() {
+    final user = ref.read(userProfileProvider).asData?.value;
+    final code = user?.numericId ?? '849201';
+    Share.share(
+      'ODAT ilovasiga qo‘shiling va yangi odatlarni shakllantiring! Mening ODAT ID kodim: $code (+150 PTS bonus) 🔥 https://odat.app/ref/$code',
+    );
+  }
+
+  void _openCategoryModal(BuildContext context, String categoryTitle, String emoji, List<Widget> quests) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.78,
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        decoration: const BoxDecoration(
+          color: Color(0xFF0B111E),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Text(emoji, style: const TextStyle(fontSize: 24)),
+                const SizedBox(width: 10),
+                Text(
+                  categoryTitle.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                itemCount: quests.length,
+                separatorBuilder: (_, index) => const SizedBox(height: 12),
+                itemBuilder: (context, index) => quests[index],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 2, bottom: 12),
-          child: Row(
-            children: [
-              // Section label caps — JetBrains Mono telemetry style
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.neonLime.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: AppColors.neonLime.withValues(alpha: 0.25),
-                    width: 1,
+        // ── 1. Quick Equalized Daily Banners (Streak & Wheel) ───────
+        Row(
+          children: [
+            Expanded(
+              child: BouncyScale(
+                onTap: () => showStreakCalendarModal(context),
+                child: Container(
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2E1700), Color(0xFF131722)],
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: const Color(0xFFFFB703), width: 1.1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFFB703).withValues(alpha: 0.12),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFFFFB703).withValues(alpha: 0.2),
+                        ),
+                        child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFFFB703), size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'banners.streak_title'.tr(),
+                              style: const TextStyle(
+                                color: Color(0xFFFFB703),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'banners.streak_sub'.tr(),
+                              style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Text(
-                  'daily_quests_title'.tr().toUpperCase(),
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.neonLime,
-                    letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: BouncyScale(
+                onTap: () => showLuckyWheelModal(context),
+                child: Container(
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF280036), Color(0xFF131722)],
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: const Color(0xFF7B2FFF), width: 1.1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF7B2FFF).withValues(alpha: 0.12),
+                        blurRadius: 8,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: const Color(0xFF7B2FFF).withValues(alpha: 0.2),
+                        ),
+                        child: const Icon(Icons.casino_rounded, color: Color(0xFF7B2FFF), size: 18),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'banners.wheel_title'.tr(),
+                              style: const TextStyle(
+                                color: Color(0xFF7B2FFF),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              'banners.wheel_sub'.tr(),
+                              style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // ── 2. 4 Katta Asosiy Bo'lim Kartalari ──────────────────────────
+        Text(
+          'categories.main_title'.tr(),
+          style: const TextStyle(
+            color: Color(0xFF8899B0),
+            fontSize: 10.5,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // 1. MASHG'ULOTLAR
+        _BigCategoryCard(
+          title: 'categories.workouts_title'.tr(),
+          subtitle: 'categories.workouts_sub'.tr(),
+          emoji: '🏋️‍♂️',
+          badgeText: '+450 PTS',
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          borderColor: const Color(0xFF232D42),
+          accentColor: const Color(0xFF5BC8FA),
+          iconBgColor: const Color(0x225BC8FA),
+          onTap: () => _openCategoryModal(
+            context,
+            'categories.workouts_title'.tr(),
+            '🏋️‍♂️',
+            [
+              _QuestCard(
+                title: 'Yugurish (GPS Xarita)',
+                subtitle: '3.0 KM TARGET • Navoiy va barcha viloyatlar',
+                icon: Icons.directions_run_rounded,
+                iconColor: const Color(0xFF3B9BFF),
+                badge: '+150 PTS',
+                badgeColor: const Color(0xFF3B9BFF),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.running);
+                },
+              ),
+              _QuestCard(
+                title: 'Kamera Vision AI Mashqlari',
+                subtitle: 'SQUAT • PUSHUP • PLANK • PRESS • TURNIK (AI Sanash)',
+                icon: Icons.fitness_center_rounded,
+                iconColor: const Color(0xFF5BC8FA),
+                badge: 'AI VISION',
+                badgeColor: const Color(0xFF5BC8FA),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.exerciseSelect);
+                },
               ),
             ],
           ),
         ),
-        _ZenQuestCard(
-          title: 'quest_running'.tr(),
-          subtitle: '3.0 KM TARGET',
-          icon: Icons.directions_run_rounded,
-          accentColor: AppColors.cyanAccent,
-          onTap: () => context.push(AppRoutes.running),
+        const SizedBox(height: 12),
+
+        // 2. INTIZOM (Ertalabki Missiya Budilnigi, Qat'iy Intizom, Tungi Uyqu)
+        _BigCategoryCard(
+          title: 'INTIZOM',
+          subtitle: 'Missiya Budilnigi • Qat‘iy Intizom • Tungi "Ekran Yo‘q"',
+          emoji: '🛡️',
+          badgeText: '+500 PTS',
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          borderColor: const Color(0xFF232D42),
+          accentColor: const Color(0xFF7B2FFF),
+          iconBgColor: const Color(0x227B2FFF),
+          onTap: () => _openCategoryModal(
+            context,
+            'INTIZOM',
+            '🛡️',
+            [
+              _QuestCard(
+                title: 'Ertalabki Missiya Budilnigi',
+                subtitle: '20 Squat + 20 Pushup qilmaguncha budilnik o‘chmaydi',
+                icon: Icons.alarm_on_rounded,
+                iconColor: const Color(0xFFFFB703),
+                badge: '+10 PTS',
+                badgeColor: const Color(0xFFFFB703),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.missionAlarm);
+                },
+              ),
+              _QuestCard(
+                title: 'Qat‘iy Intizom (Fokus)',
+                subtitle: '30 Daqiqa • Telefon to‘liq bloklanadi • Faqat qo‘ng‘iroq',
+                icon: Icons.lock_clock_rounded,
+                iconColor: const Color(0xFF5BC8FA),
+                badge: '+60 PTS',
+                badgeColor: const Color(0xFF5BC8FA),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.strictDiscipline);
+                },
+              ),
+              _QuestCard(
+                title: 'Tungi "Ekran Yo‘q" Mukofoti',
+                subtitle: '22:00 dan keyin telefon ishlatilmagan har 1 daqiqa = 1 PTS',
+                icon: Icons.nightlight_round,
+                iconColor: const Color(0xFF7B2FFF),
+                badge: '1 MIN = 1 PTS',
+                badgeColor: const Color(0xFF7B2FFF),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.disciplineHub);
+                },
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 10),
-        _ZenQuestCard(
-          title: 'Kamera Vision Mashqlari',
-          subtitle: 'SQUAT · PUSHUP · PLANK',
-          icon: Icons.fitness_center_rounded,
-          accentColor: AppColors.neonLime,
-          onTap: () => context.push(AppRoutes.exerciseSelect),
+
+        const SizedBox(height: 12),
+
+        // 3. BILIM OLISH (Kutubxona, Kitobxonlar Suhbati, Testlar, Audio Kitoblar)
+        _BigCategoryCard(
+          title: 'categories.study_title'.tr(),
+          subtitle: 'categories.study_sub'.tr(),
+          emoji: '📚',
+          badgeText: '+200 PTS',
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          borderColor: const Color(0xFF232D42),
+          accentColor: const Color(0xFF5BC8FA),
+          iconBgColor: const Color(0x225BC8FA),
+          onTap: () => _openCategoryModal(
+            context,
+            'categories.study_title'.tr(),
+            '📚',
+            [
+              _QuestCard(
+                title: 'Kitob Mutolaasi & Kutubxona',
+                subtitle: 'Elektron PDF Kutubxona • Mutolaa Tahlili',
+                icon: Icons.menu_book_rounded,
+                iconColor: const Color(0xFF7B2FFF),
+                badge: '+60 PTS',
+                badgeColor: const Color(0xFF7B2FFF),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.library);
+                },
+              ),
+              _QuestCard(
+                title: 'Fanlar & Intellektual Testlar',
+                subtitle: 'Yoshingizga mos fanlar • 3 xil qiyinlik darajasi',
+                icon: Icons.psychology_rounded,
+                iconColor: const Color(0xFFFFB703),
+                badge: '+80 PTS',
+                badgeColor: const Color(0xFFFFB703),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.quiz);
+                },
+              ),
+              _QuestCard(
+                title: 'extra.audiobooks_title'.tr(),
+                subtitle: 'extra.audiobooks_desc'.tr(),
+                icon: Icons.headphones_rounded,
+                iconColor: const Color(0xFF3B9BFF),
+                badge: 'AUDIO',
+                badgeColor: const Color(0xFF3B9BFF),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.audiobooks);
+                },
+              ),
+            ],
+          ),
         ),
-        const SizedBox(height: 10),
-        _ZenQuestCard(
-          title: 'quest_reading'.tr(),
-          subtitle: 'KUTUBXONA',
-          icon: Icons.menu_book_rounded,
-          accentColor: const Color(0xFFB388FF),
-          onTap: () => context.push(AppRoutes.library),
+
+        const SizedBox(height: 12),
+
+        // 3. QO'SHIMCHA PTS
+        _BigCategoryCard(
+          title: 'categories.extra_pts_title'.tr(),
+          subtitle: 'categories.extra_pts_sub'.tr(),
+          emoji: '💎',
+          badgeText: '+8,100 PTS',
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          borderColor: const Color(0xFF232D42),
+          accentColor: const Color(0xFF7B2FFF),
+          iconBgColor: const Color(0x227B2FFF),
+          onTap: () => _openCategoryModal(
+            context,
+            'categories.extra_pts_title'.tr(),
+            '💎',
+            [
+              _QuestCard(
+                title: 'extra.social_sub_title'.tr(),
+                subtitle: 'extra.social_sub_desc'.tr(),
+                icon: Icons.public_rounded,
+                iconColor: const Color(0xFF5BC8FA),
+                badge: '+3,000 PTS',
+                badgeColor: const Color(0xFF5BC8FA),
+                onTap: () {
+                  Navigator.pop(context);
+                  showSocialSubscriptionModal(context);
+                },
+              ),
+              _QuestCard(
+                title: 'extra.wheel_fortune_title'.tr(),
+                subtitle: 'extra.wheel_fortune_desc'.tr(),
+                icon: Icons.casino_rounded,
+                iconColor: const Color(0xFF7B2FFF),
+                badge: 'extra.free_gift'.tr(),
+                badgeColor: const Color(0xFF7B2FFF),
+                onTap: () {
+                  Navigator.pop(context);
+                  showLuckyWheelModal(context);
+                },
+              ),
+              _QuestCard(
+                title: 'extra.marathon_title'.tr(),
+                subtitle: 'extra.marathon_desc'.tr(),
+                icon: Icons.calendar_month_rounded,
+                iconColor: const Color(0xFFFFB703),
+                badge: '+100 PTS',
+                badgeColor: const Color(0xFFFFB703),
+                onTap: () {
+                  Navigator.pop(context);
+                  showStreakCalendarModal(context);
+                },
+              ),
+              _QuestCard(
+                title: 'Do‘stlarni Taklif Qilish (Referal)',
+                subtitle: 'Har bir do‘stingiz uchun +5,000 PTS katta bonus',
+                icon: Icons.group_add_rounded,
+                iconColor: const Color(0xFF3B9BFF),
+                badge: '+5,000 PTS',
+                badgeColor: const Color(0xFF3B9BFF),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shareReferral();
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // 4. JANGLAR
+        _BigCategoryCard(
+          title: 'categories.battles_title'.tr(),
+          subtitle: 'categories.battles_sub'.tr(),
+          emoji: '⚔️',
+          badgeText: '+680 PTS',
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          borderColor: const Color(0xFF232D42),
+          accentColor: const Color(0xFF5BC8FA),
+          iconBgColor: const Color(0x225BC8FA),
+          onTap: () => _openCategoryModal(
+            context,
+            'categories.battles_title'.tr(),
+            '⚔️',
+            [
+              _QuestCard(
+                title: 'extra.boss_raid'.tr(),
+                subtitle: 'Jamoaviy 1000 HP Dangasalik Titanini yiqit!',
+                icon: Icons.shield_moon_rounded,
+                iconColor: const Color(0xFFFF0055),
+                badge: '+500 PTS',
+                badgeColor: const Color(0xFFFF0055),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.bossRaid);
+                },
+              ),
+              _QuestCard(
+                title: 'extra.1v1_battle'.tr(),
+                subtitle: 'Do‘stingiz yoki tasodifiy raqib bilan bellashing',
+                icon: Icons.sports_martial_arts_rounded,
+                iconColor: const Color(0xFF3B9BFF),
+                badge: '180 PTS 🏆',
+                badgeColor: const Color(0xFF3B9BFF),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push(AppRoutes.battle);
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // 5. YANGILIKLAR & XABARLAR
+        _BigCategoryCard(
+          title: 'news.title'.tr(),
+          subtitle: 'news.subtitle'.tr(),
+          emoji: '📰',
+          badgeText: 'HOT 🔥',
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          borderColor: const Color(0xFF232D42),
+          accentColor: const Color(0xFF7B2FFF),
+          iconBgColor: const Color(0x227B2FFF),
+          onTap: () => context.push(AppRoutes.news),
+        ),
+        const SizedBox(height: 12),
+
+        // 6. MUSIQALAR & FOKUS AUDIO
+        _BigCategoryCard(
+          title: 'music.title'.tr(),
+          subtitle: 'music.sub'.tr(),
+          emoji: '🎵',
+          badgeText: 'AUDIO 🎧',
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          borderColor: const Color(0xFF232D42),
+          accentColor: const Color(0xFF5BC8FA),
+          iconBgColor: const Color(0x225BC8FA),
+          onTap: () => _openMusicModal(context),
         ),
       ],
     );
   }
-}
 
-/// A premium glassmorphism quest card — Zen Kinetic design language.
-///
-/// Visual anatomy (Stitch spec):
-/// - Level-1 glass surface: semi-transparent dark slate with 1px inner glow border
-/// - Icon halo: round gradient container with atmospheric underglow
-/// - Title: Inter semibold white
-/// - Subtitle: JetBrains Mono caps — telemetry label style
-/// - Arrow: faint right chevron
-/// - Atmospheric underglow shadow tinted by accent colour
-class _ZenQuestCard extends StatelessWidget {
-  const _ZenQuestCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.accentColor,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color accentColor;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        splashColor: accentColor.withValues(alpha: 0.10),
-        highlightColor: accentColor.withValues(alpha: 0.05),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            // Glassmorphism Level-1 surface
-            color: const Color(0xB3122131),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: AppColors.glassEdge,
-              width: 1,
+  void _openMusicModal(BuildContext context) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.88,
+        decoration: const BoxDecoration(
+          color: Color(0xFF080B14),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          border: Border(top: BorderSide(color: Color(0xFF7B2FFF), width: 1.8)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
             ),
-            boxShadow: [
-              // Accent underglow — Stitch Zen Kinetic atmospheric glow
-              BoxShadow(
-                color: accentColor.withValues(alpha: 0.14),
-                blurRadius: 24,
-                spreadRadius: 0,
-                offset: const Offset(0, 4),
+            const SizedBox(height: 8),
+            const Expanded(
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: MusicSectionWidget(),
               ),
-              const BoxShadow(
-                color: Color(0x40000000),
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              // Icon halo — circular gradient container
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.10),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: accentColor.withValues(alpha: 0.30),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accentColor.withValues(alpha: 0.25),
-                      blurRadius: 16,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  icon,
-                  color: accentColor,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              // Title + Telemetry label
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTextStyles.h3.copyWith(
-                        color: const Color(0xFFD4E4FA),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    // JetBrains Mono telemetry label
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: accentColor.withValues(alpha: 0.8),
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              // Arrow indicator
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.08),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: accentColor.withValues(alpha: 0.20),
-                    width: 1,
-                  ),
-                ),
-                child: Icon(
-                  Icons.arrow_forward_rounded,
-                  color: accentColor.withValues(alpha: 0.8),
-                  size: 15,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
+
+
+class _BigCategoryCard extends StatelessWidget {
+  const _BigCategoryCard({
+    required this.title,
+    required this.subtitle,
+    required this.emoji,
+    required this.badgeText,
+    required this.gradientColors,
+    required this.borderColor,
+    required this.accentColor,
+    required this.iconBgColor,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final String emoji;
+  final String badgeText;
+  final List<Color> gradientColors;
+  final Color borderColor;
+  final Color accentColor;
+  final Color iconBgColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncyScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: gradientColors,
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor.withValues(alpha: 0.6), width: 1.2),
+          boxShadow: [
+            BoxShadow(
+              color: borderColor.withValues(alpha: 0.12),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                shape: BoxShape.circle,
+                border: Border.all(color: accentColor.withValues(alpha: 0.5), width: 1),
+              ),
+              alignment: Alignment.center,
+              child: Text(emoji, style: const TextStyle(fontSize: 20)),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            letterSpacing: 0.2,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: accentColor, width: 0.8),
+                        ),
+                        child: Text(
+                          badgeText,
+                          style: TextStyle(
+                            color: accentColor,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 9.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Color(0xFF8899B0),
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white30, size: 13),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QuestCard extends StatelessWidget {
+  const _QuestCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+    required this.badge,
+    required this.badgeColor,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+  final String badge;
+  final Color badgeColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return BouncyScale(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF131929),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0x225BC8FA), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Color(0xFF8899B0),
+                      fontSize: 11.5,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: badgeColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: badgeColor.withValues(alpha: 0.8), width: 1),
+              ),
+              child: Text(
+                badge,
+                style: TextStyle(
+                  color: badgeColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                ),
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.chevron_right_rounded, color: Colors.white38, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}

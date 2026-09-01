@@ -21,6 +21,12 @@ class FakeRemindersNotifier extends RemindersNotifier {
     required String title,
     required DateTime dateTime,
     required RepeatType repeatType,
+    String goalType = 'general',
+    String? startTimeStr,
+    String? endTimeStr,
+    int? targetReps,
+    String? exerciseType,
+    int durationMinutes = 25,
   }) async {
     final list = [
       ...state.value ?? _initial,

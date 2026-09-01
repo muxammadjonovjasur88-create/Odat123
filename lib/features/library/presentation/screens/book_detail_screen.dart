@@ -1,8 +1,11 @@
+﻿import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../providers/library_provider.dart';
+import 'interactive_course_screen.dart';
 import 'pdf_reader_screen.dart';
 import 'quiz_screen.dart';
 
@@ -32,8 +35,8 @@ class BookDetailScreen extends ConsumerWidget {
         data: (books) {
           final bookList = books.where((b) => b.id == bookId).toList();
           if (bookList.isEmpty) {
-            return const Center(
-              child: Text('Kitob topilmadi', style: TextStyle(color: Colors.white)),
+            return Center(
+              child: Text('library.book_not_found'.tr(), style: const TextStyle(color: Colors.white)),
             );
           }
           final book = bookList.first;
@@ -68,17 +71,7 @@ class BookDetailScreen extends ConsumerWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(18),
-                      child: book.coverImageUrl.isNotEmpty
-                          ? Image.network(
-                              book.coverImageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => const Center(
-                                child: Icon(Icons.book_rounded, color: AppColors.cyanAccent, size: 64),
-                              ),
-                            )
-                          : const Center(
-                              child: Icon(Icons.book_rounded, color: AppColors.cyanAccent, size: 64),
-                            ),
+                      child: _buildBookCover(book.coverImageUrl),
                     ),
                   ),
                 ),
@@ -355,9 +348,48 @@ class BookDetailScreen extends ConsumerWidget {
                     ),
                   ),
 
+                  // AI Interactive Course Action Button
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => InteractiveCourseScreen(book: book),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF131929),
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF5BC8FA), width: 1.2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.school_rounded, color: Color(0xFF5BC8FA), size: 20),
+                          SizedBox(width: 8),
+                          Text(
+                            '🎓 Interaktiv Kurs (Dars → Mashq → Imtihon)',
+                            style: TextStyle(
+                              color: Color(0xFF5BC8FA),
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                   // Option to take quiz directly if user wants
                   if (book.hasQuiz) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     Center(
                       child: TextButton.icon(
                         onPressed: () {
@@ -387,6 +419,60 @@ class BookDetailScreen extends ConsumerWidget {
           child: Text('Xatolik: $err', style: const TextStyle(color: Colors.white)),
         ),
       ),
+    );
+  }
+
+  Widget _buildBookCover(String url) {
+    if (url.isEmpty) {
+      return const Center(
+        child: Icon(Icons.book_rounded, color: AppColors.cyanAccent, size: 64),
+      );
+    }
+
+    // 1. Data URI base64
+    if (url.startsWith('data:image') || url.startsWith('data:application')) {
+      try {
+        final commaIndex = url.indexOf(',');
+        final base64Str = commaIndex != -1 ? url.substring(commaIndex + 1) : url;
+        final bytes = base64Decode(base64Str.trim());
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => const Center(
+            child: Icon(Icons.book_rounded, color: AppColors.cyanAccent, size: 64),
+          ),
+        );
+      } catch (_) {}
+    }
+
+    // 2. HTTP/HTTPS URL
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => const Center(
+          child: Icon(Icons.book_rounded, color: AppColors.cyanAccent, size: 64),
+        ),
+      );
+    }
+
+    // 3. Raw base64 string
+    if (url.length > 100) {
+      try {
+        final cleanBase64 = url.replaceAll(RegExp(r'\s+'), '');
+        final bytes = base64Decode(cleanBase64);
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => const Center(
+            child: Icon(Icons.book_rounded, color: AppColors.cyanAccent, size: 64),
+          ),
+        );
+      } catch (_) {}
+    }
+
+    return const Center(
+      child: Icon(Icons.book_rounded, color: AppColors.cyanAccent, size: 64),
     );
   }
 }

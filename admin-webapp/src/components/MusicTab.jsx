@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Music, Plus, Trash2, Edit3, Play, Pause, Disc } from "lucide-react";
 
 const CATEGORIES = [
@@ -20,19 +20,33 @@ const CATEGORY_MAP = {
 
 export function MusicTab({ music = [], onAddMusic, onEditMusic, onDeleteMusic }) {
   const [playingId, setPlayingId] = useState(null);
-  const [audioElement, setAudioElement] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
+    };
+  }, []);
 
   const togglePlay = (track) => {
     if (playingId === track.id) {
-      audioElement?.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
       setPlayingId(null);
     } else {
-      if (audioElement) audioElement.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.src = "";
+      }
       const audio = new Audio(track.audioUrl);
       audio.play();
       audio.onended = () => setPlayingId(null);
-      setAudioElement(audio);
+      audioRef.current = audio;
       setPlayingId(track.id);
     }
   };

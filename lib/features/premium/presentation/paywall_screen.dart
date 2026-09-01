@@ -3,20 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/services/auth_repository.dart';
-import '../../../core/services/user_repository.dart';
+import '../../../core/services/in_app_purchase_service.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/widgets.dart';
 import '../domain/premium.dart';
+import 'widgets/premium_checkout_sheet.dart';
 
-/// The Premium paywall. Appears when a free user taps a premium feature or hits
-/// the daily AI limit. Calm and non-pushy: benefits, two plan options, a soft
-/// "Start Premium", and an easy "Maybe later".
-///
-/// Payment is NOT wired yet — "Start Premium" is a placeholder that just flips
-/// `isPremium = true` so the gated features can be built and tested. Replace
-/// [_startPremium]'s body with Google Play Billing later.
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
@@ -25,29 +18,33 @@ class PaywallScreen extends ConsumerStatefulWidget {
 }
 
 class _PaywallScreenState extends ConsumerState<PaywallScreen> {
-  PremiumPlan _plan = PremiumPlan.yearly; // default to the best-value plan
+  PremiumPlan _plan = PremiumPlan.monthly; // Default to the requested 40k monthly plan
   bool _starting = false;
 
   Future<void> _startPremium() async {
-    final uid = ref.read(authStateProvider).asData?.value?.uid;
-    if (uid == null) return;
+    final result = await showPremiumCheckoutSheet(
+      context: context,
+      initialPlan: _plan,
+    );
+
+    if (result == true && mounted) {
+      context.pop();
+    }
+  }
+
+  Future<void> _restorePurchases() async {
     setState(() => _starting = true);
     try {
-      // PLACEHOLDER — no real charge. Flip the flag so premium features unlock.
-      // TODO: integrate Google Play Billing and only set this after purchase.
-      await ref.read(userRepositoryProvider).setPremium(uid, true);
+      await ref.read(inAppPurchaseServiceProvider).restorePurchases();
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text('premium.unlocked'.tr())));
+          ..showSnackBar(SnackBar(content: Text('premium.restored'.tr())));
         context.pop();
       }
     } catch (_) {
       if (mounted) {
         setState(() => _starting = false);
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text('premium.error'.tr())));
       }
     }
   }
@@ -119,20 +116,20 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ),
                   const SizedBox(height: 22),
                   _PlanCard(
+                    title: 'premium.plan_monthly'.tr(),
+                    price: kMonthlyPriceLabel.tr(),
+                    period: kMonthlyPeriodLabel.tr(),
+                    selected: _plan == PremiumPlan.monthly,
+                    onTap: () => setState(() => _plan = PremiumPlan.monthly),
+                  ),
+                  const SizedBox(height: 12),
+                  _PlanCard(
                     title: 'premium.plan_yearly'.tr(),
                     price: kYearlyPriceLabel.tr(),
                     period: kYearlyPeriodLabel.tr(),
                     saveLabel: kYearlySaveLabel.tr(),
                     selected: _plan == PremiumPlan.yearly,
                     onTap: () => setState(() => _plan = PremiumPlan.yearly),
-                  ),
-                  const SizedBox(height: 12),
-                  _PlanCard(
-                    title: 'premium.plan_monthly'.tr(),
-                    price: kMonthlyPriceLabel.tr(),
-                    period: kMonthlyPeriodLabel.tr(),
-                    selected: _plan == PremiumPlan.monthly,
-                    onTap: () => setState(() => _plan = PremiumPlan.monthly),
                   ),
                   const SizedBox(height: 24),
                   AppButton(
@@ -143,14 +140,32 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                   ),
                   const SizedBox(height: 6),
                   Center(
-                    child: TextButton(
-                      onPressed: _starting ? null : () => context.pop(),
-                      child: Text(
-                        'premium.maybe_later'.tr(),
-                        style: AppTextStyles.label.copyWith(
-                          color: colors.textSecondary,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: _starting ? null : () => context.pop(),
+                          child: Text(
+                            'premium.maybe_later'.tr(),
+                            style: AppTextStyles.label.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
                         ),
-                      ),
+                        Text(
+                          ' • ',
+                          style: TextStyle(color: colors.textTertiary),
+                        ),
+                        TextButton(
+                          onPressed: _starting ? null : _restorePurchases,
+                          child: Text(
+                            'premium.restore'.tr(),
+                            style: AppTextStyles.label.copyWith(
+                              color: colors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -243,7 +258,7 @@ class _PlanCard extends StatelessWidget {
         color: selected ? kPremiumGold : colors.border,
         width: selected ? 2 : 1.2,
       ),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Icon(
@@ -253,20 +268,26 @@ class _PlanCard extends StatelessWidget {
             color: selected ? kPremiumGold : colors.textTertiary,
             size: 22,
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  title,
-                  style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
+                    ),
+                  ],
                 ),
                 if (saveLabel != null) ...[
-                  const SizedBox(width: 10),
+                  const SizedBox(height: 4),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
-                      vertical: 3,
+                      vertical: 2.5,
                     ),
                     decoration: BoxDecoration(
                       color: kPremiumGold.withValues(alpha: 0.16),
@@ -275,7 +296,9 @@ class _PlanCard extends StatelessWidget {
                     child: Text(
                       saveLabel!,
                       style: AppTextStyles.chip.copyWith(
-                        color: const Color(0xFF8A6D2B),
+                        color: const Color(0xFFE5A93C),
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
@@ -283,12 +306,14 @@ class _PlanCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 price,
-                style: AppTextStyles.label.copyWith(color: colors.textPrimary),
+                style: AppTextStyles.label.copyWith(color: colors.textPrimary, fontWeight: FontWeight.w800),
               ),
               Text(
                 period,

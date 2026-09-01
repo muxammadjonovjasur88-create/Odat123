@@ -19,11 +19,17 @@ class RemindersNotifier extends AsyncNotifier<List<Reminder>> {
 
   // ── Mutations ─────────────────────────────────────────────────────────────
 
-  /// Creates a new reminder, persists it, and schedules its notification.
+  /// Creates a new reminder / goal, persists it, and schedules its notification.
   Future<void> add({
     required String title,
     required DateTime dateTime,
     required RepeatType repeatType,
+    String goalType = 'note',
+    int durationMinutes = 25,
+    String? startTimeStr,
+    String? endTimeStr,
+    String? exerciseType,
+    int? targetReps,
   }) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
@@ -31,6 +37,12 @@ class RemindersNotifier extends AsyncNotifier<List<Reminder>> {
         title: title,
         dateTime: dateTime,
         repeatType: repeatType,
+        goalType: goalType,
+        durationMinutes: durationMinutes,
+        startTimeStr: startTimeStr,
+        endTimeStr: endTimeStr,
+        exerciseType: exerciseType,
+        targetReps: targetReps,
       );
       await _notif.schedule(reminder);
       return _repo.all();

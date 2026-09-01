@@ -319,14 +319,15 @@ class AiPlannerService {
   /// the prompt body (reduces the risk of the model "forgetting" mid-response).
   static String _langInstruction(String locale) {
     switch (locale) {
-      case 'uz':
-        return "MUHIM: Barcha vazifa nomlarini (\"title\" maydoni) FAQAT VA TO'LIQ "
-            "O'ZBEK tilida yoz. Ingliz tilida birorta ham so'z ishlatma.";
       case 'ru':
         return 'ВАЖНО: Все названия задач (поле "title") пиши ТОЛЬКО И ПОЛНОСТЬЮ '
             'на русском языке. Не используй ни одного английского слова.';
-      default:
+      case 'en':
         return 'IMPORTANT: Write all task titles (the "title" field) ONLY in English.';
+      case 'uz':
+      default:
+        return "MUHIM: Barcha vazifa nomlarini (\"title\" maydoni) FAQAT VA TO'LIQ "
+            "O'ZBEK tilida yoz. Boshqa tilda birorta ham so'z ishlatma.";
     }
   }
 

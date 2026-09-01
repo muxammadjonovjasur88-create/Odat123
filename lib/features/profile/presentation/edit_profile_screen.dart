@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -107,19 +106,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     setState(() => _saving = true);
     try {
-      final displayName = _displayNameController.text.trim();
       final bio = _bioController.text.trim();
       await ref.read(userRepositoryProvider).updateProfile(
         uid,
-        displayName: displayName.isEmpty ? null : displayName,
         bio: bio.isEmpty ? null : bio,
         photoBase64: _selectedPhotoBase64,
       );
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await user.updateDisplayName(displayName.isEmpty ? null : displayName);
-      }
 
       if (!mounted) return;
       setState(() => _saving = false);
@@ -199,14 +191,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               const SizedBox(height: 24),
               AppInput(
-                label: 'Nickname',
-                hint: 'Enter your nickname',
+                label: 'Taxallus / Ism (Qulflangan)',
+                hint: 'Ismingiz yoki taxallusingizni kiriting',
                 controller: _displayNameController,
+                enabled: false,
+                suffixIcon: const Icon(Icons.lock_outline_rounded, color: Colors.grey, size: 20),
+              ),
+              const SizedBox(height: 6),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4),
+                child: Text(
+                  "Ismni o'zgartirish faqat inventardagi 'Ismni O'zgartirish Kartasi' orqali bo'ladi.",
+                  style: TextStyle(color: Colors.white54, fontSize: 11),
+                ),
               ),
               const SizedBox(height: 16),
               AppInput(
-                label: 'Bio',
-                hint: 'Tell others a bit about yourself',
+                label: 'Bio / Shioringiz',
+                hint: 'O‘zingiz haqingizda yoki maqsadingizni yozing',
                 controller: _bioController,
                 maxLines: 4,
                 onChanged: (_) => setState(() {}),
@@ -221,7 +223,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
               const SizedBox(height: 24),
               AppButton(
-                label: 'Save',
+                label: 'Saqlash',
                 loading: _saving,
                 expand: true,
                 onPressed: _saving || _uploadingImage ? null : _save,

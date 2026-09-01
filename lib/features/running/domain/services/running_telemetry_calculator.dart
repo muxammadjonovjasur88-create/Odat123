@@ -50,12 +50,12 @@ abstract final class RunningTelemetryCalculator {
   }
 
   /// Calculates points earned for the run session.
-  /// Gives 30 points per km + 100 points completion bonus if target (e.g. 3km) is met.
+  /// Gives 200 points per km + 100 points completion bonus if target (e.g. 3km) is met.
   static int calculatePointsEarned({
     required double distanceKm,
     double targetKm = 3.0,
   }) {
-    final basePoints = (distanceKm * 30).round();
+    final basePoints = (distanceKm * 200).round();
     if (distanceKm >= targetKm) {
       return basePoints + 100;
     }

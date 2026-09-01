@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -149,7 +150,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                         ElevatedButton.icon(
                           onPressed: _loadQuiz,
                           icon: const Icon(Icons.refresh_rounded),
-                          label: const Text('Qayta urinish'),
+                          label: Text('common.retry'.tr()),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.cyanAccent,
                             foregroundColor: Colors.black,
@@ -322,7 +323,7 @@ class _QuizScreenState extends ConsumerState<QuizScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     ),
-                    child: const Text('Oldingisi'),
+                    child: Text('common.previous'.tr()),
                   ),
                 ),
               if (_currentQuestionIndex > 0) const SizedBox(width: 12),

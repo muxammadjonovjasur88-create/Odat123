@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -9,12 +10,12 @@ import 'app_text_styles.dart';
 abstract final class AppTheme {
   AppTheme._();
 
-  static ThemeData get light => _build(Brightness.dark, AppColors.dark);
+  static ThemeData get light => _build(Brightness.light, AppColors.light);
   static ThemeData get dark => _build(Brightness.dark, AppColors.dark);
 
   static ThemeData _build(Brightness brightness, AppColorScheme c) {
     final colorScheme = ColorScheme(
-      brightness: Brightness.dark,
+      brightness: brightness,
       primary: c.primary,
       onPrimary: c.onPrimary,
       secondary: c.secondary,
@@ -29,7 +30,7 @@ abstract final class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
+      brightness: brightness,
       scaffoldBackgroundColor: c.background,
       colorScheme: colorScheme,
       textTheme: textTheme,

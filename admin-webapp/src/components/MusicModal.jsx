@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Music, Upload, Play, Pause, AlertCircle, Loader2, Disc } from "lucide-react";
+import { X, Music, Upload, AlertCircle, Loader2, Disc } from "lucide-react";
 
 export function MusicModal({ isOpen, onClose, onSave, track = null }) {
   const isEdit = !!track;
@@ -13,9 +13,9 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
 
   const [audioFile, setAudioFile] = useState(null);
   const [audioFileName, setAudioFileName] = useState("");
-  const [isPlaying, setIsPlaying] = useState(false);
   const [audioPreviewUrl, setAudioPreviewUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -26,22 +26,17 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
         audioUrl: track.audioUrl || "",
         ptsCost: track.ptsCost !== undefined ? track.ptsCost : 50,
       });
-      setAudioPreviewUrl(track.audioUrl || "");
+      setAudioPreviewUrl(track.audioUrl?.startsWith("http") ? track.audioUrl : "");
       setAudioFileName(track.audioUrl ? "Mavjud audio fayl" : "");
     } else {
-      setFormData({
-        title: "",
-        genre: "workout",
-        audioUrl: "",
-        ptsCost: 50,
-      });
+      setFormData({ title: "", genre: "workout", audioUrl: "", ptsCost: 50 });
       setAudioPreviewUrl("");
       setAudioFileName("");
     }
     setAudioFile(null);
-    setIsPlaying(false);
     setError("");
     setIsUploading(false);
+    setUploadProgress(0);
   }, [track, isOpen]);
 
   if (!isOpen) return null;
@@ -49,12 +44,10 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("audio/") && !file.name.endsWith(".mp3")) {
       setError("Faqat MP3 yoki audio formatdagi fayllarni tanlang.");
       return;
     }
-
     setAudioFile(file);
     setAudioFileName(file.name);
     setAudioPreviewUrl(URL.createObjectURL(file));
@@ -67,41 +60,29 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
-      setError("Trek nomini kiriting.");
-      return;
-    }
+    if (!formData.title.trim()) { setError("Trek nomini kiriting."); return; }
     if (!formData.audioUrl.trim() && !audioFile) {
       setError("Audio (MP3) faylni tanlang yoki Audio URL manzilini kiriting.");
       return;
     }
 
     setIsUploading(true);
+    setUploadProgress(0);
     setError("");
 
     try {
-      let base64Audio = null;
-      if (audioFile) {
-        const reader = new FileReader();
-        const base64Promise = new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-        });
-        reader.readAsDataURL(audioFile);
-        base64Audio = await base64Promise;
-      }
-
-      await onSave({
-        ...formData,
-        category: formData.genre,
-        base64Audio,
-        fileName: audioFileName || audioFile?.name || "track.mp3",
-      }, track?.id);
+      // Pass raw File — firebase.js uploads to Storage with progress callback
+      await onSave(
+        { ...formData, category: formData.genre, audioFile: audioFile || null },
+        track?.id,
+        (pct) => setUploadProgress(pct)
+      );
       onClose();
     } catch (err) {
       setError(err.message || "Saqlashda xatolik yuz berdi");
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -121,10 +102,7 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
               <p className="text-xs text-zen-subtext">Mashg'ulot, bilim olish, meditatsiya va o'yin kuylari</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-zen-subtext hover:text-zen-text hover:bg-zen-muted transition-all"
-          >
+          <button onClick={onClose} className="p-2 rounded-xl text-zen-subtext hover:text-zen-text hover:bg-zen-muted transition-all">
             <X size={18} />
           </button>
         </div>
@@ -139,16 +117,9 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           {/* File Upload Box */}
           <div>
-            <label className="block text-xs font-bold text-zen-subtext mb-1.5">
-              Audio Fayl (.mp3)
-            </label>
+            <label className="block text-xs font-bold text-zen-subtext mb-1.5">Audio Fayl (.mp3)</label>
             <div className="relative border-2 border-dashed border-zen-border hover:border-purple-400/50 rounded-2xl p-4 text-center bg-zen-muted/30 transition-all">
-              <input
-                type="file"
-                accept="audio/*,.mp3"
-                onChange={handleFileChange}
-                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              />
+              <input type="file" accept="audio/*,.mp3" onChange={handleFileChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
               <Upload size={24} className="mx-auto text-purple-400 mb-1.5" />
               <p className="text-xs font-bold text-zen-text truncate">
                 {audioFileName || "MP3 faylni tanlang yoki shu yerga tashlang"}
@@ -157,8 +128,24 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
             </div>
           </div>
 
-          {/* Audio Preview Player if available */}
-          {audioPreviewUrl && (
+          {/* Upload Progress Bar */}
+          {isUploading && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-[11px] text-zen-subtext">
+                <span>Firebase Storage'ga yuklanmoqda...</span>
+                <span className="font-bold text-purple-400">{uploadProgress}%</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-zen-muted overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-400 transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Audio Preview */}
+          {audioPreviewUrl && !isUploading && (
             <div className="p-3 rounded-xl bg-zen-muted/60 border border-zen-border flex items-center gap-3">
               <Disc size={20} className="text-purple-400 animate-spin" />
               <audio controls src={audioPreviewUrl} className="w-full h-8" />
@@ -167,9 +154,7 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-bold text-zen-subtext mb-1">
-              Trek Nomi *
-            </label>
+            <label className="block text-xs font-bold text-zen-subtext mb-1">Trek Nomi *</label>
             <input
               type="text"
               required
@@ -181,11 +166,8 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Genre / Kategoriya */}
             <div>
-              <label className="block text-xs font-bold text-zen-subtext mb-1">
-                Kategoriya / Rejim
-              </label>
+              <label className="block text-xs font-bold text-zen-subtext mb-1">Kategoriya / Rejim</label>
               <select
                 value={formData.genre}
                 onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
@@ -198,12 +180,8 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
                 <option value="motivation">⚡ Motivatsiya</option>
               </select>
             </div>
-
-            {/* PTS Cost */}
             <div>
-              <label className="block text-xs font-bold text-zen-subtext mb-1">
-                Narxi (PTS)
-              </label>
+              <label className="block text-xs font-bold text-zen-subtext mb-1">Narxi (PTS)</label>
               <input
                 type="number"
                 min="0"
@@ -214,12 +192,13 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* Actions */}
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-zen-border mt-6">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-bold text-zen-subtext hover:text-zen-text hover:bg-zen-muted transition-all"
+              disabled={isUploading}
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-zen-subtext hover:text-zen-text hover:bg-zen-muted transition-all disabled:opacity-50"
             >
               Bekor qilish
             </button>
@@ -231,7 +210,7 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
               {isUploading ? (
                 <>
                   <Loader2 size={16} className="animate-spin" />
-                  <span>Yuklanmoqda...</span>
+                  <span>{uploadProgress > 0 ? `${uploadProgress}% yuklandi` : "Tayyorlanmoqda..."}</span>
                 </>
               ) : (
                 <span>{isEdit ? "O'zgarishlarni saqlash" : "Yuklash & Saqlash"}</span>
@@ -243,3 +222,4 @@ export function MusicModal({ isOpen, onClose, onSave, track = null }) {
     </div>
   );
 }
+

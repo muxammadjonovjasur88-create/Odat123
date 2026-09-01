@@ -82,6 +82,10 @@ class RemindersNotificationService {
 
   // ── Schedule ─────────────────────────────────────────────────────────────
 
+  int _idMain(int base) => (base.abs() & 0x1FFFFFFF) * 3;
+  int _id60m(int base) => (base.abs() & 0x1FFFFFFF) * 3 + 1;
+  int _id30m(int base) => (base.abs() & 0x1FFFFFFF) * 3 + 2;
+
   /// Schedules (or re-schedules) the notification for [reminder].
   ///
   /// No-op if the reminder is already completed or its time has passed and
@@ -132,22 +136,78 @@ class RemindersNotificationService {
         ? AndroidScheduleMode.exactAllowWhileIdle
         : AndroidScheduleMode.inexactAllowWhileIdle;
 
-    await _plugin.zonedSchedule(
-      id: reminder.notificationId,
-      title: '🔔 ${reminder.title}',
-      body: _repeatLabel(reminder.repeatType),
-      scheduledDate: scheduledDate,
-      notificationDetails: details,
-      androidScheduleMode: mode,
-      matchDateTimeComponents: matchComponents,
-      payload: payload,
-    );
+    try {
+      // 1. Exact Alarm
+      await _plugin.zonedSchedule(
+        id: _idMain(reminder.notificationId),
+        title: '🔔 ${reminder.title}',
+        body: _repeatLabel(reminder.repeatType),
+        scheduledDate: scheduledDate,
+        notificationDetails: details,
+        androidScheduleMode: mode,
+        matchDateTimeComponents: matchComponents,
+        payload: payload,
+      );
+
+      // 2. Advance Reminder: 1 Hour Before (60 min)
+      final when60 = scheduledDate.subtract(const Duration(hours: 1));
+      if (when60.isAfter(now)) {
+        await _plugin.zonedSchedule(
+          id: _id60m(reminder.notificationId),
+          title: '⏳ 1 soat qoldi: ${reminder.title}',
+          body: 'ODAT eslatmasi: Rejalashtirilgan vazifaga tayyorlaning!',
+          scheduledDate: when60,
+          notificationDetails: details,
+          androidScheduleMode: mode,
+          payload: payload,
+        );
+      }
+
+      // 3. Advance Reminder: 0.5 Hour Before (30 min)
+      final when30 = scheduledDate.subtract(const Duration(minutes: 30));
+      if (when30.isAfter(now)) {
+        await _plugin.zonedSchedule(
+          id: _id30m(reminder.notificationId),
+          title: '⏰ 30 daqiqa qoldi: ${reminder.title}',
+          body: 'ODAT eslatmasi: 30 daqiqadan so‘ng boshlanadi!',
+          scheduledDate: when30,
+          notificationDetails: details,
+          androidScheduleMode: mode,
+          payload: payload,
+        );
+      }
+    } catch (_) {
+      try {
+        await _plugin.zonedSchedule(
+          id: _idMain(reminder.notificationId),
+          title: '🔔 ${reminder.title}',
+          body: _repeatLabel(reminder.repeatType),
+          scheduledDate: scheduledDate,
+          notificationDetails: const NotificationDetails(
+            android: AndroidNotificationDetails(
+              _channelId,
+              _channelName,
+              channelDescription: _channelDesc,
+              importance: Importance.max,
+              priority: Priority.high,
+            ),
+          ),
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          matchDateTimeComponents: matchComponents,
+          payload: payload,
+        );
+      } catch (_) {}
+    }
   }
 
   /// Cancels the scheduled notification for [notificationId].
   Future<void> cancel(int notificationId) async {
     await init();
-    await _plugin.cancel(id: notificationId);
+    try {
+      await _plugin.cancel(id: _idMain(notificationId));
+      await _plugin.cancel(id: _id60m(notificationId));
+      await _plugin.cancel(id: _id30m(notificationId));
+    } catch (_) {}
   }
 
   /// Re-schedules all pending (not completed, not expired one-time) reminders.

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -108,7 +109,7 @@ class _ProofCaptureScreenState extends ConsumerState<ProofCaptureScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Javobingiz muvaffaqiyatli saqlandi!')),
+          SnackBar(content: Text('proof.answer_saved'.tr())),
         );
         if (context.canPop()) {
           context.pop();
@@ -133,8 +134,8 @@ class _ProofCaptureScreenState extends ConsumerState<ProofCaptureScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 
     if (uid == null) {
-      return const Scaffold(
-        body: Center(child: Text('Foydalanuvchi tizimga kirmagan')),
+      return Scaffold(
+        body: Center(child: Text('proof.not_signed_in'.tr())),
       );
     }
 

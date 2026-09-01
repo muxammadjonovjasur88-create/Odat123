@@ -9,11 +9,12 @@
  */
 import {onCall, HttpsError, onRequest} from "firebase-functions/v2/https";
 import {onSchedule} from "firebase-functions/v2/scheduler";
-import {onDocumentUpdated} from "firebase-functions/v2/firestore";
+import {onDocumentUpdated, onDocumentCreated} from "firebase-functions/v2/firestore";
 import {defineSecret} from "firebase-functions/params";
 import {setGlobalOptions} from "firebase-functions/v2";
 import {initializeApp} from "firebase-admin/app";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
+import {getStorage} from "firebase-admin/storage";
 import {getAuth} from "firebase-admin/auth";
 import {getMessaging} from "firebase-admin/messaging";
 import {randomUUID} from "crypto";
@@ -33,6 +34,7 @@ import {
   updateBookProgressHandler,
   submitBookQuizHandler,
 } from "./bookFunctions.js";
+import { processTelegramUpdate, cleanupPlayersDatabase } from "./telegramBotHandler.js";
 
 setGlobalOptions({region: "us-central1", maxInstances: 10});
 
@@ -837,6 +839,9 @@ export const checkMissedProofs = onSchedule(
 
 // Set this with:  firebase functions:secrets:set TELEGRAM_BOT_TOKEN
 const TELEGRAM_BOT_TOKEN = defineSecret("TELEGRAM_BOT_TOKEN");
+const _getTelegramBotToken = () => {
+  return "8855349705:AAGMa9cMyo62Fh8gThoC1xtuRyQwnwu6N4U";
+};
 
 // ---------------------------------------------------------------------------
 // BOSQICH A — linkTelegramChatId
@@ -844,8 +849,6 @@ const TELEGRAM_BOT_TOKEN = defineSecret("TELEGRAM_BOT_TOKEN");
 export const linkTelegramChatId = onRequest(
   {secrets: [TELEGRAM_BOT_TOKEN]},
   async (req, res) => {
-    // FORCE DEPLOY v2026.08.11-admin-fix
-    // Faqat POST qabul qilamiz
     if (req.method !== "POST") {
       res.status(405).send("Method Not Allowed");
       return;
@@ -855,50 +858,513 @@ export const linkTelegramChatId = onRequest(
     console.log("Telegram webhook received update:", JSON.stringify(update));
     const message = update?.message;
     if (!message) {
-      res.status(200).send("ok"); // Telegram boshqa event turlarini ham yuboradi
+      res.status(200).send("ok");
       return;
     }
 
     const text = (message.text ?? "").trim();
     const chatId = String(message.chat?.id ?? "");
     const fromId = String(message.from?.id ?? chatId);
-    console.log(`Telegram message fromId=${fromId}, chatId=${chatId}, text="${text}"`);
+    const chatType = message.chat?.type || "private";
+    const botToken = _getTelegramBotToken();
 
-    // /admin buyrug'ini tekshiramiz
-    if (text === "/admin" || text.startsWith("/admin")) {
-      console.log(`Processing /admin command for user ${fromId}...`);
-      const isAdmin = await isTelegramUserAdmin(db, fromId);
-      if (!isAdmin) {
+    console.log(`Telegram message fromId=${fromId}, chatId=${chatId}, chatType=${chatType}, text="${text}"`);
+
+    // ── 1. GURUH NAZORATI VA SALOMLASHISH (Group Moderation) ─────────────────
+    if (chatType === "group" || chatType === "supergroup") {
+      // 1.1 Yangi a'zo kutib olish
+      if (message.new_chat_members && message.new_chat_members.length > 0) {
+        for (const member of message.new_chat_members) {
+          if (member.is_bot && member.id === 8855349705) {
+            await sendTelegramMessage(
+              botToken,
+              chatId,
+              "👋 <b>Assalomu alaykum!</b>\nMen guruh xavfsizligini ta'minlovchi va yangi a'zolarni kutib oluvchi ODAT rasmiy botiman. Guruhda faqat rasm va do'stona xabarlar yozish mumkin. Reklama va havolalar avtomatik o'chiriladi. 🌿",
+            );
+            continue;
+          }
+          if (member.is_bot) continue;
+
+          const name = member.first_name || member.username || "do'stimiz";
+          await sendTelegramMessage(
+            botToken,
+            chatId,
+            `🎉 <b>Xush kelibsiz, ${name}!</b>\n\n` +
+            `🌿 <b>ODAT / Flowa</b> hamjamiyatiga xush kelibsiz!\n` +
+            `Bu yerda biz intizom, sport, kitob mutolaasi va foydali odatlarni rivojlantiramiz. 🚀\n\n` +
+            `📌 <b>Guruh qoidalari:</b>\n` +
+            `• Reklama, begona havolalar (linklar) va kanal forwardlari qat'iyan taqiqlangan.\n` +
+            `• Guruhda faqat oddiy xabarlar va bajarilgan vazifalarning isbot rasmlari qabul qilinadi. 🌿`,
+          );
+        }
+        res.status(200).send("ok");
+        return;
+      }
+
+      // 1.2 Reklama, havolalar, forward va haqoratli so'zlarni filtr qilish
+      const senderIsAdmin = await isTelegramUserAdmin(db, fromId);
+      if (!senderIsAdmin) {
+        const fullContent = (message.text || message.caption || "").trim();
+        const lowerText = fullContent.toLowerCase();
+
+        const badPatterns = [
+          /https?:\/\//i,
+          /t\.me\//i,
+          /telegram\.me\//i,
+          /@[\w_]{4,}/i,
+          /rek[\s_]*lama/i,
+          /kanalga\s+obuna/i,
+          /pul\s+ishlash/i,
+          /garant/i,
+          /suka|blya|am|qotoq|sikish|dalbayob|chmo|harom|jalap|pidar/i,
+        ];
+
+        const hasBadPattern = badPatterns.some((pattern) => pattern.test(fullContent));
+        const entities = [...(message.entities || []), ...(message.caption_entities || [])];
+        const hasLinkEntity = entities.some((e) => ["url", "text_link", "mention"].includes(e.type));
+        const isForwarded = Boolean(message.forward_from_chat || message.forward_from);
+
+        if (hasBadPattern || hasLinkEntity || isForwarded) {
+          try {
+            await fetch(`https://api.telegram.org/bot${botToken}/deleteMessage`, {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({chat_id: chatId, message_id: message.message_id}),
+            });
+          } catch (_) {}
+
+          const userName = message.from?.username ? `@${message.from.username}` : (message.from?.first_name || "Foydalanuvchi");
+          let warnReason = "reklama va begona havolalar";
+          if (isForwarded) warnReason = "kanallardan xabar ulashish (forward)";
+          
+          await sendTelegramMessage(
+            botToken,
+            chatId,
+            `⚠️ <b>Ogohlantirish!</b> ${userName}, guruhda ${warnReason} taqiqlanadi!\nFaqat oddiy xabarlar va mashg'ulot isboti (rasmlar) yuborishingiz mumkin. 🌿`,
+          );
+          res.status(200).send("ok");
+          return;
+        }
+      }
+
+      res.status(200).send("ok");
+      return;
+    }
+
+    // ── 2. ADMIN ISHLARI (Admin Commands & Panel) ────────────────────────────
+    const isAdmin = await isTelegramUserAdmin(db, fromId);
+
+    // Agar admin /start yoki /admin yoki /stats yuborsa:
+    if (isAdmin && (text === "/start" || text === "/admin" || text === "/stats" || text === "/menu")) {
+      let usersCount = 0;
+      let clansCount = 0;
+      let booksCount = 0;
+      let shopCount = 0;
+
+      try {
+        const uSnap = await db.collection("users").count().get();
+        usersCount = uSnap.data().count;
+      } catch (_) {
+        const uSnap = await db.collection("users").limit(100).get();
+        usersCount = uSnap.size;
+      }
+
+      try {
+        const cSnap = await db.collection("clans").count().get();
+        clansCount = cSnap.data().count;
+      } catch (_) {
+        const cSnap = await db.collection("clans").limit(50).get();
+        clansCount = cSnap.size;
+      }
+
+      try {
+        const bSnap = await db.collection("books").count().get();
+        booksCount = bSnap.data().count;
+      } catch (_) {
+        const bSnap = await db.collection("books").limit(50).get();
+        booksCount = bSnap.size;
+      }
+
+      try {
+        const sSnap = await db.collection("shopItems").count().get();
+        shopCount = sSnap.data().count;
+      } catch (_) {
+        const sSnap = await db.collection("shopItems").limit(50).get();
+        shopCount = sSnap.size;
+      }
+
+      const adminDashboard =
+        `👑 <b>ASSALOMU ALAYKUM, BOSHQARUVCHI (ADMIN)!</b>\n\n` +
+        `📊 <b>Real-Vaqt Tizim Statistikasi:</b>\n` +
+        `👥 Jami foydalanuvchilar: <b>${usersCount} ta</b>\n` +
+        `🏰 Faol Klanlar: <b>${clansCount} ta</b>\n` +
+        `📚 Kutubxona kitoblari: <b>${booksCount} ta</b>\n` +
+        `🛍️ Do'kondagi mahsulotlar: <b>${shopCount} ta</b>\n\n` +
+        `⚡ <b>BUYRUQLAR ORQALI QO'SHISH:</b>\n\n` +
+        `📖 <b>Kitob qo'shish:</b>\n<code>/addbook Nomi | Muallif | Betlar | PTS | RasmURL</code>\n\n` +
+        `🎵 <b>Musiqa/Audio qo'shish:</b>\n<code>/addmusic Nomi | Janr | AudioURL | PTS</code>\n\n` +
+        `🎁 <b>Do'konga mahsulot qo'shish:</b>\n<code>/addshop Nomi | coupon/gift | PTS | Soni | Tavsif</code>\n\n` +
+        `📈 <b>Statistikani yangilash:</b> /stats`;
+
+      await sendTelegramMessage(botToken, chatId, adminDashboard);
+      res.status(200).send("ok");
+      return;
+    }
+
+    // Admin kitob qo'shish (/addbook)
+    if (isAdmin && text.startsWith("/addbook")) {
+      const payload = text.replace("/addbook", "").trim();
+      const parts = payload.split("|").map((p) => p.trim());
+      if (parts.length < 4) {
         await sendTelegramMessage(
-          TELEGRAM_BOT_TOKEN.value(),
+          botToken,
           chatId,
-          "❌ Bu buyruq faqat administratorlar uchun.",
+          "❌ <b>Format xato!</b>\nNamuna:\n<code>/addbook Atom Odatlar | Jeyms Klir | 320 | 150 | https://example.com/cover.jpg</code>",
         );
         res.status(200).send("ok");
         return;
       }
 
-      const webAppUrl = process.env.ADMIN_WEBAPP_URL || "https://flowa-4fca9.web.app";
-      await sendTelegramMessageWithWebAppButtons(
-        TELEGRAM_BOT_TOKEN.value(),
+      const [title, author, pagesStr, ptsStr, coverUrl] = parts;
+      const pages = parseInt(pagesStr, 10) || 100;
+      const pts = parseInt(ptsStr, 10) || 100;
+
+      const docRef = await db.collection("books").add({
+        title,
+        author,
+        pages,
+        ptsReward: pts,
+        coverUrl: coverUrl || "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c",
+        createdAt: FieldValue.serverTimestamp(),
+        createdBy: fromId,
+      });
+
+      await sendTelegramMessage(
+        botToken,
         chatId,
-        "🛍️ <b>Odat Admin Paneliga xush kelibsiz!</b>\n\n" +
-        "Quyidagi tugmalar orqali Do'kon mahsulotlari, buyurtmalar va kutubxona kitoblarini boshqarishingiz mumkin.",
-        [
-          [
-            {
-              text: "🏪 Admin Panelni ochish",
-              web_app: { url: webAppUrl },
-            },
-          ],
-          [
-            {
-              text: "📚 Kitob qo'shish",
-              web_app: { url: `${webAppUrl}?tab=books&action=add` },
-            },
-          ],
-        ],
+        `✅ <b>Kitob muvaffaqiyatli qo'shildi!</b>\n\n📚 Nomi: <b>${title}</b>\n✍️ Muallif: <b>${author}</b>\n📄 Betlar: ${pages}\n⚡ Mukofot: +${pts} PTS\n🆔 ID: <code>${docRef.id}</code>`,
       );
+      res.status(200).send("ok");
+      return;
+    }
+
+    // Admin musiqa fayli yuborganida (MP3 / Audio / Voice / Document)
+    const audioObj = message.audio || message.voice || (message.document && message.document.mime_type?.startsWith("audio/") ? message.document : null);
+    if (isAdmin && audioObj) {
+      try {
+        const fileId = audioObj.file_id;
+        const rawFileName = audioObj.file_name || message.caption || `track_${Date.now()}.mp3`;
+        const title = audioObj.title || message.caption || rawFileName.replace(/\.[a-zA-Z0-9]+$/, "");
+        const artist = audioObj.performer || "ODAT / Flowa";
+        const duration = audioObj.duration || 180;
+
+        await sendTelegramMessage(botToken, chatId, "⏳ <b>Musiqa serverga yuklanmoqda...</b> Iltimos kuting.");
+
+        // 1. Get file path from Telegram
+        const fileRes = await fetch(`https://api.telegram.org/bot${botToken}/getFile?file_id=${fileId}`);
+        const fileData = await fileRes.json();
+
+        if (!fileData.ok || !fileData.result?.file_path) {
+          throw new Error("Telegramdan fayl manzilini olib bo'lmadi.");
+        }
+
+        const telegramFilePath = fileData.result.file_path;
+        const downloadUrl = `https://api.telegram.org/file/bot${botToken}/${telegramFilePath}`;
+
+        // 2. Download audio buffer
+        const audioFetch = await fetch(downloadUrl);
+        const audioBuffer = Buffer.from(await audioFetch.arrayBuffer());
+
+        // 3. Upload to Firebase Storage
+        const safeFileName = rawFileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const storagePath = `music/music_${Date.now()}_${safeFileName}`;
+        let audioUrl = "";
+
+        const candidateBuckets = [
+          "flowa-4fca9.firebasestorage.app",
+          "flowa-4fca9.appspot.com",
+        ];
+
+        for (const bName of candidateBuckets) {
+          try {
+            const bucket = getStorage().bucket(bName);
+            const file = bucket.file(storagePath);
+            await file.save(audioBuffer, {
+              metadata: {
+                contentType: audioObj.mime_type || "audio/mpeg",
+                cacheControl: "public, max-age=31536000",
+              },
+            });
+            try { await file.makePublic(); } catch (_) {}
+            audioUrl = `https://storage.googleapis.com/${bName}/${storagePath}`;
+            break;
+          } catch (bErr) {
+            console.warn(`Telegram audio bucket ${bName} failed:`, bErr.message);
+          }
+        }
+
+        if (!audioUrl) {
+          audioUrl = downloadUrl;
+        }
+
+        // 4. Save to music_tracks collection
+        const trackDoc = await db.collection("music_tracks").add({
+          title,
+          artist,
+          audioUrl,
+          category: "study",
+          genre: "Focus",
+          duration,
+          ptsCost: 0,
+          isActive: true,
+          createdAt: FieldValue.serverTimestamp(),
+          createdBy: fromId,
+        });
+
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          `✅ <b>Musiqa muvaffaqiyatli yuklandi va ilovaga qo'shildi!</b>\n\n` +
+          `🎵 Nomi: <b>${title}</b>\n` +
+          `👤 Ijrochi: <b>${artist}</b>\n` +
+          `⏱️ Davomiyligi: ${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}\n` +
+          `📁 Bo'lim: <b>Focus / Study</b>\n` +
+          `🆔 ID: <code>${trackDoc.id}</code>\n\n` +
+          `📱 <i>Foydalanuvchilar ilovani ochib darhol eshitishlari mumkin!</i>`,
+        );
+        res.status(200).send("ok");
+        return;
+      } catch (err) {
+        console.error("Telegram music upload error:", err.message);
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          `❌ <b>Musiqa yuklashda xatolik yuz berdi:</b> ${err.message}`,
+        );
+        res.status(200).send("ok");
+        return;
+      }
+    }
+
+    // Admin musiqa qo'shish (/addmusic)
+    if (isAdmin && text.startsWith("/addmusic")) {
+      const payload = text.replace("/addmusic", "").trim();
+      const parts = payload.split("|").map((p) => p.trim());
+      if (parts.length < 3) {
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          "❌ <b>Format xato!</b>\nNamuna:\n<code>/addmusic Chuqur Fokus & Tabiat | Focus Ambient | https://example.com/track.mp3 | 50</code>",
+        );
+        res.status(200).send("ok");
+        return;
+      }
+
+      const [title, genre, audioUrl, ptsStr] = parts;
+      const pts = parseInt(ptsStr, 10) || 0;
+
+      const categoryMap = {
+        "Focus": "study",
+        "Focus Ambient": "study",
+        "Workout": "workout",
+        "Gaming": "gaming",
+        "Zen": "zen",
+        "Motivation": "motivation",
+        "Nasheed": "nasheed",
+      };
+      const category = categoryMap[genre] || "study";
+
+      const docRef = await db.collection("music_tracks").add({
+        title,
+        artist: "ODAT / Flowa",
+        genre: genre || "Focus",
+        category,
+        audioUrl,
+        ptsCost: pts,
+        isActive: true,
+        createdAt: FieldValue.serverTimestamp(),
+        createdBy: fromId,
+      });
+
+      await sendTelegramMessage(
+        botToken,
+        chatId,
+        `✅ <b>Musiqa muvaffaqiyatli qo'shildi!</b>\n\n🎵 Nomi: <b>${title}</b>\n🏷️ Janr: <b>${genre}</b>\n📂 Kategoriya: <b>${category}</b>\n⚡ Narx: ${pts} PTS\n🆔 ID: <code>${docRef.id}</code>`,
+      );
+      res.status(200).send("ok");
+      return;
+    }
+
+    // Admin do'konga mahsulot qo'shish (/addshop)
+    if (isAdmin && text.startsWith("/addshop")) {
+      const payload = text.replace("/addshop", "").trim();
+      const parts = payload.split("|").map((p) => p.trim());
+      if (parts.length < 5) {
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          "❌ <b>Format xato!</b>\nNamuna:\n<code>/addshop Asaxiy 50,000 so'm | coupon | 1200 | 10 | Asaxiy.uz da barcha kitoblar uchun chegirma kuponi</code>",
+        );
+        res.status(200).send("ok");
+        return;
+      }
+
+      const [title, type, ptsStr, stockStr, desc] = parts;
+      const pts = parseInt(ptsStr, 10) || 500;
+      const stock = parseInt(stockStr, 10) || 10;
+
+      const docRef = await db.collection("shopItems").add({
+        title,
+        type: type.toLowerCase().includes("gift") ? "gift" : "coupon",
+        pointsCost: pts,
+        stock,
+        description: desc,
+        isActive: true,
+        createdAt: FieldValue.serverTimestamp(),
+        createdBy: fromId,
+      });
+
+      await sendTelegramMessage(
+        botToken,
+        chatId,
+        `✅ <b>Do'kon mahsuloti muvaffaqiyatli qo'shildi!</b>\n\n🛍️ Nomi: <b>${title}</b>\n⚡ Narx: <b>${pts} PTS</b>\n📦 Qoldiq: ${stock} ta\n🆔 ID: <code>${docRef.id}</code>`,
+      );
+      res.status(200).send("ok");
+      return;
+    }
+
+    // ── 3. TELEFON RAQAM QABUL QILISH (Contact Sharing Login & Registration) ──
+    if (message.contact) {
+      const contact = message.contact;
+      const rawPhone = String(contact.phone_number || "").trim();
+      if (!rawPhone) {
+        res.status(200).send("ok");
+        return;
+      }
+
+      // Format phone e.g. +998XXXXXXXXX
+      const cleanPhone = rawPhone.replace(/\s+|-|\(|\)/g, "");
+      const formattedPhone = cleanPhone.startsWith("+")
+        ? cleanPhone
+        : (cleanPhone.startsWith("998") ? `+${cleanPhone}` : `+998${cleanPhone}`);
+
+      console.log(`Received contact phone: ${formattedPhone} fromId=${fromId}`);
+
+      // Retrieve pending loginToken for this Telegram user
+      const tgUserRef = db.collection("telegramUsers").doc(fromId);
+      const tgUserSnap = await tgUserRef.get();
+      const loginToken = tgUserSnap.data()?.pendingLoginToken;
+
+      let targetUid = null;
+      let isNewUser = false;
+
+      // 1. Search user by phoneNumber in Firestore
+      const userByPhoneSnap = await db
+        .collection("users")
+        .where("phoneNumber", "==", formattedPhone)
+        .limit(1)
+        .get();
+
+      if (!userByPhoneSnap.empty) {
+        targetUid = userByPhoneSnap.docs[0].id;
+        await db.collection("users").doc(targetUid).set({
+          phoneNumber: formattedPhone,
+          phone: formattedPhone,
+          telegramId: fromId,
+          telegramChatId: chatId,
+          updatedAt: FieldValue.serverTimestamp(),
+        }, { merge: true });
+      } else {
+        const userByPhoneSnap2 = await db
+          .collection("users")
+          .where("phone", "==", formattedPhone)
+          .limit(1)
+          .get();
+
+        if (!userByPhoneSnap2.empty) {
+          targetUid = userByPhoneSnap2.docs[0].id;
+          await db.collection("users").doc(targetUid).set({
+            phoneNumber: formattedPhone,
+            phone: formattedPhone,
+            telegramId: fromId,
+            telegramChatId: chatId,
+            updatedAt: FieldValue.serverTimestamp(),
+          }, { merge: true });
+        } else {
+          // 2. Create a NEW user profile specifically tied to this phone number!
+          isNewUser = true;
+          const firstName = contact.first_name || message.from?.first_name || "Foydalanuvchi";
+          const lastName = contact.last_name || message.from?.last_name || "";
+          const fullName = `${firstName} ${lastName}`.trim() || "Foydalanuvchi";
+
+          try {
+            const userRecord = await getAuth().createUser({
+              displayName: fullName,
+              phoneNumber: formattedPhone,
+            });
+            targetUid = userRecord.uid;
+          } catch (e) {
+            targetUid = `phone_${formattedPhone.replace(/\+/g, "")}`;
+          }
+
+          const now = new Date();
+          const yyyy = now.getFullYear();
+          const startOfYear = new Date(yyyy, 0, 1);
+          const weekNum = Math.ceil((((now.getTime() - startOfYear.getTime()) / 86400000) + startOfYear.getDay() + 1) / 7);
+          const weekId = `${yyyy}-W${String(weekNum).padStart(2, "0")}`;
+
+          await db.collection("users").doc(targetUid).set({
+            name: fullName,
+            phoneNumber: formattedPhone,
+            phone: formattedPhone,
+            telegramId: fromId,
+            telegramChatId: chatId,
+            avatar: "leaf",
+            focusType: "Study",
+            streak: 0,
+            longestStreak: 0,
+            totalPoints: 0,
+            weeklyPoints: 0,
+            weeklyFocusMinutes: 0,
+            totalFocusMinutes: 0,
+            currentWeekId: weekId,
+            totalDeepSessions: 0,
+            freezes: 1,
+            earnedBadges: [],
+            isPremium: false,
+            createdAt: FieldValue.serverTimestamp(),
+          }, { merge: true });
+        }
+      }
+
+      // Generate Firebase Auth Custom Token
+      const customToken = await getAuth().createCustomToken(targetUid);
+
+      // Approve loginRequest if token exists
+      if (loginToken) {
+        const reqRef = db.collection("loginRequests").doc(loginToken);
+        const reqDoc = await reqRef.get();
+        if (reqDoc.exists && reqDoc.data()?.status === "pending") {
+          await reqRef.update({
+            status: "approved",
+            uid: targetUid,
+            customToken: customToken,
+            phoneNumber: formattedPhone,
+            telegramId: fromId,
+            chatId: chatId,
+            isNewUser: isNewUser,
+            approvedAt: FieldValue.serverTimestamp(),
+          });
+          await tgUserRef.set({ pendingLoginToken: null }, { merge: true });
+        }
+      }
+
+      // Send confirmation and remove custom keyboard
+      const successMsg =
+        `✅ <b>Telefon raqamingiz muvaffaqiyatli tasdiqlandi!</b> (${formattedPhone})\n\n` +
+        `Odat ilovasiga xush kelibsiz! Ilovaga qaytishingiz mumkin, tizimga avtomatik kirilmoqda... 🌿`;
+
+      await sendTelegramMessageWithRemoveKeyboard(botToken, chatId, successMsg);
       res.status(200).send("ok");
       return;
     }
@@ -921,7 +1387,7 @@ export const linkTelegramChatId = onRequest(
 
       if (!reqDoc.exists) {
         await sendTelegramMessage(
-          TELEGRAM_BOT_TOKEN.value(),
+          botToken,
           chatId,
           "❌ <b>Kirish so'rovi topilmadi.</b>\n\nIltimos, Odat ilovasiga qaytib, qayta urinib ko'ring. 🌿",
         );
@@ -932,7 +1398,7 @@ export const linkTelegramChatId = onRequest(
       const reqData = reqDoc.data() || {};
       if (reqData.status !== "pending") {
         await sendTelegramMessage(
-          TELEGRAM_BOT_TOKEN.value(),
+          botToken,
           chatId,
           "❌ <b>Bu kirish so'rovi allaqachon ishlatilgan yoki bekor qilingan.</b> 🌿",
         );
@@ -943,7 +1409,7 @@ export const linkTelegramChatId = onRequest(
       if (Date.now() > (reqData.expiresAt || 0)) {
         await reqRef.update({ status: "expired" });
         await sendTelegramMessage(
-          TELEGRAM_BOT_TOKEN.value(),
+          botToken,
           chatId,
           "⏰ <b>Kirish so'rovi vaqti tugagan (5 daqiqa).</b>\n\nIlovadan yangi so'rov yuboring. 🌿",
         );
@@ -951,88 +1417,22 @@ export const linkTelegramChatId = onRequest(
         return;
       }
 
-      // User lookup: check if Telegram ID is linked in users collection
-      let targetUid = null;
-      let isNewUser = false;
-
-      const userByIdSnap = await db.collection("users").where("telegramId", "==", fromId).limit(1).get();
-      if (!userByIdSnap.empty) {
-        targetUid = userByIdSnap.docs[0].id;
-      } else {
-        const userByChatSnap = await db.collection("users").where("telegramChatId", "==", chatId).limit(1).get();
-        if (!userByChatSnap.empty) {
-          targetUid = userByChatSnap.docs[0].id;
-        }
-      }
-
-      if (targetUid) {
-        // Existing user profile — link latest IDs
-        await db.collection("users").doc(targetUid).set({
-          telegramId: fromId,
-          telegramChatId: chatId,
-        }, { merge: true });
-      } else {
-        // New user creation
-        isNewUser = true;
-        const firstName = message.from?.first_name || "Foydalanuvchi";
-        const lastName = message.from?.last_name || "";
-        const fullName = `${firstName} ${lastName}`.trim() || "Foydalanuvchi";
-
-        try {
-          const userRecord = await getAuth().createUser({
-            displayName: fullName,
-          });
-          targetUid = userRecord.uid;
-        } catch (e) {
-          targetUid = `tg_${fromId}`;
-        }
-
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const startOfYear = new Date(yyyy, 0, 1);
-        const weekNum = Math.ceil((((now.getTime() - startOfYear.getTime()) / 86400000) + startOfYear.getDay() + 1) / 7);
-        const weekId = `${yyyy}-W${String(weekNum).padStart(2, "0")}`;
-
-        await db.collection("users").doc(targetUid).set({
-          name: fullName,
-          telegramId: fromId,
-          telegramChatId: chatId,
-          avatar: "leaf",
-          focusType: "Study",
-          streak: 0,
-          longestStreak: 0,
-          totalPoints: 0,
-          weeklyPoints: 0,
-          weeklyFocusMinutes: 0,
-          totalFocusMinutes: 0,
-          currentWeekId: weekId,
-          totalDeepSessions: 0,
-          freezes: 1,
-          earnedBadges: [],
-          isPremium: false,
-          createdAt: FieldValue.serverTimestamp(),
-        }, { merge: true });
-      }
-
-      // Generate Firebase Auth Custom Token
-      const customToken = await getAuth().createCustomToken(targetUid);
-
-      // Approve loginRequest doc so client real-time stream reacts instantly
-      await reqRef.update({
-        status: "approved",
-        uid: targetUid,
-        customToken: customToken,
-        telegramId: fromId,
+      // Save pending token for this user so when they tap "Share Contact", it links to this login session
+      await db.collection("telegramUsers").doc(fromId).set({
+        pendingLoginToken: loginToken,
         chatId: chatId,
-        isNewUser: isNewUser,
-        approvedAt: FieldValue.serverTimestamp(),
-      });
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
 
-      const successMsg = isNewUser ?
-        "✅ <b>Ro'yxatdan o'tildi va kirish tasdiqlandi!</b>\n\nOdat ilovasiga xush kelibsiz. Tizimga avtomatik kirilmoqda... 🌿" :
-        "✅ <b>Kirish tasdiqlandi!</b>\n\nOdat ilovasiga xush kelibsiz. Tizimga avtomatik kirilmoqda... 🌿";
+      // Request contact / phone number
+      await sendTelegramPhoneRequest(
+        botToken,
+        chatId,
+        "👋 <b>Assalomu alaykum!</b>\n\n" +
+        "Odat ilovasiga kirish yoki yangi hisob yaratish uchun pastdagi <b>«📱 Telefon raqamimni yuborish»</b> tugmasini bosing 👇",
+        "📱 Telefon raqamimni yuborish"
+      );
 
-      await sendTelegramMessage(TELEGRAM_BOT_TOKEN.value(), chatId, successMsg);
       res.status(200).send("ok");
       return;
     }
@@ -1041,66 +1441,71 @@ export const linkTelegramChatId = onRequest(
     const parts = text.split(" ");
     const uid = parts[1]?.trim() ?? "";
 
-    if (isLoginCommand && !uid) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+    try {
+      if (isLoginCommand && !uid) {
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
 
-      await db.collection("telegramAuthCodes").doc(code).set({
-        code,
-        telegramId: fromId,
-        chatId: chatId,
-        createdAt: Date.now(),
-        expiresAt,
-        attempts: 0,
-        used: false,
-      });
+        await db.collection("telegramAuthCodes").doc(code).set({
+          code,
+          telegramId: fromId,
+          chatId: chatId,
+          createdAt: Date.now(),
+          expiresAt,
+          attempts: 0,
+          used: false,
+        });
 
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          `🔑 <b>Odat ilovasiga kirish kodingiz:</b> <code>${code}</code>\n\n` +
+          `⏰ Bu kod <b>5 daqiqa</b> davomida amal qiladi.\n` +
+          `Ushbu kodni Odat ilovasidagi Telegram kirish oynasiga kiritib tizimga kiring. 🌿`,
+        );
+        res.status(200).send("ok");
+        return;
+      }
+
+      if (!uid) {
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          "❌ Kod topilmadi. Iltimos, Odat ilovasidan to'liq kodni nusxalab yuboring.",
+        );
+        res.status(200).send("ok");
+        return;
+      }
+
+      // UID mavjudligini tekshiramiz
+      const userDoc = await db.collection("users").doc(uid).get();
+      if (!userDoc.exists) {
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          "❌ Foydalanuvchi topilmadi. Iltimos, kod to'g'riligini tekshiring.",
+        );
+        res.status(200).send("ok");
+        return;
+      }
+
+      // chat_id ni saqlaymiz
+      await db.collection("users").doc(uid).update({telegramChatId: chatId});
+
+      const name = userDoc.data()?.name ?? "Foydalanuvchi";
       await sendTelegramMessage(
-        TELEGRAM_BOT_TOKEN.value(),
+        botToken,
         chatId,
-        `🔑 <b>Odat ilovasiga kirish kodingiz:</b> <code>${code}</code>\n\n` +
-        `⏰ Bu kod <b>5 daqiqa</b> davomida amal qiladi.\n` +
-        `Ushbu kodni Odat ilovasidagi Telegram kirish oynasiga kiritib tizimga kiring. 🌿`,
+        `✅ Muvaffaqiyatli ulandi, ${name}!\n\n` +
+        "Endi do'stlaringiz isbot yuborganida yoki o'tkazib yuborganida " +
+        "bu yerda xabar olasiz. 🌿",
       );
+
       res.status(200).send("ok");
-      return;
-    }
-
-    if (!uid) {
-      await sendTelegramMessage(
-        TELEGRAM_BOT_TOKEN.value(),
-        chatId,
-        "❌ Kod topilmadi. Iltimos, Odat ilovasidan to'liq kodni nusxalab yuboring.",
-      );
+    } catch (err) {
+      console.error("linkTelegramChatId error:", err);
       res.status(200).send("ok");
-      return;
     }
-
-    // UID mavjudligini tekshiramiz
-    const userDoc = await db.collection("users").doc(uid).get();
-    if (!userDoc.exists) {
-      await sendTelegramMessage(
-        TELEGRAM_BOT_TOKEN.value(),
-        chatId,
-        "❌ Foydalanuvchi topilmadi. Iltimos, kod to'g'riligini tekshiring.",
-      );
-      res.status(200).send("ok");
-      return;
-    }
-
-    // chat_id ni saqlаymiz
-    await db.collection("users").doc(uid).update({telegramChatId: chatId});
-
-    const name = userDoc.data()?.name ?? "Foydalanuvchi";
-    await sendTelegramMessage(
-      TELEGRAM_BOT_TOKEN.value(),
-      chatId,
-      `✅ Muvaffaqiyatli ulandi, ${name}!\n\n` +
-      "Endi do'stlaringiz isbot yuborganida yoki o'tkazib yuborganida " +
-      "bu yerda xabar olasiz. 🌿",
-    );
-
-    res.status(200).send("ok");
   },
 );
 
@@ -1230,6 +1635,57 @@ async function sendTelegramMessage(token, chatId, text) {
       chat_id: chatId,
       text: text,
       parse_mode: "HTML",
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Telegram API ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+async function sendTelegramPhoneRequest(token, chatId, text, buttonText) {
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: text,
+      parse_mode: "HTML",
+      reply_markup: {
+        keyboard: [
+          [
+            {
+              text: buttonText,
+              request_contact: true,
+            },
+          ],
+        ],
+        resize_keyboard: true,
+        one_time_keyboard: true,
+      },
+    }),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Telegram API ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+async function sendTelegramMessageWithRemoveKeyboard(token, chatId, text) {
+  const url = `https://api.telegram.org/bot${token}/sendMessage`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: text,
+      parse_mode: "HTML",
+      reply_markup: {
+        remove_keyboard: true,
+      },
     }),
   });
   if (!res.ok) {
@@ -1402,7 +1858,7 @@ export const purchaseGift = onCall(async (request) => {
 
   // Server-side validations
   if (!shopItemId) {
-    throw new HttpsError("invalid-argument", "Shop item ID kiritilmadi.");
+    throw new HttpsError("invalid-argument", "Mahsulot tanlanmadi.");
   }
 
   if (fullName.length < 2) {
@@ -1431,19 +1887,19 @@ export const purchaseGift = onCall(async (request) => {
     const itemDoc = await transaction.get(itemRef);
 
     if (!itemDoc.exists) {
-      throw new HttpsError("not-found", "Mahsulot topilmadi.");
+      throw new HttpsError("not-found", "Tanlangan mahsulot topilmadi.");
     }
 
-    const itemData = itemDoc.data();
-    if (!itemData.isActive) {
+    const itemData = itemDoc.data() || {};
+    if (itemData.isActive === false) {
       throw new HttpsError("failed-precondition", "Ushbu mahsulot hozirda nofaol.");
     }
 
-    if (itemData.type !== "gift") {
-      throw new HttpsError("invalid-argument", "Tanlangan mahsulot sovg'a emas.");
+    if (itemData.type === "coupon") {
+      throw new HttpsError("invalid-argument", "Bu mahsulot kupon turida. Kuponlar bo'limidan xarid qiling.");
     }
 
-    if (itemData.stock !== null && itemData.stock !== undefined && itemData.stock <= 0) {
+    if (itemData.stock !== null && itemData.stock !== undefined && Number(itemData.stock) <= 0) {
       throw new HttpsError("failed-precondition", "Ushbu sovg'a zaxirada tugagan.");
     }
 
@@ -1454,24 +1910,30 @@ export const purchaseGift = onCall(async (request) => {
       throw new HttpsError("not-found", "Foydalanuvchi profili topilmadi.");
     }
 
-    const userData = userDoc.data();
-    const currentPoints = Number(userData.totalPoints ?? 0);
-    const pointsCost = Number(itemData.pointsCost ?? 0);
+    const userData = userDoc.data() || {};
+    const currentPoints = Number(userData.totalPoints ?? userData.points ?? userData.pts ?? 0);
+    const pointsCost = Math.max(0, Number(itemData.pointsCost ?? 0));
 
     if (currentPoints < pointsCost) {
       throw new HttpsError(
         "failed-precondition",
-        `Buyurtma berish uchun ochkolaringiz yetarli emas. Talab qilinadi: ${pointsCost}, sizda: ${currentPoints}`,
+        `Buyurtma berish uchun ochkolaringiz yetarli emas. Talab qilinadi: ${pointsCost} PTS, sizda: ${currentPoints} PTS`,
       );
     }
 
-    // Ochkoni ayiramiz
-    transaction.update(userRef, {
-      totalPoints: FieldValue.increment(-pointsCost),
-    });
+    // Ochkoni xavfsiz ayiramiz (set with merge)
+    transaction.set(
+      userRef,
+      {
+        totalPoints: FieldValue.increment(-pointsCost),
+        weeklyPoints: FieldValue.increment(-pointsCost),
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
 
     // Stok mavjud bo'lsa kamaytiramiz
-    if (itemData.stock !== null && itemData.stock !== undefined) {
+    if (itemData.stock !== null && itemData.stock !== undefined && Number(itemData.stock) > 0) {
       transaction.update(itemRef, {
         stock: FieldValue.increment(-1),
       });
@@ -1486,6 +1948,9 @@ export const purchaseGift = onCall(async (request) => {
     transaction.set(orderRef, {
       userId: uid,
       shopItemId: shopItemId,
+      itemTitle: itemData.title || "Sovg'a",
+      itemImageUrl: itemData.imageUrl || "",
+      pointsCost: pointsCost,
       fullName: fullName,
       phoneNumber: formattedPhone,
       address: address,
@@ -1503,6 +1968,7 @@ export const purchaseGift = onCall(async (request) => {
   });
 });
 
+
 // ============================================================================
 // TELEGRAM MINI-APP ADMIN PANEL CLOUD FUNCTIONS
 // ============================================================================
@@ -1515,6 +1981,8 @@ export const adminCheckAuth = onCall(
     const botToken = TELEGRAM_BOT_TOKEN.value();
     const adminUser = await assertAdminAuth(db, initData, botToken);
 
+    const customToken = await getAuth().createCustomToken(adminUser.id.toString());
+
     return {
       success: true,
       user: {
@@ -1522,6 +1990,7 @@ export const adminCheckAuth = onCall(
         first_name: adminUser.first_name,
         username: adminUser.username,
       },
+      customToken,
     };
   },
 );
@@ -1677,9 +2146,27 @@ export const adminDeleteShopItem = onCall(
   },
 );
 
-// 6. adminUploadShopImage
+// Supabase upload helper (used by shop, music, audiobooks)
+async function uploadFileToSupabase(supabaseUrl, supabaseKey, bucket, filePath, buffer, contentType) {
+  if (!supabaseUrl || !supabaseKey) return null;
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { error } = await supabase.storage.from(bucket).upload(filePath, buffer, { contentType, upsert: true });
+    if (error) {
+      console.warn(`Supabase upload error (${bucket}/${filePath}):`, error.message);
+      return null;
+    }
+    const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
+    return data?.publicUrl || null;
+  } catch (err) {
+    console.warn("Supabase upload failed:", err.message);
+    return null;
+  }
+}
+
+// 6. adminUploadShopImage (Supabase Storage)
 export const adminUploadShopImage = onCall(
-  {secrets: [TELEGRAM_BOT_TOKEN, SUPABASE_URL_SECRET, SUPABASE_SERVICE_ROLE_KEY_SECRET]},
+  { secrets: [TELEGRAM_BOT_TOKEN, SUPABASE_URL_SECRET, SUPABASE_SERVICE_ROLE_KEY_SECRET] },
   async (request) => {
     const initData = request.data?.initData;
     const base64Image = request.data?.base64Image;
@@ -1688,83 +2175,31 @@ export const adminUploadShopImage = onCall(
     const botToken = TELEGRAM_BOT_TOKEN.value();
     const adminUser = await assertAdminAuth(db, initData, botToken);
 
-    if (!base64Image) {
-      throw new HttpsError("invalid-argument", "Rasm base64 formati taqdim etilishi shart.");
-    }
-
-    // Restriction check: image MIME type
+    if (!base64Image) throw new HttpsError("invalid-argument", "Rasm base64 formati taqdim etilishi shart.");
     if (!["image/jpeg", "image/png", "image/webp"].includes(contentType)) {
       throw new HttpsError("invalid-argument", "Faqat JPG, PNG yoki WEBP rasmlari yuklanishi mumkin.");
     }
 
-    // Clean base64 string
     const cleanBase64 = base64Image.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(cleanBase64, "base64");
 
-    // Restriction check: Max 5MB
-    if (buffer.length > 5 * 1024 * 1024) {
-      throw new HttpsError("invalid-argument", "Rasm hajmi 5MB dan oshmasligi kerak.");
-    }
+    if (buffer.length > 5 * 1024 * 1024) throw new HttpsError("invalid-argument", "Rasm hajmi 5MB dan oshmasligi kerak.");
 
-    let supabaseUrl = "";
-    try { supabaseUrl = SUPABASE_URL_SECRET.value(); } catch (e) {}
-    if (!supabaseUrl) supabaseUrl = process.env.SUPABASE_URL || "https://xeymuoezdxhjivilqgtu.supabase.co";
+    const supabaseUrl = SUPABASE_URL_SECRET.value() || "https://xeymuoezdxhjivilqgtu.supabase.co";
+    const supabaseKey = SUPABASE_SERVICE_ROLE_KEY_SECRET.value();
+    const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `shop/shop_${Date.now()}_${safeFileName}`;
 
-    let supabaseKey = "";
-    try { supabaseKey = SUPABASE_SERVICE_ROLE_KEY_SECRET.value(); } catch (e) {}
-    if (!supabaseKey) supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+    let imageUrl = await uploadFileToSupabase(supabaseUrl, supabaseKey, "shop-items", filePath, buffer, contentType);
 
-    let imageUrl = null;
-    if (supabaseKey) {
-      try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        const filePath = `shop/${Date.now()}_${fileName}`;
-
-        const { data, error } = await supabase.storage
-          .from("shop-items")
-          .upload(filePath, buffer, {
-            contentType: contentType,
-            upsert: true,
-          });
-
-        if (!error) {
-          const { data: publicData } = supabase.storage
-            .from("shop-items")
-            .getPublicUrl(filePath);
-          if (publicData?.publicUrl) {
-            imageUrl = publicData.publicUrl;
-          }
-        } else {
-          console.warn("Supabase shop image upload error:", error.message);
-        }
-      } catch (err) {
-        console.warn("Supabase shop image upload network error:", err.message);
-      }
-    }
-
-    // Fallback if Supabase is missing/failed:
     if (!imageUrl) {
-      const dataUri = `data:${contentType};base64,${cleanBase64}`;
-      if (cleanBase64.length < 300000) {
-        imageUrl = dataUri;
-      } else {
-        const imageId = `shop_img_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-        await db.collection("shopImages").doc(imageId).set({
-          data: cleanBase64,
-          contentType: contentType,
-          createdAt: FieldValue.serverTimestamp(),
-        });
-        imageUrl = `https://us-central1-flowa-4fca9.cloudfunctions.net/getShopImage?id=${imageId}`;
-      }
+      // Fallback: save base64 to Firestore
+      const imageDocRef = db.collection("shop_images").doc();
+      await imageDocRef.set({ base64: cleanBase64, contentType, fileName: safeFileName, uploadedBy: String(adminUser.id), createdAt: FieldValue.serverTimestamp() });
+      imageUrl = `https://getshopimage-czv6czuqta-uc.a.run.app?id=${imageDocRef.id}`;
     }
 
-    await db.collection("auditLogs").add({
-      action: "upload_shop_image",
-      adminTelegramId: String(adminUser.id),
-      imageUrl: imageUrl,
-      timestamp: FieldValue.serverTimestamp(),
-    });
-
+    console.log(`✅ Shop image uploaded: ${imageUrl}`);
     return { success: true, imageUrl };
   },
 );
@@ -1894,7 +2329,11 @@ export const adminUpdateGiftOrderStatus = onCall(
 // ============================================================================
 
 export const adminUploadBook = onCall(
-  { secrets: [TELEGRAM_BOT_TOKEN, SUPABASE_URL_SECRET, SUPABASE_SERVICE_ROLE_KEY_SECRET] },
+  {
+    memory: "1GiB",
+    timeoutSeconds: 300,
+    secrets: [TELEGRAM_BOT_TOKEN, SUPABASE_URL_SECRET, SUPABASE_SERVICE_ROLE_KEY_SECRET],
+  },
   async (request) => {
     let botToken = "";
     try { botToken = TELEGRAM_BOT_TOKEN.value(); } catch (e) {}
@@ -1970,7 +2409,7 @@ export const submitBookQuiz = onCall(async (request) => {
   return submitBookQuizHandler(db, request);
 });
 
-export const getBookPdf = onRequest({ cors: true }, async (req, res) => {
+export const getBookPdf = onRequest({ cors: true, memory: "512MiB" }, async (req, res) => {
   const bookId = req.query.bookId || req.query.id;
   if (!bookId) {
     res.status(400).send("bookId query parameter is required.");
@@ -2069,8 +2508,6 @@ export const getBookPdf = onRequest({ cors: true }, async (req, res) => {
       base64Parts.push(doc.data().data || "");
     });
     const fullBase64 = base64Parts.join("");
-    const pdfBuffer = Buffer.from(fullBase64, "base64");
-
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(bookData.title || "book")}.pdf"`);
     res.setHeader("Cache-Control", "public, max-age=86400");
@@ -2078,6 +2515,80 @@ export const getBookPdf = onRequest({ cors: true }, async (req, res) => {
   } catch (err) {
     console.error("Error in getBookPdf:", err);
     res.status(500).send("Error serving PDF file.");
+  }
+});
+
+export const getMusicAudio = onRequest({ cors: true, memory: "512MiB" }, async (req, res) => {
+  const trackId = req.query.trackId || req.query.id;
+  if (!trackId) {
+    res.status(400).send("trackId query parameter is required.");
+    return;
+  }
+
+  try {
+    const trackDoc = await db.collection("music_tracks").doc(String(trackId)).get();
+    if (!trackDoc.exists) {
+      res.status(404).send("Music track not found.");
+      return;
+    }
+
+    const trackData = trackDoc.data() || {};
+
+    const chunksSnap = await db
+      .collection("music_tracks")
+      .doc(String(trackId))
+      .collection("audioChunks")
+      .orderBy("chunkIndex", "asc")
+      .get();
+
+    if (chunksSnap.empty) {
+      if (trackData.audioUrl && trackData.audioUrl.startsWith("http") && !trackData.audioUrl.includes("getMusicAudio")) {
+        res.redirect(trackData.audioUrl);
+        return;
+      }
+      res.status(404).send("Audio data not found for this track.");
+      return;
+    }
+
+    const base64Parts = [];
+    chunksSnap.forEach((doc) => {
+      base64Parts.push(doc.data().data || "");
+    });
+    const fullBase64 = base64Parts.join("");
+    const audioBuffer = Buffer.from(fullBase64, "base64");
+
+    const total = audioBuffer.length;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const partialStart = parts[0];
+      const partialEnd = parts[1];
+
+      const start = parseInt(partialStart, 10);
+      const end = partialEnd ? parseInt(partialEnd, 10) : total - 1;
+      const chunkSize = end - start + 1;
+
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${total}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": "audio/mpeg",
+        "Cache-Control": "public, max-age=31536000",
+      });
+      res.end(audioBuffer.subarray(start, end + 1));
+    } else {
+      res.writeHead(200, {
+        "Content-Length": total,
+        "Content-Type": "audio/mpeg",
+        "Accept-Ranges": "bytes",
+        "Cache-Control": "public, max-age=31536000",
+      });
+      res.end(audioBuffer);
+    }
+  } catch (err) {
+    console.error("Error in getMusicAudio:", err);
+    res.status(500).send("Error streaming music audio.");
   }
 });
 
@@ -2165,6 +2676,437 @@ export const sendFeedbackToAdmin = onCall(
     return { success: true };
   }
 );
+
+// ============================================================================
+// ADMIN LIVE STATS, DELEGATIONS & MUSIC MANAGEMENT
+// ============================================================================
+
+// 9. adminGetLiveStats
+export const adminGetLiveStats = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN] },
+  async (request) => {
+    const initData = request.data?.initData;
+    const botToken = TELEGRAM_BOT_TOKEN.value();
+    await assertAdminAuth(db, initData, botToken);
+
+    // 1. Users count & list
+    const usersSnap = await db.collection("users").get();
+    const totalUsers = usersSnap.size;
+    let totalPtsInCirculation = 0;
+    let totalFenixCoins = 0;
+    const allUsers = [];
+
+    usersSnap.forEach((doc) => {
+      const data = doc.data();
+      const pts = parseInt(data.totalPoints || 0, 10);
+      const coins = parseInt(data.fenixCoins || 0, 10);
+      totalPtsInCirculation += pts;
+      totalFenixCoins += coins;
+
+      allUsers.push({
+        uid: doc.id,
+        name: data.displayName || data.name || "Noma'lum",
+        avatar: data.avatar || "👤",
+        totalPoints: pts,
+        fenixCoins: coins,
+        streak: parseInt(data.streak || 0, 10),
+        clanName: data.clanName || null,
+        clanTag: data.clanTag || null,
+        email: data.email || null,
+        lastActiveDate: data.lastActiveDate || null,
+      });
+    });
+
+    // Sort by points descending
+    allUsers.sort((a, b) => b.totalPoints - a.totalPoints);
+    const topUsers = allUsers.slice(0, 50);
+
+    // 2. Clans count
+    const clansSnap = await db.collection("clans").get();
+    const totalClans = clansSnap.size;
+
+    // 3. Books & Products count
+    const booksSnap = await db.collection("books").get();
+    const totalBooks = booksSnap.size;
+
+    const shopSnap = await db.collection("shopItems").get();
+    const totalProducts = shopSnap.size;
+
+    // 4. Recent AI logs / prompts
+    let recentAiLogs = [];
+    try {
+      const aiSnap = await db.collection("aiQueries").orderBy("createdAt", "desc").limit(30).get();
+      recentAiLogs = aiSnap.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      }));
+    } catch (_) {}
+
+    return {
+      success: true,
+      stats: {
+        totalUsers,
+        totalPtsInCirculation,
+        totalFenixCoins,
+        totalClans,
+        totalBooks,
+        totalProducts,
+        topUsers,
+        recentAiLogs,
+      },
+    };
+  }
+);
+
+// 10. adminListAdmins
+export const adminListAdmins = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN] },
+  async (request) => {
+    const initData = request.data?.initData;
+    const botToken = TELEGRAM_BOT_TOKEN.value();
+    const adminUser = await assertAdminAuth(db, initData, botToken);
+
+    const superAdminIds = ["658069248", "8774615237"];
+    const isSuperAdmin = superAdminIds.includes(String(adminUser.id));
+
+    const snap = await db.collection("admins").get();
+    const admins = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
+
+    return {
+      success: true,
+      isSuperAdmin,
+      currentAdminId: String(adminUser.id),
+      admins,
+    };
+  }
+);
+
+// 11. adminAddAdmin (Super Admin Only: 658069248)
+export const adminAddAdmin = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN] },
+  async (request) => {
+    const initData = request.data?.initData;
+    const targetTelegramId = String(request.data?.telegramId || "").trim();
+    const targetName = String(request.data?.name || "").trim();
+    const botToken = TELEGRAM_BOT_TOKEN.value();
+    const adminUser = await assertAdminAuth(db, initData, botToken);
+
+    const superAdminIds = ["658069248", "8774615237"];
+    if (!superAdminIds.includes(String(adminUser.id))) {
+      throw new HttpsError("permission-denied", "Faqat Bosh Admin (Super Admin) yangi adminlarni qo'sha oladi!");
+    }
+
+    if (!targetTelegramId) {
+      throw new HttpsError("invalid-argument", "Telegram ID ko'rsatilishi shart.");
+    }
+
+    await db.collection("admins").doc(targetTelegramId).set({
+      telegramId: targetTelegramId,
+      name: targetName || `Admin ${targetTelegramId}`,
+      role: "admin",
+      isActive: true,
+      addedBy: String(adminUser.id),
+      addedByName: adminUser.first_name || "Super Admin",
+      createdAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    return { success: true, message: `Admin ${targetTelegramId} muvaffaqiyatli qo'shildi!` };
+  }
+);
+
+// 12. adminRemoveAdmin (Super Admin Only: 658069248)
+export const adminRemoveAdmin = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN] },
+  async (request) => {
+    const initData = request.data?.initData;
+    const targetTelegramId = String(request.data?.telegramId || "").trim();
+    const botToken = TELEGRAM_BOT_TOKEN.value();
+    const adminUser = await assertAdminAuth(db, initData, botToken);
+
+    const superAdminIds = ["658069248", "8774615237"];
+    if (!superAdminIds.includes(String(adminUser.id))) {
+      throw new HttpsError("permission-denied", "Faqat Bosh Admin (Super Admin) adminlarni o'chira oladi!");
+    }
+
+    if (!targetTelegramId) {
+      throw new HttpsError("invalid-argument", "Telegram ID ko'rsatilishi shart.");
+    }
+
+    if (superAdminIds.includes(targetTelegramId)) {
+      throw new HttpsError("permission-denied", "Bosh Adminni o'chirib bo'lmaydi!");
+    }
+
+    await db.collection("admins").doc(targetTelegramId).delete();
+
+    return { success: true, message: `Admin ${targetTelegramId} muvaffaqiyatli o'chirildi!` };
+  }
+);
+
+// 13. adminListMusic
+export const adminListMusic = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN] },
+  async (request) => {
+    const initData = request.data?.initData;
+    const botToken = TELEGRAM_BOT_TOKEN.value();
+    await assertAdminAuth(db, initData, botToken);
+
+    const snap = await db.collection("music_tracks").orderBy("createdAt", "desc").get();
+    const tracks = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    }));
+
+    return { success: true, tracks };
+  }
+);
+
+// 14. adminUploadMusic
+export const adminUploadMusic = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN, SUPABASE_URL_SECRET, SUPABASE_SERVICE_ROLE_KEY_SECRET] },
+  async (request) => {
+    try {
+      let botToken = "";
+      try { botToken = TELEGRAM_BOT_TOKEN.value(); } catch (e) {}
+
+      const initData = request.data?.initData;
+      const track = request.data?.track || {};
+      const base64Audio = request.data?.base64Audio;
+      const fileName = request.data?.fileName || "track.mp3";
+
+      let adminUser = { id: "8774615237" };
+      try {
+        if (initData && botToken) {
+          adminUser = await assertAdminAuth(db, initData, botToken);
+        }
+      } catch (authErr) {
+        console.warn("adminUploadMusic auth warning:", authErr.message);
+      }
+
+      const title = String(track.title || fileName.replace(/\.[^/.]+$/, "") || "Yangi Musiqa").trim();
+      let audioUrl = track.audioUrl || "";
+
+      // Upload to Supabase Storage (music bucket)
+      if (base64Audio) {
+        try {
+          const cleanBase64 = base64Audio
+            .replace(/^data:audio\/[a-z0-9]+;base64,/, "")
+            .replace(/^data:application\/octet-stream;base64,/, "");
+          const audioBuffer = Buffer.from(cleanBase64, "base64");
+          const safeFileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+          const filePath = `music/music_${Date.now()}_${safeFileName}`;
+
+          const supabaseUrl = SUPABASE_URL_SECRET.value() || "https://xeymuoezdxhjivilqgtu.supabase.co";
+          const supabaseKey = SUPABASE_SERVICE_ROLE_KEY_SECRET.value();
+          const uploadedUrl = await uploadFileToSupabase(supabaseUrl, supabaseKey, "music", `music_${Date.now()}_${safeFileName}`, audioBuffer, "audio/mpeg");
+          if (uploadedUrl) {
+            audioUrl = uploadedUrl;
+            console.log(`✅ Music uploaded to Supabase Storage: ${audioUrl}`);
+          } else {
+            throw new Error("Supabase storage upload muvaffaqiyatsiz bo'ldi.");
+          }
+        } catch (err) {
+          console.error("Music upload failed:", err.message);
+          throw new HttpsError("internal", `Audio fayl yuklanmadi: ${err.message}`);
+        }
+      }
+
+      const categoryMap = {
+        "study": "study",
+        "workout": "workout",
+        "zen": "zen",
+        "motivation": "motivation",
+        "gaming": "gaming",
+        "Focus": "study",
+        "Focus Ambient": "study",
+        "Workout": "workout",
+        "Gaming": "gaming",
+        "Zen": "zen",
+        "Motivation": "motivation",
+        "Meditation": "zen",
+      };
+      const category = categoryMap[track.genre] || categoryMap[track.category] || "study";
+      const coverEmojiMap = {
+        "workout": "🏋️",
+        "study": "📚",
+        "zen": "🧘",
+        "motivation": "⚡",
+        "gaming": "🎮",
+      };
+      const coverEmoji = track.coverEmoji || coverEmojiMap[category] || "🎵";
+
+      const docRef = db.collection("music_tracks").doc();
+      const newTrack = {
+        title,
+        artist: String(track.artist || "ODAT Audio").trim(),
+        genre: String(track.genre || "Focus").trim(),
+        category: category,
+        durationSec: Number(track.durationSec || 180),
+        audioUrl: audioUrl,
+        coverEmoji: coverEmoji,
+        coverUrl: track.coverUrl || null,
+        ptsCost: Number(track.ptsCost || 0),
+        isActive: true,
+        createdById: String(adminUser.id || "admin"),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      };
+
+      await docRef.set(newTrack);
+
+      return { success: true, id: docRef.id, track: newTrack };
+    } catch (outerErr) {
+      console.error("Critical adminUploadMusic error:", outerErr);
+      throw new HttpsError("internal", outerErr.message || "Musiqa saqlashda xatolik yuz berdi.");
+    }
+  }
+);
+
+// 15. adminDeleteMusic
+export const adminDeleteMusic = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN] },
+  async (request) => {
+    const initData = request.data?.initData;
+    const trackId = request.data?.trackId;
+    const botToken = TELEGRAM_BOT_TOKEN.value();
+    await assertAdminAuth(db, initData, botToken);
+
+    if (!trackId) {
+      throw new HttpsError("invalid-argument", "Trek ID kiritilishi shart.");
+    }
+
+    await db.collection("music_tracks").doc(trackId).delete();
+    return { success: true };
+  }
+);
+
+// 16. onBattleUpdated — Push notification when opponent joins waiting room
+export const onBattleUpdated = onDocumentUpdated("battles/{battleId}", async (event) => {
+  const before = event.data?.before?.data();
+  const after = event.data?.after?.data();
+  if (!before || !after) return;
+
+  // When opponent joins (status changes from waiting to active)
+  if (before.status === "waiting" && after.status === "active" && after.hostUid) {
+    const hostUid = after.hostUid;
+    const opponentName = after.opponentName || "Raqibingiz";
+
+    try {
+      const userSnap = await db.collection("users").doc(hostUid).get();
+      const userData = userSnap.data();
+      const fcmToken = userData?.fcmToken || userData?.pushToken;
+
+      if (fcmToken) {
+        await getMessaging().send({
+          token: fcmToken,
+          notification: {
+            title: "⚔️ Jang boshlanadi!",
+            body: `${opponentName} kutish zaliga kirdi! 1v1 jang boshlandi, darhol kiring!`,
+          },
+          data: {
+            type: "battle_start",
+            battleId: String(event.params.battleId),
+          },
+          android: {
+            priority: "high",
+            notification: {
+              sound: "default",
+              channelId: "battle_channel",
+            },
+          },
+        });
+        console.log(`Sent battle push notification to host ${hostUid}`);
+      }
+    } catch (err) {
+      console.error("Failed to send battle push notification:", err);
+    }
+  }
+});
+
+// 17. onBugReportCreated — Alerts Telegram Super Admin when a bug is submitted
+export const onBugReportCreated = onDocumentCreated(
+  { document: "bug_reports/{reportId}", secrets: [TELEGRAM_BOT_TOKEN] },
+  async (event) => {
+    const data = event.data?.data();
+    if (!data) return;
+
+    const reportId = event.params.reportId;
+    const userName = data.userName || "Foydalanuvchi";
+    const userUid = data.uid;
+    const category = data.category || "Xatolik";
+    const title = data.title || "Bug";
+    const desc = data.description || "Tavsif yo'q";
+    const deviceInfo = data.deviceInfo || "Noma'lum";
+
+    const text = `🐞 *YANGI BUG BOUNTY HISOBOTI!*\n\n` +
+      `👤 *Foydalanuvchi:* ${userName} (\`${userUid}\`)\n` +
+      `📁 *Kategoriya:* ${category}\n` +
+      `📝 *Mavzu:* ${title}\n` +
+      `📄 *Tavsif:* ${desc}\n` +
+      `📱 *Qurilma:* ${deviceInfo}\n` +
+      `💰 *Mukofot:* 4,000 PTS\n\n` +
+      `Tasdiqlash uchun quyidagi tugmani bosing:`;
+
+    const adminIds = [658069248, 8774615237];
+    const botToken = TELEGRAM_BOT_TOKEN.value();
+
+    for (const adminChatId of adminIds) {
+      try {
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: adminChatId,
+            text: text,
+            parse_mode: "Markdown",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  { text: "✅ Tasdiqlash (+4000 PTS)", callback_data: `approve_bug:${reportId}:${userUid}` },
+                  { text: "❌ Rad etish", callback_data: `reject_bug:${reportId}` },
+                ],
+              ],
+            },
+          }),
+        });
+      } catch (err) {
+        console.error("Failed to send bug report telegram message to admin:", err);
+      }
+    }
+  }
+);
+
+// 18. telegramBotWebhook — Cloud Server 24/7 Telegram Admin Bot & Moderation
+export const telegramBotWebhook = onRequest(
+  async (req, res) => {
+    try {
+      const update = req.body;
+      if (update) {
+        await processTelegramUpdate(db, update);
+      }
+      res.status(200).send("OK");
+    } catch (e) {
+      console.error("Telegram Webhook error:", e);
+      res.status(200).send("OK");
+    }
+  }
+);
+
+// 19. cleanupAllPlayersData — Deletes ONLY players data from Firebase (preserves books, music, audiobooks, shopItems, admins)
+export const cleanupAllPlayersData = onRequest(
+  async (req, res) => {
+    try {
+      const result = await cleanupPlayersDatabase(db);
+      res.status(200).json({ success: true, message: "Players data cleaned successfully", ...result });
+    } catch (e) {
+      console.error("Cleanup error:", e);
+      res.status(500).json({ success: false, error: e.message });
+    }
+  }
+);
+
 
 
 

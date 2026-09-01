@@ -5,49 +5,44 @@ import { ProductsTab } from "./components/ProductsTab";
 import { OrdersTab } from "./components/OrdersTab";
 import { BooksTab } from "./components/BooksTab";
 import { MusicTab } from "./components/MusicTab";
+import { AudiobooksTab } from "./components/AudiobooksTab";
 import StatsTab from "./components/StatsTab";
 import AdminsTab from "./components/AdminsTab";
 import { BookModal } from "./components/BookModal";
 import { ProductModal } from "./components/ProductModal";
 import { MusicModal } from "./components/MusicModal";
+import { AudiobookModal } from "./components/AudiobookModal";
+import { LandingPage } from "./components/LandingPage";
 import { api, getTelegramInitData } from "./services/api";
-import { directUploadMusic, directListMusic, directDeleteMusic } from "./services/firebase";
-
-const INITIAL_MUSIC_TRACKS = [
-  {
-    id: "track_1",
-    title: "Chuqur Fokus & Tabiat Sadolari",
-    genre: "Focus",
-    ptsCost: 50,
-    audioUrl: "https://actions.google.com/sounds/v1/nature/wind_through_trees.ogg",
-  },
-  {
-    id: "track_2",
-    title: "Meditatsiya & Xotirjamlik",
-    genre: "Meditation",
-    ptsCost: 75,
-    audioUrl: "https://actions.google.com/sounds/v1/water/rain_heavy.ogg",
-  },
-  {
-    id: "track_3",
-    title: "Miya Faolligi & Binaural Kuylar",
-    genre: "Binaural",
-    ptsCost: 100,
-    audioUrl: "https://actions.google.com/sounds/v1/nature/creek_flowing.ogg",
-  },
-];
+import {
+  directUploadMusic,
+  directUpdateMusic,
+  directListMusic,
+  directDeleteMusic,
+  directListAudiobooks,
+  directSaveAudiobook,
+  directCreateShopItem,
+  directUpdateShopItem,
+  directDeleteShopItem,
+  directUploadBook,
+  directUpdateBook,
+} from "./services/firebase";
+import { signInWithCustomToken } from "firebase/auth";
+import { auth } from "./services/firebase";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [user, setUser] = useState(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
 
   // Data states
   const [items, setItems] = useState([]);
   const [orders, setOrders] = useState([]);
   const [books, setBooks] = useState([]);
   const [music, setMusic] = useState([]);
+  const [audiobooks, setAudiobooks] = useState([]);
 
   const [isDataLoading, setIsDataLoading] = useState(false);
   const [notification, setNotification] = useState(null);
@@ -62,6 +57,9 @@ export default function App() {
   const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
   const [selectedMusic, setSelectedMusic] = useState(null);
 
+  const [isAudiobookModalOpen, setIsAudiobookModalOpen] = useState(false);
+  const [selectedAudiobook, setSelectedAudiobook] = useState(null);
+
   const showNotification = (msg, type = "success") => {
     setNotification({ msg, type });
     setTimeout(() => setNotification(null), 3500);
@@ -70,16 +68,19 @@ export default function App() {
   const loadData = async () => {
     setIsDataLoading(true);
     try {
-      const [itemsRes, ordersRes, booksRes, musicRes] = await Promise.allSettled([
+      const [itemsRes, ordersRes, booksRes, musicRes, audiobooksList] = await Promise.allSettled([
         api.listShopItems(),
         api.listGiftOrders("all"),
         api.listBooks(),
-        api.listMusic(),
+        directListMusic(),
+        directListAudiobooks(),
       ]);
+
       if (itemsRes.status === "fulfilled") setItems(itemsRes.value?.items || []);
       if (ordersRes.status === "fulfilled") setOrders(ordersRes.value?.orders || []);
       if (booksRes.status === "fulfilled") setBooks(booksRes.value?.books || []);
-      if (musicRes.status === "fulfilled") setMusic(musicRes.value?.tracks || []);
+      if (musicRes.status === "fulfilled") setMusic(Array.isArray(musicRes.value) ? musicRes.value : (musicRes.value?.tracks || []));
+      if (audiobooksList.status === "fulfilled") setAudiobooks(audiobooksList.value || []);
     } catch (err) {
       showNotification(err.message || "Ma'lumotlarni yuklashda xatolik", "error");
     } finally {
@@ -90,18 +91,31 @@ export default function App() {
   useEffect(() => {
     const initAuth = async () => {
       setIsAuthLoading(true);
+      setAuthError(null);
       try {
         const initData = getTelegramInitData();
-        if (initData) {
-          const res = await api.checkAuth();
-          if (res.success && res.user) {
-            setUser(res.user);
-          }
+        if (!initData) {
+          throw new Error("Telegram avtorizatsiya ma'lumotlari (initData) topilmadi.");
         }
-        await loadData();
+
+        const res = await api.checkAuth();
+        if (res && res.success && res.user) {
+          setUser(res.user);
+          if (res.customToken) {
+            try {
+              await signInWithCustomToken(auth, res.customToken);
+            } catch (e) {
+              console.error("Custom token orqali kirishda xatolik:", e);
+            }
+          }
+          await loadData();
+        } else {
+          throw new Error(res?.error || "Ushbu Telegram hisobi uchun admin huquqi berilmagan.");
+        }
       } catch (err) {
-        setUser({ id: "8774615237", username: "Admin", first_name: "SuperAdmin" });
-        await loadData();
+        console.warn("Admin auth check failed:", err.message);
+        setUser(null);
+        setAuthError(err.message || "Ruxsat yo'q. Ushbu panel faqat Odat ma'murlari uchun.");
       } finally {
         setIsAuthLoading(false);
       }
@@ -110,14 +124,20 @@ export default function App() {
     initAuth();
   }, []);
 
-  // Books Actions
-  const handleSaveBook = async (bookData, bookId = null) => {
+  // 📚 Books Actions
+  const handleSaveBook = async (bookData, bookId = null, onProgress) => {
     try {
       if (bookId) {
-        await api.updateBook(bookId, bookData);
-        showNotification("Kitob muvaffaqiyatli tahrirlandi 📚");
+        await directUpdateBook(bookId, bookData, onProgress);
+        try { await api.updateBook(bookId, bookData.book || bookData); } catch (_) {}
+        showNotification("Kitob va PTS mukofoti muvaffaqiyatli saqlandi! 📚");
       } else {
-        await api.uploadBook(bookData);
+        try {
+          await directUploadBook(bookData, onProgress);
+        } catch (directErr) {
+          console.warn("Direct upload fallback to API:", directErr);
+          await api.uploadBook(bookData);
+        }
         showNotification("Yangi kitob kutubxonaga qo'shildi 🎉");
       }
       await loadData();
@@ -137,14 +157,20 @@ export default function App() {
     }
   };
 
-  // Products Actions
+  // 🛍️ Products Actions
   const handleSaveItem = async (itemData, itemId = null) => {
     try {
       if (itemId) {
-        await api.updateShopItem(itemId, itemData);
-        showNotification("Mahsulot muvaffaqiyatli tahrirlandi ✨");
+        await directUpdateShopItem(itemId, itemData);
+        try { await api.updateShopItem(itemId, itemData); } catch (_) {}
+        showNotification("Mahsulot narxi va ma'lumotlari yangilandi! ✨");
       } else {
-        await api.createShopItem(itemData);
+        try {
+          await directCreateShopItem(itemData);
+        } catch (directErr) {
+          console.warn("Direct create fallback to API:", directErr);
+          await api.createShopItem(itemData);
+        }
         showNotification("Yangi mahsulot do'konga qo'shildi 🎉");
       }
       await loadData();
@@ -156,7 +182,8 @@ export default function App() {
 
   const handleDeleteItem = async (itemId) => {
     try {
-      await api.deleteShopItem(itemId, false);
+      await directDeleteShopItem(itemId, false);
+      try { await api.deleteShopItem(itemId, false); } catch (_) {}
       showNotification("Mahsulot do'kondan olib tashlandi");
       await loadData();
     } catch (err) {
@@ -166,7 +193,8 @@ export default function App() {
 
   const handleToggleActive = async (item) => {
     try {
-      await api.updateShopItem(item.id, { isActive: !item.isActive });
+      await directUpdateShopItem(item.id, { isActive: !item.isActive });
+      try { await api.updateShopItem(item.id, { isActive: !item.isActive }); } catch (_) {}
       showNotification(item.isActive ? "Mahsulot noaktiv qilindi" : "Mahsulot faollashtirildi");
       await loadData();
     } catch (err) {
@@ -184,18 +212,28 @@ export default function App() {
     }
   };
 
-  // Music Actions (Cloud Functions + Storage + Firestore)
-  const handleSaveMusic = async (trackData, trackId = null) => {
+  // 🎵 Music Actions
+  const handleSaveMusic = async (trackData, trackId = null, onProgress) => {
     try {
       if (trackId) {
-        showNotification("Musiqa treki yangilandi 🎵");
+        await directUpdateMusic(trackId, {
+          audioFile: trackData.audioFile || null,
+          title: trackData.title,
+          artist: trackData.artist,
+          genre: trackData.genre,
+          ptsCost: trackData.ptsCost,
+          audioUrl: trackData.audioUrl,
+          category: trackData.category,
+        }, onProgress);
+        showNotification("Musiqa treki va PTS narxi yangilandi! 🎵");
       } else {
-        const { base64Audio, fileName, ...cleanTrack } = trackData;
-        await api.uploadMusic({
-          track: cleanTrack,
-          base64Audio: base64Audio,
-          fileName: fileName || "track.mp3",
-        });
+        await directUploadMusic({
+          audioFile: trackData.audioFile || null,
+          title: trackData.title,
+          genre: trackData.genre,
+          ptsCost: trackData.ptsCost,
+          audioUrl: trackData.audioUrl,
+        }, onProgress);
         showNotification("Yangi musiqa (MP3) muvaffaqiyatli yuklandi! 🎵");
       }
       await loadData();
@@ -207,13 +245,85 @@ export default function App() {
 
   const handleDeleteMusic = async (trackId) => {
     try {
-      await api.deleteMusic(trackId);
-      showNotification("Musiqa treki Firebase'dan butunlay o'chirildi");
+      await directDeleteMusic(trackId);
+      showNotification("Musiqa treki o'chirildi");
       await loadData();
     } catch (err) {
       showNotification(err.message || "O'chirishda xatolik", "error");
     }
   };
+
+  // 🎧 Audiobooks Actions
+  const handleSaveAudiobook = async (audiobookData, audiobookId = null) => {
+    try {
+      await directSaveAudiobook(audiobookData, audiobookId);
+      showNotification(audiobookId ? "Audio kitob muvaffaqiyatli yangilandi! 🎧" : "Yangi audio kitob saqlandi! 🎉");
+      await loadData();
+    } catch (err) {
+      showNotification(err.message || "Audio kitobni saqlashda xatolik", "error");
+      throw err;
+    }
+  };
+
+  const handleDeleteAudiobook = async (audiobookId) => {
+    try {
+      await directDeleteAudiobook(audiobookId);
+      showNotification("Audio kitob muvaffaqiyatli o'chirildi");
+      await loadData();
+    } catch (err) {
+      showNotification(err.message || "O'chirishda xatolik", "error");
+    }
+  };
+
+  // 1. Loading State
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-zen-void text-zen-text flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="w-16 h-16 rounded-3xl bg-zen-surface border border-zen-border flex items-center justify-center mb-6 shadow-glow-lime animate-pulse">
+          <span className="text-3xl">🛡️</span>
+        </div>
+        <h2 className="text-xl font-black text-white tracking-wide mb-2">ODAT</h2>
+        <p className="text-sm text-zen-muted mb-6">Yuklanmoqda...</p>
+        <div className="w-8 h-8 border-3 border-zen-lime border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // 2. Non-Admin or Public Web Visitor
+  if (!user || authError) {
+    const isTelegramEnv = Boolean(window.Telegram?.WebApp?.initData);
+    if (!isTelegramEnv) {
+      return <LandingPage />;
+    }
+
+    return (
+      <div className="min-h-screen bg-zen-void text-zen-text flex flex-col items-center justify-center p-6 text-center font-sans">
+        <div className="w-20 h-20 rounded-3xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6 shadow-lg shadow-red-500/10">
+          <span className="text-4xl">🔒</span>
+        </div>
+        <div className="inline-block px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/30 rounded-full text-xs font-black tracking-widest uppercase mb-3">
+          403 Ruxsat Berilmagan
+        </div>
+        <h1 className="text-2xl font-black text-white mb-3">Kirish Taqiqlangan</h1>
+        <p className="text-sm text-zen-muted max-w-md leading-relaxed mb-6">
+          {authError || "Ushbu boshqaruv paneli faqat Odat ma'murlari (Adminlar) uchun mo'ljallangan. Sizning Telegram hisobingiz adminlar ro'yxatida mavjud emas."}
+        </p>
+        <button
+          onClick={() => {
+            if (window.Telegram?.WebApp?.close) {
+              window.Telegram.WebApp.close();
+            } else {
+              window.location.href = "https://t.me/odat_fenix_bot";
+            }
+          }}
+          className="px-6 py-3 bg-zen-surface hover:bg-zen-card text-white font-bold text-sm rounded-2xl border border-zen-border transition-all flex items-center gap-2"
+        >
+          <span>✕</span>
+          <span>Mini App'ni Yopish</span>
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zen-void text-zen-text flex flex-col font-sans selection:bg-zen-lime selection:text-zen-void">
@@ -269,6 +379,7 @@ export default function App() {
         {activeTab === "books" && (
           <BooksTab
             books={books}
+            onSaveBook={handleSaveBook}
             onAddBook={() => {
               setSelectedBook(null);
               setIsBookModalOpen(true);
@@ -284,6 +395,7 @@ export default function App() {
         {activeTab === "products" && (
           <ProductsTab
             items={items}
+            onSaveItem={handleSaveItem}
             onAddItem={() => {
               setSelectedProduct(null);
               setIsProductModalOpen(true);
@@ -309,6 +421,21 @@ export default function App() {
               setIsMusicModalOpen(true);
             }}
             onDeleteMusic={handleDeleteMusic}
+          />
+        )}
+
+        {activeTab === "audiobooks" && (
+          <AudiobooksTab
+            audiobooks={audiobooks}
+            onAddAudiobook={() => {
+              setSelectedAudiobook(null);
+              setIsAudiobookModalOpen(true);
+            }}
+            onEditAudiobook={(book) => {
+              setSelectedAudiobook(book);
+              setIsAudiobookModalOpen(true);
+            }}
+            onDeleteAudiobook={handleDeleteAudiobook}
           />
         )}
 
@@ -354,6 +481,16 @@ export default function App() {
         }}
         onSave={handleSaveMusic}
         track={selectedMusic}
+      />
+
+      <AudiobookModal
+        isOpen={isAudiobookModalOpen}
+        onClose={() => {
+          setIsAudiobookModalOpen(false);
+          setSelectedAudiobook(null);
+        }}
+        onSave={handleSaveAudiobook}
+        audiobook={selectedAudiobook}
       />
     </div>
   );

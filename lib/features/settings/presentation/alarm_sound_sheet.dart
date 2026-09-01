@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,7 +121,7 @@ class _AlarmSoundSheetState extends ConsumerState<AlarmSoundSheet> {
             child: OutlinedButton.icon(
               onPressed: _pickCustomFile,
               icon: const Icon(Icons.folder_open_rounded),
-              label: const Text('Fayldan tanlash...'),
+              label: Text('settings.custom_sound_pick'.tr()),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
               ),

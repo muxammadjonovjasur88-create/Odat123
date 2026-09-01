@@ -1,29 +1,51 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/models/player_level.dart';
+import '../../../core/models/rank_tier.dart';
 import '../../../core/models/user_profile.dart';
 import '../../../core/router/app_routes.dart';
 import '../../../core/router/nav_helpers.dart';
 import '../../../core/services/auth_repository.dart';
+import '../../../core/services/locale_store.dart';
 import '../../../core/services/user_repository.dart';
-import '../../../core/theme/app_text_styles.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/widgets.dart';
-import '../../premium/domain/premium.dart';
-import '../../premium/presentation/premium_badge.dart';
-import '../../streak/data/streak_repository.dart';
-import '../../streak/domain/streak_badge.dart';
-import '../../streak/domain/streak_math.dart';
-import '../../streak/presentation/streak_flame.dart';
-import '../domain/achievement.dart';
-import '../domain/profile_display_name.dart';
+import '../../clan/data/clan_repository.dart';
+import '../../clan/domain/models/clan.dart';
+import '../../clan/presentation/screens/clan_detail_screen.dart';
+import '../../clan/presentation/widgets/create_clan_modal.dart';
+import '../../friends/data/friends_repository.dart';
+import '../../friends/presentation/widgets/add_friend_modal.dart';
+import '../../friends/presentation/widgets/direct_chat_screen.dart';
+import '../../inbox/data/inbox_repository.dart';
+import '../../inbox/presentation/widgets/inbox_modal.dart';
+import 'widgets/badges_modal.dart';
+import 'widgets/bug_bounty_modal.dart';
+import 'widgets/coins_history_modal.dart';
+import 'widgets/inventory_modal.dart';
+import 'widgets/pts_history_modal.dart';
+import 'widgets/rank_roadmap_modal.dart';
 
-/// Redesigned Production-Ready Profile Screen for Flowa.
-///
-/// Displays user identity, Zen level progress, lifetime stats, streak management,
-/// and an interactive Achievements grid with detailed modal sheets on tap.
+extension _ProfileTr on String {
+  String trFallback(String fallback, {Map<String, String>? namedArgs}) {
+    final val = tr(this, namedArgs: namedArgs);
+    if (val == this || val.startsWith('profile.')) {
+      return fallback;
+    }
+    return val;
+  }
+}
+
+/// Redesigned Zen Kinetic Cyberpunk Profile Screen for ODAT.
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -31,1167 +53,1494 @@ class ProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _glowController;
+
+  @override
+  void initState() {
+    super.initState();
+    _glowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _glowController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _showLanguageDialog() async {
+    final currentCode = LocaleStore.effectiveCode();
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF0D1220),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0x335BC8FA)),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.language_rounded, color: Color(0xFF5BC8FA)),
+            const SizedBox(width: 10),
+            Text(
+              'language.title'.tr(),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: kSupportedLocales.map((loc) {
+            final isSelected = loc.languageCode == currentCode;
+            return ListTile(
+              onTap: () async {
+                await context.setLocale(loc);
+                await LocaleStore.save(loc.languageCode);
+                if (context.mounted) Navigator.pop(context);
+              },
+              leading: Text(
+                loc.languageCode == 'uz' ? '🇺🇿' : loc.languageCode == 'ru' ? '🇷🇺' : '🇬🇧',
+                style: const TextStyle(fontSize: 22),
+              ),
+              title: Text(
+                localeNativeName(loc.languageCode),
+                style: TextStyle(
+                  color: isSelected ? const Color(0xFF5BC8FA) : Colors.white,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              trailing: isSelected
+                  ? const Icon(Icons.check_circle_rounded, color: Color(0xFF5BC8FA))
+                  : null,
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF0D1220),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0x44FF0055)),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.logout_rounded, color: Color(0xFFFF0055)),
+            const SizedBox(width: 10),
+            Text('profile.logout_confirm_title'.tr(), style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+        content: Text(
+          'profile.logout_confirm_msg'.tr(),
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('common.cancel'.tr(), style: const TextStyle(color: Colors.white54)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF0055)),
+            child: Text('profile.logout'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      await ref.read(authRepositoryProvider).signOut();
+      if (mounted) context.go(AppRoutes.welcome);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final profile = ref.watch(userProfileProvider).asData?.value;
-    final secondaryName = profile == null
-        ? null
-        : secondaryProfileName(
-            primaryName: profile.name,
-            displayName: profile.displayName,
-          );
+    final userClan = ref.watch(userClanProvider).asData?.value;
+    final friends = ref.watch(friendsLeaderboardProvider).asData?.value ?? [];
+
+    if (profile == null) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF070B13),
+        body: Center(child: FlowaLoading()),
+      );
+    }
+
+    final referralCode = profile.uid.substring(0, 6).toUpperCase();
+    final rankTier = RankTier.fromWinsAndPoints(
+      battleWins: profile.battleWins,
+      points: profile.totalPoints,
+    );
+    final progress = rankTier.progress(profile.totalPoints);
 
     return Scaffold(
+      backgroundColor: const Color(0xFF070B13),
       bottomNavigationBar: AppBottomNav(
         current: AppNavTab.profile,
         onSelected: (tab) => goToTab(context, tab),
       ),
       body: SafeArea(
         bottom: false,
-        child: profile == null
-            ? const Center(child: FlowaLoading())
-            : ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
-                children: [
-                  // Top Navigation Header
-                  Row(
-                    children: [
-                      const BrandLogo(),
-                      const Spacer(),
-                      IconButton(
-                        tooltip: 'Profilni tahrirlash',
-                        icon: Icon(
-                          Icons.edit_outlined,
-                          color: colors.textSecondary,
-                        ),
-                        onPressed: () => context.push(AppRoutes.editProfile),
-                      ),
-                      IconButton(
-                        tooltip: 'settings.title'.tr(),
-                        icon: Icon(
-                          Icons.settings_outlined,
-                          color: colors.textSecondary,
-                        ),
-                        onPressed: () => context.push(AppRoutes.settings),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(18, 12, 18, 120),
+          children: [
+            // Top App Bar with Messages Badge
+            _buildTopBar(profile),
+            const SizedBox(height: 16),
 
-                  // Hero Profile Header Card
-                  _ProfileHeroCard(
-                    profile: profile,
-                    secondaryName: secondaryName,
-                    onEditAvatar: () => context.push(AppRoutes.editProfile),
-                  ),
-                  const SizedBox(height: 20),
+            // Hero Cyberpunk Rank Tier Profile Card
+            _buildHeroProfileCard(profile, rankTier, progress),
+            const SizedBox(height: 16),
 
-                  // Lifetime Statistics Grid
-                  _StatsGrid(profile: profile),
-                  const SizedBox(height: 24),
+            // Clan Banner Card
+            _buildClanCard(profile, userClan),
+            const SizedBox(height: 16),
 
-                  // Streak & Freeze Management Section
-                  _StreakSection(profile: profile),
-                ],
-              ),
+            // Matrix Stats Grid (PTS, Coins, Streak, Distance, Battles)
+            _buildStatsMatrix(profile),
+            const SizedBox(height: 16),
+
+            // Qo'shimcha Menyu (Settings style list)
+            _buildUnifiedSettingsMenu(friends.length),
+          ],
+        ),
       ),
     );
   }
-}
 
-/// Hero Card featuring User Avatar, Level Progress Bar, Name, and Bio
-class _ProfileHeroCard extends StatelessWidget {
-  const _ProfileHeroCard({
-    required this.profile,
-    required this.secondaryName,
-    required this.onEditAvatar,
-  });
-
-  final UserProfile profile;
-  final String? secondaryName;
-  final VoidCallback onEditAvatar;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final level = profile.level;
-    final currentPointsInLevel = profile.totalPoints % 250;
-    final progressToNextLevel = currentPointsInLevel / 250.0;
-
+  Widget _buildUnifiedSettingsMenu(int friendsCount) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colors.border),
-        boxShadow: [
-          BoxShadow(
-            color: colors.shadow.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        color: const Color(0xFF0D1220),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white10),
       ),
       child: Column(
         children: [
-          GestureDetector(
-            onTap: onEditAvatar,
-            child: Stack(
+          // Badges
+          ListTile(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              showBadgesModal(context);
+            },
+            leading: const Icon(Icons.military_tech_rounded, color: Color(0xFF7B2FFF)),
+            title: Text('profile.badges_title'.trFallback('Nishonlar & Yutuqlar'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
+          ),
+          const Divider(color: Colors.white10, height: 1),
+          // Community Squads
+          ListTile(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push(AppRoutes.communityHub);
+            },
+            leading: const Icon(Icons.people_outline_rounded, color: Color(0xFF00FF88)),
+            title: Text('community.card_title'.trFallback('Hamfikrlar / Squads'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
+          ),
+          const Divider(color: Colors.white10, height: 1),
+          // Friends
+          ListTile(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push('${AppRoutes.leaderboard}?tab=friends');
+            },
+            leading: const Icon(Icons.people_alt_rounded, color: Color(0xFF3B9BFF)),
+            title: Text('profile.friends_title'.trFallback('Do‘stlar: $friendsCount ta'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () => _showFriendsChatModal(context),
+                  icon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF3B9BFF), size: 18),
+                  tooltip: 'Chat',
+                ),
+                IconButton(
+                  onPressed: () => showAddFriendModal(context),
+                  icon: const Icon(Icons.person_add_rounded, color: Color(0xFF3B9BFF), size: 18),
+                  tooltip: 'Qo‘shish',
+                ),
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white10, height: 1),
+          // Digital Wellbeing
+          ListTile(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push(AppRoutes.digitalWellbeing);
+            },
+            leading: const Icon(Icons.phonelink_setup_rounded, color: Color(0xFF5BC8FA)),
+            title: Text('wellbeing.card_title'.trFallback('Raqamli Salomatlik'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 92,
-                  height: 92,
-                  padding: const EdgeInsets.all(3),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: LinearGradient(
-                      colors: [
-                        colors.primary,
-                        colors.primary.withValues(alpha: 0.5),
-                      ],
-                    ),
+                    color: const Color(0x2200FF88),
+                    borderRadius: BorderRadius.circular(6),
                   ),
-                  child: ClipOval(
-                    child: AvatarCircle(
-                      avatarKey: profile.avatar,
-                      size: 86,
-                      photoBase64: profile.photoBase64,
-                      photoUrl: profile.photoUrl,
-                    ),
+                  child: Text(
+                    'wellbeing.live'.trFallback('LIVE'),
+                    style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 9.5, fontWeight: FontWeight.w900),
                   ),
                 ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: colors.primary,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: colors.surface, width: 2),
-                    ),
-                    child: const Icon(
-                      Icons.camera_alt_rounded,
-                      color: Colors.white,
-                      size: 15,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // User Name & Premium Badge
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Flexible(
-                child: Text(
-                  profile.name,
-                  style: AppTextStyles.h2.copyWith(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              if (kPremiumEnabled && profile.isPremium) ...[
                 const SizedBox(width: 8),
-                const PremiumBadge(),
+                const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
               ],
-            ],
+            ),
           ),
-
-          if (secondaryName != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              secondaryName!,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: colors.textSecondary,
-              ),
-            ),
-          ],
-
-          if ((profile.bio ?? '').trim().isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: colors.surfaceMuted,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                profile.bio!,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: colors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
-
-          const SizedBox(height: 16),
-
-          // Level Progress Bar
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colors.surfaceMuted,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: colors.border),
-            ),
-            child: Column(
+          const Divider(color: Colors.white10, height: 1),
+          // Bug Bounty
+          ListTile(
+            onTap: () => showBugBountyModal(context),
+            leading: const Icon(Icons.pest_control_rounded, color: Color(0xFFFFB703)),
+            title: Text('bug_bounty.title'.trFallback('Bug Bounty Dasturi'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: const Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.workspace_premium_rounded,
-                            size: 18,
-                            color: Color(0xFFE7C56D),
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: Text(
-                              'profile.zen_master_level'.tr(
-                                namedArgs: {'level': '$level'},
-                              ),
-                              style: AppTextStyles.label.copyWith(
-                                color: colors.textPrimary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '$currentPointsInLevel / 250 ball',
-                      style: AppTextStyles.caption.copyWith(
-                        color: colors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: progressToNextLevel.clamp(0.0, 1.0),
-                    minHeight: 8,
-                    backgroundColor: colors.border,
-                    valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
-                  ),
-                ),
+                Text('+4000 PTS', style: TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.w900, fontSize: 11)),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
               ],
             ),
+          ),
+          const Divider(color: Colors.white10, height: 1),
+          // Suggestions
+          ListTile(
+            onTap: () async {
+              HapticFeedback.lightImpact();
+              final uri = Uri.parse('https://t.me/salomov_2502');
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+            },
+            leading: const Text('💡', style: TextStyle(fontSize: 18)),
+            title: Text('profile.suggestions_btn'.trFallback('Takliflaringiz (@salomov_2502)'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: const Icon(Icons.send_rounded, color: Color(0xFF5BC8FA), size: 14),
           ),
         ],
       ),
     );
   }
-}
 
-/// Statistics 2x2 Grid displaying key metrics
-class _StatsGrid extends StatelessWidget {
-  const _StatsGrid({required this.profile});
+  Widget _buildTopBar(UserProfile profile) {
+    final unreadCount = ref.watch(unreadMessagesCountProvider);
 
-  final UserProfile profile;
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 10,
-      crossAxisSpacing: 10,
-      childAspectRatio: 2.1,
+    return Row(
       children: [
-        _StatCard(
-          icon: Icons.stars_rounded,
-          iconColor: const Color(0xFFE7C56D),
-          value: '${profile.totalPoints}',
-          label: 'profile.lifetime_points'.tr(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+            ),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            'profile.header_title'.trFallback('ODAT PROFIL'),
+            style: const TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+              letterSpacing: 1.2,
+            ),
+          ),
         ),
-        _StatCard(
-          icon: Icons.timer_rounded,
-          iconColor: const Color(0xFF8DB1C9),
-          value: profile.focusHours.toStringAsFixed(1),
-          label: 'profile.focus_hours'.tr(),
+        const Spacer(),
+        // Messages Inbox Button
+        Stack(
+          children: [
+            IconButton(
+              tooltip: 'profile.tooltip_messages'.trFallback('Xabarlar'),
+              icon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF5BC8FA), size: 22),
+              onPressed: () => showInboxModal(context),
+            ),
+            if (unreadCount > 0)
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFF0055),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '$unreadCount',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
-        _StatCard(
-          icon: Icons.local_fire_department_rounded,
-          iconColor: const Color(0xFFFF7A00),
-          value: '${profile.longestStreak}',
-          label: 'profile.longest_streak'.tr(),
+        IconButton(
+          tooltip: 'profile.tooltip_language'.trFallback('Tilni o‘zgartirish'),
+          icon: const Icon(Icons.language_rounded, color: Color(0xFF5BC8FA), size: 22),
+          onPressed: _showLanguageDialog,
         ),
-        _StatCard(
-          icon: Icons.center_focus_strong_rounded,
-          iconColor: const Color(0xFF8AAE84),
-          value: '${profile.totalDeepSessions}',
-          label: 'Chuqur seanslar',
+        IconButton(
+          tooltip: 'profile.tooltip_settings'.trFallback('Sozlamalar'),
+          icon: const Icon(Icons.settings_outlined, color: Colors.white70, size: 22),
+          onPressed: () => _showSettingsModal(context, profile),
         ),
       ],
     );
   }
-}
 
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.iconColor,
-    required this.value,
-    required this.label,
-  });
+  Widget _buildHeroProfileCard(UserProfile profile, RankTier tier, double progress) {
+    final playerLevel = PlayerLevel.fromTotalPts(profile.totalPoints);
+    final levelProgress = ((profile.totalPoints - playerLevel.minPts) /
+            (playerLevel.maxPts - playerLevel.minPts).clamp(1, 999999))
+        .clamp(0.0, 1.0);
 
-  final IconData icon;
-  final Color iconColor;
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return AppCard(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
+    return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF161B26), Color(0xFF080B14)],
             ),
-            child: Icon(icon, size: 20, color: iconColor),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: const Color(0x335BC8FA), width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x225BC8FA),
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  value,
-                  style: AppTextStyles.h3.copyWith(
-                    color: colors.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.textSecondary,
-                    fontSize: 10.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Streak & Freeze Card Section
-class _StreakSection extends ConsumerWidget {
-  const _StreakSection({required this.profile});
-
-  final UserProfile profile;
-
-  Future<void> _buyFreeze(BuildContext context, WidgetRef ref) async {
-    final uid = ref.read(authStateProvider).asData?.value?.uid;
-    if (uid == null) return;
-    final result = await ref.read(streakRepositoryProvider).buyFreeze(uid);
-    if (!context.mounted) return;
-    final message = switch (result) {
-      BuyFreezeResult.ok => 'profile.freeze_added'.tr(),
-      BuyFreezeResult.notEnoughPoints => 'profile.freeze_not_enough'.tr(
-        namedArgs: {'cost': '${StreakMath.freezeCost}'},
-      ),
-      BuyFreezeResult.full => 'profile.freeze_full'.tr(),
-    };
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              StreakFlame(streak: profile.streak, size: 32),
+              // Avatar + Info Row
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Avatar
+                  GestureDetector(
+                    onTap: () => _showEditProfileModal(context, profile),
+                    child: Stack(
+                      children: [
+                        AvatarCircle(
+                          avatarKey: profile.avatar,
+                          photoUrl: profile.photoUrl,
+                          photoBase64: profile.photoBase64,
+                          size: 72,
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF5BC8FA),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded, color: Colors.black, size: 12),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Name, ID & Badges
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Name
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                profile.displayName ?? profile.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 0.3,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Numeric ID Badge (Clickable to copy)
+                        GestureDetector(
+                          onTap: () async {
+                            HapticFeedback.lightImpact();
+                            await Clipboard.setData(ClipboardData(text: profile.numericId));
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('ID nusxalandi: ${profile.numericId}'),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0x225BC8FA),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'ID: ${profile.numericId}',
+                                  style: const TextStyle(
+                                    color: Color(0xFF5BC8FA),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.copy_rounded, color: Color(0xFF5BC8FA), size: 11),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Level 1-100 Badge & Rank Tier Badge Row
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            // 1. Level 1-100 Badge (Opens Level Roadmap)
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                showRankRoadmapModal(context, initialTab: 1);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                decoration: BoxDecoration(
+                                  color: playerLevel.color.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: playerLevel.color.withValues(alpha: 0.7)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(playerLevel.badgeIcon, style: const TextStyle(fontSize: 11.5)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${playerLevel.level}-DARAJA',
+                                      style: TextStyle(
+                                        color: playerLevel.color,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // 2. Competitive Rank Tier badge (Opens Unvonlar Tab 0 in Rank Roadmap modal)
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                showRankRoadmapModal(context, initialTab: 0);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                                decoration: BoxDecoration(
+                                  color: tier.color.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: tier.color.withValues(alpha: 0.6)),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(tier.icon, style: const TextStyle(fontSize: 11.5)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      tier.localizedName.toUpperCase(),
+                                      style: TextStyle(
+                                        color: tier.color,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 3),
+                                    Icon(Icons.arrow_forward_ios_rounded, size: 8, color: tier.color),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Level XP Progress Bar
+              GestureDetector(
+                onTap: () => showRankRoadmapModal(context),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '⭐ ${playerLevel.level}-Daraja (${playerLevel.title})',
+                          style: TextStyle(color: playerLevel.color, fontSize: 11, fontWeight: FontWeight.w900),
+                        ),
+                        Text(
+                          '${profile.totalPoints} / ${playerLevel.maxPts} PTS',
+                          style: TextStyle(color: playerLevel.color, fontSize: 11, fontWeight: FontWeight.w900),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: levelProgress,
+                        minHeight: 8,
+                        backgroundColor: Colors.white12,
+                        valueColor: AlwaysStoppedAnimation(playerLevel.color),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          playerLevel.level < 100
+                              ? 'Keyingi darajaga: ${playerLevel.maxPts - profile.totalPoints} PTS kerak'
+                              : 'Maksimal 100-daraja zabt etildi! ⚡',
+                          style: const TextStyle(color: Colors.white38, fontSize: 10),
+                        ),
+                        Text(
+                          '+${playerLevel.rewardCoins} 🪙  +${playerLevel.rewardPts} ⚡',
+                          style: const TextStyle(color: Color(0xFFFFB703), fontSize: 10, fontWeight: FontWeight.w900),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+  }
+
+  Widget _buildClanCard(UserProfile profile, Clan? clan) {
+    final hasClan = clan != null;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          if (hasClan) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ClanDetailScreen(clan: clan)),
+            );
+          } else {
+            context.push('${AppRoutes.leaderboard}?tab=clans');
+          }
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0D1220),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: hasClan ? const Color(0xFF5BC8FA) : const Color(0x22FFFFFF),
+              width: hasClan ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0x22FFFFFF),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: hasClan
+                      ? Text(clan.emblem, style: const TextStyle(fontSize: 22))
+                      : const Icon(Icons.shield_rounded, color: Colors.white54, size: 24),
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      profile.streak > 0
-                          ? 'common.days_streak'.tr(
-                              namedArgs: {'count': '${profile.streak}'},
-                            )
-                          : 'profile.no_active_streak'.tr(),
-                      style: AppTextStyles.h3.copyWith(
-                        color: colors.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          hasClan ? clan.formattedTag : 'profile.clan_none'.trFallback('KLANSIZ'),
+                          style: TextStyle(
+                            color: hasClan ? const Color(0xFF5BC8FA) : Colors.white54,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            hasClan ? clan.name : 'profile.clan_not_member'.trFallback('Hali klanga a‘zo emassiz'),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'profile.longest_days'.tr(
-                        namedArgs: {'count': '${profile.longestStreak}'},
-                      ),
-                      style: AppTextStyles.caption.copyWith(
-                        color: colors.textSecondary,
-                      ),
+                      hasClan
+                          ? '⚡ ${clan.formattedPoints} PTS · 👥 ${'profile.clan_members'.trFallback('${clan.membersCount} a‘zo', namedArgs: {'count': clan.membersCount.toString()})}'
+                          : 'profile.clan_hint'.trFallback('Klan oching yoki mavjud klanga qo‘shiling'),
+                      style: const TextStyle(color: Colors.white54, fontSize: 11),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              StreakFreezeChip(count: profile.freezes),
+              ElevatedButton(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  if (hasClan) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ClanDetailScreen(clan: clan)),
+                    );
+                  } else {
+                    showCreateClanModal(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: hasClan ? const Color(0x225BC8FA) : const Color(0xFF5BC8FA),
+                  foregroundColor: hasClan ? const Color(0xFF5BC8FA) : Colors.black,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                child: Text(
+                  hasClan ? 'profile.clan_enter'.trFallback('Klanga Kirish') : 'profile.clan_create'.trFallback('Klan Ochish'),
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            'profile.freeze_explainer'.tr(),
-            style: AppTextStyles.caption.copyWith(
-              color: colors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: 10),
-          SizedBox(
-            height: 40,
-            child: AppButton(
-              label: 'profile.buy_freeze'.tr(
-                namedArgs: {'cost': '${StreakMath.freezeCost}'},
-              ),
-              expand: false,
-              onPressed: () => _buyFreeze(context, ref),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Streak Milestone Badges Row
-          Text(
-            'Seriya nishonlari',
-            style: AppTextStyles.label.copyWith(
-              color: colors.textPrimary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 10),
-          _StreakBadgeRow(profile: profile),
-        ],
-      ),
-    );
-  }
-}
-
-class _StreakBadgeRow extends StatelessWidget {
-  const _StreakBadgeRow({required this.profile});
-
-  final UserProfile profile;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          for (final (i, b) in kStreakBadges.indexed) ...[
-            if (i > 0) const SizedBox(width: 10),
-            Tooltip(
-              message: '${b.name}: ${b.message}',
-              child: Container(
-                width: 76,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: profile.hasBadge(b.days)
-                      ? b.color.withValues(alpha: 0.9)
-                      : colors.surfaceMuted,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: profile.hasBadge(b.days)
-                        ? colors.primary.withValues(alpha: 0.3)
-                        : colors.border,
-                  ),
-                  boxShadow: profile.hasBadge(b.days)
-                      ? [
-                          BoxShadow(
-                            color: colors.primary.withValues(alpha: 0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : null,
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: profile.hasBadge(b.days)
-                            ? colors.surface.withValues(alpha: 0.9)
-                            : colors.border,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        b.icon,
-                        size: 20,
-                        color: profile.hasBadge(b.days)
-                            ? colors.primary
-                            : colors.textTertiary,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '${b.days} kun',
-                      style: AppTextStyles.caption.copyWith(
-                        color: profile.hasBadge(b.days)
-                            ? colors.textPrimary
-                            : colors.textTertiary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class ProfileFilterChip extends StatelessWidget {
-  const ProfileFilterChip({
-    super.key,
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? colors.primary : colors.surfaceMuted,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? colors.primary : colors.border,
-          ),
-        ),
-        child: Text(
-          label,
-          style: AppTextStyles.caption.copyWith(
-            color: isSelected ? Colors.white : colors.textSecondary,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
         ),
       ),
     );
   }
-}
 
-/// Achievements Grid View Component
-class AchievementsGrid extends StatelessWidget {
-  const AchievementsGrid({
-    super.key,
-    required this.profile,
-    required this.filter,
-  });
-
-  final UserProfile profile;
-  final String filter;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final filteredAchievements = kAchievements.where((a) {
-      if (filter == 'unlocked') return a.isUnlocked(profile);
-      if (filter == 'locked') return !a.isUnlocked(profile);
-      return true;
-    }).toList();
-
-    if (filteredAchievements.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colors.surfaceMuted,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: colors.border),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.emoji_events_outlined,
-              size: 48,
-              color: colors.textTertiary,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Ushbu bo\'limda yutuqlar topilmadi',
-              style: AppTextStyles.body.copyWith(
-                color: colors.textSecondary,
-                fontWeight: FontWeight.w600,
+  Widget _buildStatsMatrix(UserProfile profile) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Quick Action Row: Full-width Inventory
+        GestureDetector(
+          onTap: () => showInventoryModal(context),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF131929), Color(0xFF0F1726)],
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Diqqat seanslarini bajarib yangi marralarni zabt eting!',
-              style: AppTextStyles.caption.copyWith(
-                color: colors.textTertiary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      );
-    }
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: filteredAchievements.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.15,
-      ),
-      itemBuilder: (context, index) {
-        final a = filteredAchievements[index];
-        final isUnlocked = a.isUnlocked(profile);
-        final progress = a.getProgress?.call(profile);
-
-        return AchievementCard(
-          achievement: a,
-          isUnlocked: isUnlocked,
-          progress: progress,
-          onTap: () => showAchievementDetail(context, a, profile),
-        );
-      },
-    );
-  }
-
-  void showAchievementDetail(
-    BuildContext context,
-    Achievement a,
-    UserProfile profile,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: context.colors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) => AchievementDetailBottomSheet(
-        achievement: a,
-        profile: profile,
-      ),
-    );
-  }
-}
-
-/// Interactive Card representing a single achievement item
-class AchievementCard extends StatelessWidget {
-  const AchievementCard({
-    super.key,
-    required this.achievement,
-    required this.isUnlocked,
-    required this.progress,
-    required this.onTap,
-  });
-
-  final Achievement achievement;
-  final bool isUnlocked;
-  final AchievementProgress? progress;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Material(
-      color: isUnlocked
-          ? colors.surface
-          : colors.surfaceMuted.withValues(alpha: 0.6),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(
-          color: isUnlocked
-              ? achievement.color.withValues(alpha: 0.4)
-              : colors.border,
-          width: 1.2,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Icon container
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: isUnlocked
-                          ? achievement.color.withValues(alpha: 0.2)
-                          : colors.border.withValues(alpha: 0.5),
-                      shape: BoxShape.circle,
-                      boxShadow: isUnlocked
-                          ? [
-                              BoxShadow(
-                                color: achievement.color.withValues(alpha: 0.25),
-                                blurRadius: 10,
-                                offset: const Offset(0, 2),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: Icon(
-                      isUnlocked ? achievement.icon : Icons.lock_rounded,
-                      color: isUnlocked ? achievement.color : colors.textTertiary,
-                      size: 22,
-                    ),
-                  ),
-
-                  // Category tag
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colors.surfaceMuted,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: colors.border),
-                    ),
-                    child: Text(
-                      achievement.category,
-                      style: AppTextStyles.caption.copyWith(
-                        color: colors.textTertiary,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
-
-              // Title
-              Text(
-                achievement.name,
-                style: AppTextStyles.label.copyWith(
-                  color: isUnlocked ? colors.textPrimary : colors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 2),
-
-              // Description or Progress
-              if (isUnlocked) ...[
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      size: 12,
-                      color: Color(0xFF4CAF50),
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        'Qo\'lga kiritildi',
-                        style: AppTextStyles.caption.copyWith(
-                          color: const Color(0xFF4CAF50),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 10.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ] else if (progress != null) ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: (progress!.$1 / progress!.$2).clamp(0.0, 1.0),
-                          minHeight: 5,
-                          backgroundColor: colors.border,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            achievement.color.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${progress!.$1}/${progress!.$2}',
-                      style: AppTextStyles.caption.copyWith(
-                        color: colors.textTertiary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ] else ...[
-                Text(
-                  achievement.description,
-                  style: AppTextStyles.caption.copyWith(
-                    color: colors.textTertiary,
-                    fontSize: 10.5,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.6), width: 1.5),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x225BC8FA),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
               ],
-            ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.backpack_rounded, color: Color(0xFF5BC8FA), size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'profile.inventory_title'.trFallback('INVENTAR'),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ],
+            ),
           ),
+        ),
+        const SizedBox(height: 12),
+
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          child: Text(
+            'profile.main_metrics'.trFallback('ASOSIY METRIKALAR'),
+            style: const TextStyle(
+              color: Color(0xFF5BC8FA),
+              fontSize: 9.5,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 8,
+          crossAxisSpacing: 8,
+          childAspectRatio: 1.26,
+          children: [
+            _statItem(
+              title: 'PTS',
+              value: '${profile.totalPoints}',
+              icon: Icons.bolt_rounded,
+              color: const Color(0xFF5BC8FA),
+              onTap: () => showPtsHistoryModal(context),
+            ),
+            _statItem(
+              title: 'profile.fenix_coins'.trFallback('Fenix Coins'),
+              value: '${profile.fenixCoins}',
+              icon: Icons.local_fire_department_rounded,
+              color: const Color(0xFFFFB703),
+              onTap: () => showCoinsHistoryModal(context),
+            ),
+            _statItem(
+              title: 'profile.streak'.trFallback('Streak'),
+              value: '${profile.streak} ${'profile.days_unit'.trFallback('kun')} 🔥',
+              icon: Icons.local_fire_department_rounded,
+              color: const Color(0xFFFF4500),
+            ),
+            _statItem(
+              title: 'profile.freezes'.trFallback('Muzlatgich'),
+              value: '${profile.freezes} ❄️',
+              icon: Icons.ac_unit_rounded,
+              color: const Color(0xFF5BC8FA),
+              onTap: () => showInventoryModal(context),
+            ),
+            _statItem(
+              title: 'Qat‘iy Intizom',
+              value: '${(profile.totalFocusMinutes / 60).toStringAsFixed(1)} soat',
+              icon: Icons.timer_rounded,
+              color: const Color(0xFF3B9BFF),
+            ),
+            _statItem(
+              title: '1v1 Winrate',
+              value: '${profile.winratePercent}% (${profile.battleWins}W/${profile.battleLosses}L)',
+              icon: Icons.sports_martial_arts_rounded,
+              color: const Color(0xFFFF0055),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push(AppRoutes.battle);
+              },
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _statItem({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D1220),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFFB0C4DE),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Icon(icon, color: color, size: 14),
+              ],
+            ),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-/// Modal Bottom Sheet displaying rich achievement details, unlocking requirements, and current progress
-class AchievementDetailBottomSheet extends StatelessWidget {
-  const AchievementDetailBottomSheet({
-    super.key,
-    required this.achievement,
-    required this.profile,
-  });
+  // Badges and Friends sections removed in favor of unified settings menu
 
-  final Achievement achievement;
-  final UserProfile profile;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final isUnlocked = achievement.isUnlocked(profile);
-    final progress = achievement.getProgress?.call(profile);
-
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+  /// Shows Direct Photo / Avatar Picker Modal Bottom Sheet
+  void _showAvatarPhotoPickerSheet(BuildContext context) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+        decoration: const BoxDecoration(
+          color: Color(0xFF0D1220),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Top Handle
             Container(
-              width: 36,
+              width: 40,
               height: 4,
-              decoration: BoxDecoration(
-                color: colors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
+              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 16),
-
-            // Big Hero Icon Container
-            Container(
-              width: 88,
-              height: 88,
-              decoration: BoxDecoration(
-                color: isUnlocked
-                    ? achievement.color.withValues(alpha: 0.2)
-                    : colors.surfaceMuted,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isUnlocked
-                      ? achievement.color.withValues(alpha: 0.5)
-                      : colors.border,
-                  width: 2,
-                ),
-                boxShadow: isUnlocked
-                    ? [
-                        BoxShadow(
-                          color: achievement.color.withValues(alpha: 0.3),
-                          blurRadius: 24,
-                          spreadRadius: 4,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Center(
-                child: Icon(
-                  isUnlocked ? achievement.icon : Icons.lock_rounded,
-                  size: 42,
-                  color: isUnlocked ? achievement.color : colors.textTertiary,
-                ),
-              ),
+            Text(
+              'profile.avatar_picker_title'.tr(),
+              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900, letterSpacing: 1.1),
             ),
             const SizedBox(height: 18),
-
-            // Category Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: colors.surfaceMuted,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colors.border),
-              ),
-              child: Text(
-                achievement.category.toUpperCase(),
-                style: AppTextStyles.caption.copyWith(
-                  color: colors.textSecondary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 10.5,
-                  letterSpacing: 1,
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0x225BC8FA),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF5BC8FA)),
               ),
+              title: Text('profile.avatar_camera'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              subtitle: Text('profile.avatar_camera_sub'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadProfileImage(ImageSource.camera);
+              },
             ),
-            const SizedBox(height: 8),
-
-            // Achievement Name
-            Text(
-              achievement.name,
-              style: AppTextStyles.h2.copyWith(
-                color: colors.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 6),
-
-            // Status Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: isUnlocked
-                    ? const Color(0xFF4CAF50).withValues(alpha: 0.15)
-                    : Colors.orange.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isUnlocked
-                        ? Icons.check_circle_rounded
-                        : Icons.lock_outline_rounded,
-                    size: 14,
-                    color: isUnlocked ? const Color(0xFF4CAF50) : Colors.orange,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    isUnlocked ? 'Qo\'lga kiritilgan' : 'Qulflangan',
-                    style: AppTextStyles.caption.copyWith(
-                      color: isUnlocked ? const Color(0xFF4CAF50) : Colors.orange,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Requirement Section Box
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.surfaceMuted,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: colors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.help_outline_rounded,
-                        size: 18,
-                        color: colors.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Bu yutuqni qanday qo\'lga kiritish mumkin?',
-                          style: AppTextStyles.label.copyWith(
-                            color: colors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    achievement.howToUnlock,
-                    style: AppTextStyles.body.copyWith(
-                      color: colors.textSecondary,
-                      height: 1.35,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-          // Progress Section if Locked
-          if (!isUnlocked && progress != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colors.surfaceMuted,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: colors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Joriy progress:',
-                        style: AppTextStyles.label.copyWith(
-                          color: colors.textPrimary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '${progress.$1} / ${progress.$2}',
-                        style: AppTextStyles.label.copyWith(
-                          color: colors.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: LinearProgressIndicator(
-                      value: (progress.$1 / progress.$2).clamp(0.0, 1.0),
-                      minHeight: 10,
-                      backgroundColor: colors.border,
-                      valueColor: AlwaysStoppedAnimation<Color>(colors.primary),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ] else if (isUnlocked) ...[
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(
-                  color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+            const Divider(color: Colors.white10, height: 1),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0x2239FF14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Icon(Icons.photo_library_rounded, color: Color(0xFF3B9BFF)),
               ),
-              child: Row(
-                children: [
-                  const Text('🎉', style: TextStyle(fontSize: 22)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Tabriklaymiz! Siz ushbu yutuqni muvaffaqiyatli qo\'lga kiritgansiz.',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              title: Text('profile.avatar_gallery'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              subtitle: Text('profile.avatar_gallery_sub'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
+              onTap: () {
+                Navigator.pop(ctx);
+                _pickAndUploadProfileImage(ImageSource.gallery);
+              },
             ),
           ],
+        ),
+      ),
+    );
+  }
 
-          const SizedBox(height: 24),
+  Future<void> _pickAndUploadProfileImage(ImageSource source) async {
+    final picker = ImagePicker();
+    try {
+      final image = await picker.pickImage(source: source, imageQuality: 85);
+      if (image == null) return;
 
-          // Primary Button
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+      final uid = ref.read(authStateProvider).asData?.value?.uid;
+      if (uid == null) return;
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF5BC8FA),
+          content: Text('profile.avatar_uploading'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        ),
+      );
+
+      final tempDir = Directory.systemTemp.createTempSync('odat_profile');
+      final targetPath = '${tempDir.path}/profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final compressedFile = await FlutterImageCompress.compressAndGetFile(
+        image.path,
+        targetPath,
+        quality: 60,
+        minWidth: 300,
+        minHeight: 300,
+        format: CompressFormat.jpeg,
+      );
+
+      final fileBytes = compressedFile != null ? await compressedFile.readAsBytes() : await File(image.path).readAsBytes();
+      final base64String = base64Encode(fileBytes);
+
+      await ref.read(userRepositoryProvider).updateProfile(
+        uid,
+        photoBase64: base64String,
+      );
+
+      if (mounted) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF3B9BFF),
+            content: Text('profile.avatar_success'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(backgroundColor: const Color(0xFFFF0055), content: Text('Xatolik: $e')),
+        );
+      }
+    }
+  }
+
+  /// Shows Friends Chat / Direct Messages Modal
+  void _showFriendsChatModal(BuildContext context) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Consumer(
+        builder: (context, ref, _) {
+          final friendsAsync = ref.watch(friendsLeaderboardProvider);
+
+          return Container(
+            constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+            decoration: const BoxDecoration(
+              color: Color(0xFF0D1220),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: Color(0xFF0088CC), width: 1.5)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
                 ),
-              ),
-              child: const Text(
-                'Tushunarli',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Icon(Icons.forum_rounded, color: Color(0xFF0088CC), size: 24),
+                    const SizedBox(width: 10),
+                    Text(
+                      'profile.friends_chat_title'.tr(),
+                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.person_add_rounded, color: Color(0xFF3B9BFF), size: 20),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        showAddFriendModal(context);
+                      },
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: friendsAsync.when(
+                    loading: () => const Center(child: FlowaLoading()),
+                    error: (e, _) => Center(child: Text('Xato: $e', style: const TextStyle(color: Colors.red))),
+                    data: (friends) {
+                      if (friends.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Text('👥', style: TextStyle(fontSize: 40)),
+                              const SizedBox(height: 10),
+                              Text('profile.no_friends_title'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 12),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pop(ctx);
+                                  showAddFriendModal(context);
+                                },
+                                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B9BFF), foregroundColor: Colors.black),
+                                child: Text('profile.find_friends_btn'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return ListView.separated(
+                        itemCount: friends.length,
+                        separatorBuilder: (_, _) => const Divider(color: Colors.white10, height: 1),
+                        itemBuilder: (context, index) {
+                          final friend = friends[index];
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                            leading: ClipOval(
+                              child: AvatarCircle(
+                                avatarKey: friend.avatar,
+                                size: 42,
+                                photoBase64: friend.photoBase64,
+                                photoUrl: friend.photoUrl,
+                              ),
+                            ),
+                            title: Text(
+                              friend.name,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              '${friend.totalPoints} PTS',
+                              style: const TextStyle(color: Color(0xFFFFB703), fontSize: 12, fontWeight: FontWeight.w700),
+                            ),
+                            trailing: ElevatedButton.icon(
+                              onPressed: () {
+                                final myProfile = ref.read(userProfileProvider).asData?.value;
+                                if (myProfile == null) return;
+                                Navigator.pop(ctx);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => DirectChatScreen(
+                                      myUid: myProfile.uid,
+                                      myName: myProfile.name.isEmpty ? 'Foydalanuvchi' : myProfile.name,
+                                      myAvatar: myProfile.avatar,
+                                      friendUid: friend.uid,
+                                      friendName: friend.name,
+                                      friendAvatar: friend.avatar,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF0088CC),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              icon: const Icon(Icons.send_rounded, size: 14),
+                              label: Text('profile.msg_btn'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showEditProfileModal(BuildContext context, UserProfile profile) {
+    HapticFeedback.mediumImpact();
+    final bioController = TextEditingController(text: profile.bio ?? '');
+    final goalController = TextEditingController(text: profile.goalTitle ?? '');
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + MediaQuery.of(context).viewInsets.bottom),
+            decoration: const BoxDecoration(
+              color: Color(0xFF0D1220),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Icon(Icons.edit_note_rounded, color: Color(0xFF5BC8FA), size: 24),
+                      const SizedBox(width: 10),
+                      Text(
+                        'profile.edit_title'.trFallback('Profilni Tahrirlash'),
+                        style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Avatar preview and change button
+                  Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        _showAvatarPhotoPickerSheet(context);
+                      },
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: LinearGradient(colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)]),
+                            ),
+                            child: ClipOval(
+                              child: AvatarCircle(
+                                avatarKey: profile.avatar,
+                                size: 76,
+                                photoBase64: profile.photoBase64,
+                                photoUrl: profile.photoUrl,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF5BC8FA),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.black),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Text(
+                      'profile.tap_to_change_photo'.trFallback('Rasmni o‘zgartirish uchun bosing'),
+                      style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // Name Display (Locked - Card required -> Opens Shop)
+                  Text('profile.name_label'.trFallback('Ism / Taxallus'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      context.push(AppRoutes.shop);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0D1220),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFFB703).withValues(alpha: 0.5)),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            profile.displayName ?? profile.name,
+                            style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                          const Spacer(),
+                          const Icon(Icons.shopping_bag_rounded, color: Color(0xFFFFB703), size: 16),
+                          const SizedBox(width: 4),
+                          const Text(
+                            'Karta orqali 🎫',
+                            style: TextStyle(color: Color(0xFFFFB703), fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Bio / Status Field
+                  Text('profile.bio_label'.trFallback('Status (Bio)'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: bioController,
+                    maxLines: 2,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'profile.bio_hint'.trFallback('O‘zingiz haqingizda qisqacha yozing...'),
+                      hintStyle: const TextStyle(color: Colors.white30),
+                      filled: true,
+                      fillColor: const Color(0xFF131929),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x335BC8FA))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF5BC8FA))),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+
+                  // Goal Field
+                  Text('profile.goal_label'.trFallback('Bosh Maqsad'), style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: goalController,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'profile.goal_hint'.trFallback('Masalan: IELTS 8.0 olish yoki 10 km yugurish...'),
+                      hintStyle: const TextStyle(color: Colors.white30),
+                      filled: true,
+                      fillColor: const Color(0xFF131929),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x335BC8FA))),
+                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF5BC8FA))),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: isSaving
+                          ? null
+                          : () async {
+                              setModalState(() => isSaving = true);
+                              try {
+                                final newBio = bioController.text.trim();
+                                final newGoal = goalController.text.trim();
+                                await ref.read(userRepositoryProvider).updateUserProfile(
+                                  profile.uid,
+                                  bio: newBio,
+                                  goalTitle: newGoal,
+                                );
+                                if (ctx.mounted) {
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: const Color(0xFF3B9BFF),
+                                      behavior: SnackBarBehavior.floating,
+                                      content: Text('profile.profile_saved'.trFallback('Profil ma’lumotlari muvaffaqiyatli saqlandi! ✨'), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (ctx.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(backgroundColor: const Color(0xFFFF0055), content: Text('Xatolik: $e')),
+                                  );
+                                }
+                              } finally {
+                                if (ctx.mounted) setModalState(() => isSaving = false);
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF5BC8FA),
+                        foregroundColor: Colors.black,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: isSaving
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                          : Text('common.save'.trFallback('Saqlash ✨'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+          );
+        },
       ),
-    ),
-  );
-}
+    );
+  }
+
+  void _showSettingsModal(BuildContext context, UserProfile profile) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        decoration: const BoxDecoration(
+          color: Color(0xFF0D1220),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.settings_suggest_rounded, color: Color(0xFF5BC8FA), size: 24),
+                const SizedBox(width: 10),
+                Text(
+                  'profile.settings_modal_title'.trFallback('SOZLAMALAR VA BOSHQARUV'),
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 20),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+
+            _modalActionTile(
+              icon: Icons.edit_note_rounded,
+              iconColor: const Color(0xFF5BC8FA),
+              title: 'profile.edit_profile_tile'.trFallback('Profil Ma’lumotlarini Tahrirlash'),
+              subtitle: 'profile.edit_profile_sub'.trFallback('Rasm, status (bio) va bosh maqsadni o‘zgartirish'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showEditProfileModal(context, profile);
+              },
+            ),
+            const Divider(color: Colors.white10, height: 1),
+
+            _modalActionTile(
+              icon: Icons.workspace_premium_rounded,
+              iconColor: const Color(0xFFFFB703),
+              title: 'profile.premium_tile'.trFallback('ODAT PRO Obunasi'),
+              subtitle: profile.isPremium ? 'profile.premium_sub_active'.trFallback('PRO faol — barcha imkoniyatlar ochiq ✨') : 'profile.premium_sub_upgrade'.trFallback('Cheksiz AI, maxsus nishonlar va imkoniyatlar 🚀'),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push(
+                  profile.isPremium
+                      ? AppRoutes.premiumStats
+                      : AppRoutes.paywall,
+                );
+              },
+            ),
+            const Divider(color: Colors.white10, height: 1),
+
+            _modalActionTile(
+              icon: Icons.logout_rounded,
+              iconColor: const Color(0xFFFF0055),
+              title: 'profile.logout_tile'.trFallback('Hisobdan Chiqish'),
+              subtitle: 'profile.logout_sub'.trFallback('Tizimdan xavfsiz chiqish'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _confirmLogout();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modalActionTile({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: iconColor.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: iconColor, size: 20),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: Colors.white54, fontSize: 11),
+      ),
+      trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white24, size: 14),
+    );
+  }
 }

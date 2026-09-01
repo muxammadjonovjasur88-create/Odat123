@@ -53,8 +53,8 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   ); // deep-work minutes
   final _intervalWorkController = TextEditingController(
     text: '45',
-  ); // sport sec
-  final _setsController = TextEditingController(text: '4'); // sport sets
+  ); // sport daqiqa (minutes → stored as seconds)
+  final _setsController = TextEditingController(text: '1'); // sport sets
   bool _manual = true;
   AppCategory _category = AppCategory.study;
   FocusMethod _focusMethod = FocusMethod.pomodoro;
@@ -185,10 +185,11 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
   }
   int get _workMinutes =>
       (int.tryParse(_workController.text) ?? 25).clamp(5, 180);
+  // Sport interval: user enters MINUTES, we convert to seconds for storage.
   int get _intervalWorkSeconds =>
-      (int.tryParse(_intervalWorkController.text) ?? 45).clamp(10, 600);
+      ((int.tryParse(_intervalWorkController.text) ?? 45) * 60).clamp(60, 36000);
   int get _intervalSets =>
-      (int.tryParse(_setsController.text) ?? 4).clamp(1, 20);
+      (int.tryParse(_setsController.text) ?? 1).clamp(1, 20);
 
   Future<void> _pickGoalEndDate() async {
     final now = DateTime.now();
@@ -376,6 +377,9 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
       type: isError ? NotificationType.error : NotificationType.success,
     );
   }
+
+  String _formatDate(DateTime d) =>
+      DateFormat('d MMMM, yyyy', context.locale.languageCode).format(d);
 
   @override
   Widget build(BuildContext context) {
@@ -793,9 +797,11 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
     );
   }
 
-  /// Sport interval: user types work seconds + sets; rest is auto.
+  /// Sport interval: user types total workout minutes; converted to seconds.
   Widget _intervalCard(AppColorScheme colors) {
-    final rest = Task.autoRestSeconds(_intervalWorkSeconds);
+    final totalMin = int.tryParse(_intervalWorkController.text) ?? 45;
+    final totalSec = totalMin * 60;
+    final restSec = Task.autoRestSeconds(totalSec.clamp(60, 36000));
     return AppCard(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -803,36 +809,22 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
         children: [
           _Label('addgoal.interval_training'.tr()),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: AppInput(
-                  label: 'addgoal.work_sec'.tr(),
-                  controller: _intervalWorkController,
-                  hint: '45',
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: AppInput(
-                  label: 'addgoal.sets'.tr(),
-                  controller: _setsController,
-                  hint: '4',
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  onChanged: (_) => setState(() {}),
-                ),
-              ),
-            ],
+          SizedBox(
+            width: 160,
+            child: AppInput(
+              label: 'addgoal.minutes'.tr(),
+              controller: _intervalWorkController,
+              hint: '45',
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (_) => setState(() {}),
+            ),
           ),
           const SizedBox(height: 14),
           _autoNote(
             colors,
-            Icons.air_rounded,
-            'addgoal.rest_note'.tr(namedArgs: {'sec': '$rest'}),
+            Icons.fitness_center_rounded,
+            'addgoal.break_note'.tr(namedArgs: {'min': '${restSec ~/ 60}'}),
           ),
         ],
       ),
@@ -880,11 +872,6 @@ class _AddGoalScreenState extends ConsumerState<AddGoalScreen> {
         ],
       ),
     );
-  }
-
-  String _formatDate(DateTime d) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(d.month)}/${two(d.day)}/${two(d.year % 100)}';
   }
 }
 

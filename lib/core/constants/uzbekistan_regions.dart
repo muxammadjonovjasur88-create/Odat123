@@ -19,8 +19,47 @@ enum UzRegion {
   qoraqalpogiston;
 
   // ---------------------------------------------------------------------------
-  // Display name (Uzbek)
+  // Display name (Localized by languageCode)
   // ---------------------------------------------------------------------------
+
+  String localizedName(String langCode) {
+    if (langCode == 'ru') {
+      return switch (this) {
+        UzRegion.toshkent => 'г. Ташкент',
+        UzRegion.toshkentViloyat => 'Ташкентская область',
+        UzRegion.samarqand => 'Самарканд',
+        UzRegion.buxoro => 'Бухара',
+        UzRegion.navoiy => 'Навоий',
+        UzRegion.fargona => 'Фергана',
+        UzRegion.andijon => 'Андижан',
+        UzRegion.namangan => 'Наманган',
+        UzRegion.qashqadaryo => 'Кашкадарья',
+        UzRegion.surxondaryo => 'Сурхандарья',
+        UzRegion.jizzax => 'Джизак',
+        UzRegion.sirdaryo => 'Сырдарья',
+        UzRegion.xorazm => 'Хорезм',
+        UzRegion.qoraqalpogiston => 'Каракалпакстан',
+      };
+    } else if (langCode == 'en') {
+      return switch (this) {
+        UzRegion.toshkent => 'Tashkent City',
+        UzRegion.toshkentViloyat => 'Tashkent Region',
+        UzRegion.samarqand => 'Samarkand',
+        UzRegion.buxoro => 'Bukhara',
+        UzRegion.navoiy => 'Navoiy',
+        UzRegion.fargona => 'Fergana',
+        UzRegion.andijon => 'Andijan',
+        UzRegion.namangan => 'Namangan',
+        UzRegion.qashqadaryo => 'Kashkadarya',
+        UzRegion.surxondaryo => 'Surkhandarya',
+        UzRegion.jizzax => 'Jizzakh',
+        UzRegion.sirdaryo => 'Syrdarya',
+        UzRegion.xorazm => 'Khorezm',
+        UzRegion.qoraqalpogiston => 'Karakalpakstan',
+      };
+    }
+    return displayName;
+  }
 
   String get displayName => switch (this) {
         UzRegion.toshkent => 'Toshkent shahri',

@@ -1,22 +1,19 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../core/router/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_motion.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/models/reminder.dart';
 import '../providers/reminders_provider.dart';
 import '../screens/add_reminder_screen.dart';
 
-/// A single reminder card with:
-/// * Slide + fade entrance animation (driven by [index]).
-/// * Checkmark micro-animation on completion.
-/// * Swipe-to-dismiss (handled by the parent [Dismissible]).
-/// * Repeat badge and status colour coded by state.
+/// A rich Goal Card supporting Focus Timer, AI Vision Camera Exercise, and Simple Notes.
 class ReminderCard extends ConsumerStatefulWidget {
   const ReminderCard({
     super.key,
@@ -25,8 +22,6 @@ class ReminderCard extends ConsumerStatefulWidget {
   });
 
   final Reminder reminder;
-
-  /// Position in the list — used to stagger the entrance animation.
   final int index;
 
   @override
@@ -38,8 +33,6 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
   late AnimationController _checkController;
   late Animation<double> _checkScale;
   late Animation<double> _checkOpacity;
-
-  // Entrance slide+fade driven by index stagger.
   bool _visible = false;
 
   @override
@@ -63,7 +56,6 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
       _checkController.value = 1.0;
     }
 
-    // Stagger entrance: delay by 40ms × index, clamped to 320ms max.
     final delay = Duration(
       milliseconds: math.min(40 * widget.index, 320),
     );
@@ -78,13 +70,25 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
     super.dispose();
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
   Future<void> _toggleComplete() async {
     final r = widget.reminder;
-    if (r.isCompleted) return; // already done — no undo in this version
+    if (r.isCompleted) return;
 
-    // Animate checkmark immediately for snappy feel.
+    if (r.isFocusGoal) {
+      context.push(AppRoutes.strictDiscipline, extra: r.id);
+      return;
+    } else if (r.isExerciseGoal) {
+      context.push(
+        '/exercise/camera',
+        extra: {
+          'exerciseType': r.exerciseType ?? 'SQUAT',
+          'targetReps': r.targetReps ?? 20,
+          'reminderId': r.id,
+        },
+      );
+      return;
+    }
+
     await _checkController.forward();
     if (!mounted) return;
 
@@ -100,12 +104,6 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
     }
   }
 
-  Color _statusColor(AppColorScheme c, Reminder r) {
-    if (r.isCompleted) return c.primary;
-    if (r.isPast) return const Color(0xFFFF5252);
-    return c.textSecondary;
-  }
-
   String _formattedDate(DateTime dt) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -118,25 +116,10 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
     return DateFormat('d MMM, HH:mm', 'uz').format(dt);
   }
 
-  String _repeatBadge(RepeatType type) {
-    switch (type) {
-      case RepeatType.once:
-        return '';
-      case RepeatType.daily:
-        return 'Har kuni';
-      case RepeatType.weekly:
-        return 'Har hafta';
-    }
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final r = widget.reminder;
-    final statusColor = _statusColor(colors, r);
-    final repeatLabel = _repeatBadge(r.repeatType);
 
     return AnimatedOpacity(
       duration: AppMotion.fade,
@@ -154,11 +137,8 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
             background: _SwipeDeleteBackground(colors: colors),
             confirmDismiss: (dir) => _confirmDelete(context),
             onDismissed: (_) => _onDelete(),
-            child: _CardContent(
+            child: _GoalCardContent(
               reminder: r,
-              colors: colors,
-              statusColor: statusColor,
-              repeatLabel: repeatLabel,
               formattedDate: _formattedDate(r.dateTime),
               checkScale: _checkScale,
               checkOpacity: _checkOpacity,
@@ -175,31 +155,31 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: context.colors.surface,
-        title: Text(
-          'Eslatmani o\'chirish',
-          style: AppTextStyles.h3.copyWith(color: context.colors.textPrimary),
+        backgroundColor: const Color(0xFF0D1220),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFFFF0055), width: 1.5),
+        ),
+        title: const Text(
+          'Maqsadni o‘chirish',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         content: Text(
-          '"${widget.reminder.title}" eslatmasini o\'chirmoqchimisiz?',
-          style: AppTextStyles.body.copyWith(
-            color: context.colors.textSecondary,
-          ),
+          '"${widget.reminder.title}" maqsadini o‘chirmoqchimisiz?',
+          style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(
-              'Bekor qilish',
-              style: TextStyle(color: context.colors.textSecondary),
-            ),
+            child: Text('common.cancel'.tr(), style: TextStyle(color: Colors.white54)),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'O\'chirish',
-              style: TextStyle(color: Color(0xFFFF5252)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFF0055),
+              foregroundColor: Colors.white,
             ),
+            child: Text('common.delete'.tr()),
           ),
         ],
       ),
@@ -208,27 +188,13 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
   }
 
   void _onDelete() {
-    ref.read(remindersProvider.notifier).deleteReminder(widget.reminder.id).catchError(
-      (Object e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('O\'chirishda xato: $e')),
-          );
-        }
-        return null;
-      },
-    );
+    ref.read(remindersProvider.notifier).deleteReminder(widget.reminder.id);
   }
 }
 
-// ── Sub-widget: Card content ──────────────────────────────────────────────
-
-class _CardContent extends StatelessWidget {
-  const _CardContent({
+class _GoalCardContent extends StatelessWidget {
+  const _GoalCardContent({
     required this.reminder,
-    required this.colors,
-    required this.statusColor,
-    required this.repeatLabel,
     required this.formattedDate,
     required this.checkScale,
     required this.checkOpacity,
@@ -237,9 +203,6 @@ class _CardContent extends StatelessWidget {
   });
 
   final Reminder reminder;
-  final AppColorScheme colors;
-  final Color statusColor;
-  final String repeatLabel;
   final String formattedDate;
   final Animation<double> checkScale;
   final Animation<double> checkOpacity;
@@ -248,193 +211,185 @@ class _CardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A nice accent line on the left to indicate urgency.
-    final bool isUrgent = !reminder.isCompleted &&
-        reminder.dateTime.difference(DateTime.now()).inHours < 2 &&
-        !reminder.isPast;
+    final isFocus = reminder.isFocusGoal;
+    final isExercise = reminder.isExerciseGoal;
 
-    final Color accentColor = reminder.isCompleted
-        ? colors.border
-        : (reminder.isPast
-            ? const Color(0xFFFF5252)
-            : (isUrgent ? colors.primary : colors.tintSage));
+    final Color badgeColor = isFocus
+        ? const Color(0xFF5BC8FA)
+        : (isExercise ? const Color(0xFF3B9BFF) : const Color(0xFFFFB703));
 
-    final String timeStr = DateFormat('HH:mm').format(reminder.dateTime);
-    final String dateStr = formattedDate.split(',').first;
+    final IconData badgeIcon = isFocus
+        ? Icons.timer_outlined
+        : (isExercise ? Icons.videocam_rounded : Icons.edit_note_rounded);
 
-    return Stack(
-      children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: colors.border, width: 0.8),
-            boxShadow: [
-              BoxShadow(
-                color: colors.shadow,
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    final String badgeText = isFocus
+        ? '🎯 FOKUS (${reminder.durationMinutes} MIN)'
+        : (isExercise
+            ? '🏋️ AI MASHQ (${reminder.targetReps ?? 20} TA ${reminder.exerciseType ?? "SQUAT"})'
+            : '📝 ZAMETKA');
+
+    return InkWell(
+      onTap: onEdit,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D1220),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: reminder.isCompleted
+                ? const Color(0x3300FF88)
+                : badgeColor.withValues(alpha: 0.35),
+            width: 1.2,
           ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Row: Type Badge + Time + Checkbox
+            Row(
               children: [
-                // Accent Line
                 Container(
-                  width: 5,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: accentColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(18),
-                      bottomLeft: Radius.circular(18),
-                    ),
+                    color: badgeColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: badgeColor, width: 1),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(badgeIcon, color: badgeColor, size: 13),
+                      const SizedBox(width: 5),
+                      Text(
+                        badgeText,
+                        style: TextStyle(
+                          color: badgeColor,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Left side: Time and Date
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              timeStr,
-                              style: AppTextStyles.h2.copyWith(
-                                color: reminder.isCompleted
-                                    ? colors.textSecondary
-                                    : colors.textPrimary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 22,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              dateStr,
-                              style: AppTextStyles.caption.copyWith(
-                                color: reminder.isCompleted
-                                    ? colors.border
-                                    : colors.textSecondary,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(width: 14),
-                        // Divider
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: colors.border,
-                        ),
-                        const SizedBox(width: 14),
-
-                        // Title & meta
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                reminder.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: AppTextStyles.h3.copyWith(
-                                  color: reminder.isCompleted
-                                      ? colors.textSecondary
-                                      : colors.textPrimary,
-                                  decoration: reminder.isCompleted
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              if (repeatLabel.isNotEmpty) ...[
-                                const SizedBox(height: 6),
-                                _RepeatBadge(
-                                  label: repeatLabel,
-                                  primary: colors.primary,
-                                  tintSage: colors.tintSage,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        // Animated check button
-                        GestureDetector(
-                          onTap: onToggle,
-                          behavior: HitTestBehavior.opaque,
-                          child: _CheckCircle(
-                            isCompleted: reminder.isCompleted,
-                            scaleAnim: checkScale,
-                            opacityAnim: checkOpacity,
-                            primaryColor: colors.primary,
-                            borderColor: reminder.isPast ? const Color(0xFFFF5252) : colors.border,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        // Edit popup menu
-                        if (!reminder.isCompleted)
-                          SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: PopupMenuButton<String>(
-                              icon: Icon(
-                                Icons.more_vert_rounded,
-                                size: 18,
-                                color: colors.textSecondary,
-                              ),
-                              color: colors.surface,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: colors.border, width: 0.6),
-                              ),
-                              padding: EdgeInsets.zero,
-                              onSelected: (value) {
-                                if (value == 'edit') onEdit();
-                              },
-                              itemBuilder: (ctx) => [
-                                PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit_rounded,
-                                          size: 16, color: colors.primary),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Tahrirlash',
-                                        style: AppTextStyles.bodySmall.copyWith(
-                                          color: colors.textPrimary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
+                const Spacer(),
+                Text(
+                  formattedDate,
+                  style: const TextStyle(color: Colors.white54, fontSize: 11, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(width: 8),
+                if (reminder.isCompleted || (!isFocus && !isExercise && !reminder.isPast))
+                  GestureDetector(
+                    onTap: reminder.isCompleted ? null : onToggle,
+                    behavior: HitTestBehavior.opaque,
+                    child: _CheckCircle(
+                      isCompleted: reminder.isCompleted,
+                      scaleAnim: checkScale,
+                      opacityAnim: checkOpacity,
+                      primaryColor: const Color(0xFF3B9BFF),
+                      borderColor: Colors.white24,
+                    ),
+                  )
+                else if (reminder.isPast && !reminder.isCompleted)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0x33FF0055),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFF0055)),
+                    ),
+                    child: const Text(
+                      'O\'tkazib yuborildi',
+                      style: TextStyle(color: Color(0xFFFF0055), fontSize: 9, fontWeight: FontWeight.bold),
                     ),
                   ),
-                ),
               ],
             ),
-          ),
+            const SizedBox(height: 10),
+
+            // Title
+            Text(
+              reminder.title,
+              style: TextStyle(
+                color: reminder.isCompleted ? Colors.white38 : Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                decoration: reminder.isCompleted ? TextDecoration.lineThrough : null,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Mode-specific Action Buttons
+            if (!reminder.isCompleted && !reminder.isPast) ...[
+              if (isFocus)
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // Launch Deep Focus / Strict Discipline Screen
+                          context.push(AppRoutes.strictDiscipline, extra: reminder.id);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF5BC8FA),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                        label: Text(
+                          '${reminder.durationMinutes} daqiqa Fokusni Boshlash 🚀',
+                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else if (isExercise)
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // Launch AI Vision Camera screen
+                          context.push(
+                            '/exercise/camera',
+                            extra: {
+                              'exerciseType': reminder.exerciseType ?? 'SQUAT',
+                              'targetReps': reminder.targetReps ?? 20,
+                              'reminderId': reminder.id,
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3B9BFF),
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.videocam_rounded, size: 18),
+                        label: Text(
+                          '📸 AI Kamera orqali bajarish (${reminder.targetReps ?? 20} ta)',
+                          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w900),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ],
         ),
-      ],
+      ),
     );
   }
 }
-
-// ── Sub-widget: Animated check circle ────────────────────────────────────
-
 
 class _CheckCircle extends StatelessWidget {
   const _CheckCircle({
@@ -453,89 +408,24 @@ class _CheckCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 28,
-      height: 28,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Empty circle border.
-          AnimatedOpacity(
-            duration: AppMotion.subtle,
-            opacity: isCompleted ? 0.0 : 1.0,
-            child: Container(
-              width: 26,
-              height: 26,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: borderColor, width: 1.6),
-              ),
-            ),
-          ),
-          // Filled check circle (animated in).
-          ScaleTransition(
-            scale: scaleAnim,
-            child: FadeTransition(
-              opacity: opacityAnim,
-              child: Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [primaryColor, AppColors.purpleAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.check_rounded,
-                  size: 16,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Sub-widget: Repeat badge ──────────────────────────────────────────────
-
-class _RepeatBadge extends StatelessWidget {
-  const _RepeatBadge({
-    required this.label,
-    required this.primary,
-    required this.tintSage,
-  });
-
-  final String label;
-  final Color primary;
-  final Color tintSage;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    return AnimatedContainer(
+      duration: AppMotion.fade,
+      width: 24,
+      height: 24,
       decoration: BoxDecoration(
-        color: tintSage,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: AppTextStyles.overline.copyWith(
-          color: primary,
-          fontSize: 9,
-          letterSpacing: 0.5,
+        shape: BoxShape.circle,
+        color: isCompleted ? primaryColor : Colors.transparent,
+        border: Border.all(
+          color: isCompleted ? primaryColor : borderColor,
+          width: 2,
         ),
       ),
+      child: isCompleted
+          ? const Icon(Icons.check_rounded, size: 16, color: Colors.black)
+          : null,
     );
   }
 }
-
-// ── Sub-widget: Swipe delete background ──────────────────────────────────
 
 class _SwipeDeleteBackground extends StatelessWidget {
   const _SwipeDeleteBackground({required this.colors});
@@ -546,23 +436,19 @@ class _SwipeDeleteBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 24),
+      padding: const EdgeInsets.only(right: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF5252).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(18),
+        color: const Color(0xFFFF0055),
+        borderRadius: BorderRadius.circular(20),
       ),
-      child: const Column(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.delete_rounded, color: Color(0xFFFF5252), size: 26),
-          SizedBox(height: 2),
+          const Icon(Icons.delete_outline_rounded, color: Colors.white, size: 22),
+          const SizedBox(width: 6),
           Text(
-            "O'chirish",
-            style: TextStyle(
-              color: Color(0xFFFF5252),
-              fontSize: 11,
-              fontFamily: 'Inter',
-            ),
+            'common.delete'.tr(),
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
           ),
         ],
       ),

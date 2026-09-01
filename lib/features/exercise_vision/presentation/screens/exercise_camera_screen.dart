@@ -1,6 +1,7 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:camera/camera.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,9 +11,11 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
+import '../../domain/services/crunch_strategy.dart';
 import '../../domain/services/exercise_strategy.dart';
 import '../../domain/services/plank_strategy.dart';
 import '../../domain/services/pose_detector_service.dart';
+import '../../domain/services/pullup_strategy.dart';
 import '../../domain/services/pushup_strategy.dart';
 import '../../domain/services/squat_strategy.dart';
 import '../widgets/skeleton_painter.dart';
@@ -22,10 +25,12 @@ class ExerciseCameraScreen extends ConsumerStatefulWidget {
     super.key,
     this.exerciseType = 'SQUAT',
     this.targetReps = 20,
+    this.reminderId,
   });
 
   final String exerciseType;
   final int targetReps;
+  final String? reminderId;
 
   @override
   ConsumerState<ExerciseCameraScreen> createState() =>
@@ -45,7 +50,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
   List<Pose> _poses = [];
   bool _isProcessingFrame = false;
   int _lastFrameTimeMs = 0;
-  static const int _frameIntervalMs = 70; // ~14 FPS throttling to save battery
+  static const int _frameIntervalMs = 25; // Real-time low latency processing (~35-40 FPS)
 
   bool _navigatingToSummary = false;
   BodyReadinessResult? _readiness;
@@ -65,6 +70,10 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
       _exerciseStrategy = PushUpStrategy();
     } else if (type == 'PLANK') {
       _exerciseStrategy = PlankStrategy();
+    } else if (type == 'CRUNCH' || type == 'PRESS') {
+      _exerciseStrategy = CrunchStrategy();
+    } else if (type == 'PULL_UP' || type == 'PULLUP' || type == 'TURNIK') {
+      _exerciseStrategy = PullUpStrategy();
     } else {
       _exerciseStrategy = SquatStrategy();
     }
@@ -120,7 +129,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
   Future<void> _startCameraStream(CameraDescription camera) async {
     _cameraController = CameraController(
       camera,
-      ResolutionPreset.medium,
+      ResolutionPreset.low,
       enableAudio: false,
       imageFormatGroup: defaultTargetPlatform == TargetPlatform.android
           ? ImageFormatGroup.nv21
@@ -152,7 +161,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
             pose,
             exerciseType: widget.exerciseType,
           );
-          final eval = pose != null
+          final eval = (pose != null && readiness.ready)
               ? _exerciseStrategy.evaluateFrame(pose, now)
               : null;
 
@@ -240,6 +249,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
         'repCount': count,
         'durationSeconds': duration,
         'pointsEarned': points,
+        'reminderId': widget.reminderId,
       },
     );
   }
@@ -248,7 +258,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
   Widget build(BuildContext context) {
     if (_permissionDenied) {
       return Scaffold(
-        backgroundColor: const Color(0xFF07090E),
+        backgroundColor: const Color(0xFF080B14),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -284,7 +294,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                 ElevatedButton.icon(
                   onPressed: () => openAppSettings(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00F3FF),
+                    backgroundColor: const Color(0xFF5BC8FA),
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
@@ -307,12 +317,12 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
 
     if (!_isCameraInitialized || _cameraController == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFF07090E),
+        backgroundColor: const Color(0xFF080B14),
         body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Color(0xFF00F3FF)),
+              CircularProgressIndicator(color: Color(0xFF5BC8FA)),
               SizedBox(height: 16),
               Text(
                 'Kamera va pose detector yuklanmoqda...',
@@ -339,24 +349,50 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
     final plankS = count % 60;
     final plankHoldText = '${plankM < 10 ? '0$plankM' : plankM}:${plankS < 10 ? '0$plankS' : plankS}';
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // --- CAMERA PREVIEW ---
-            if (_cameraController!.value.previewSize != null)
-              SizedBox.expand(
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: _cameraController!.value.previewSize!.height,
-                    height: _cameraController!.value.previewSize!.width,
-                    child: CameraPreview(_cameraController!),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: const Color(0xFF0D1220),
+            title: Text('vision.stop_confirm_title'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            content: Text('vision.stop_confirm_body'.tr(), style: const TextStyle(color: Colors.white70)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text('common.continue_btn'.tr(), style: const TextStyle(color: Color(0xFF5BC8FA))),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text('common.exit'.tr(), style: const TextStyle(color: Color(0xFFFF0055))),
+              ),
+            ],
+          ),
+        );
+        if (shouldExit == true && context.mounted) {
+          context.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // --- CAMERA PREVIEW (Touch absorbed) ---
+              if (_cameraController!.value.previewSize != null)
+                Positioned.fill(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _cameraController!.value.previewSize!.height,
+                      height: _cameraController!.value.previewSize!.width,
+                      child: CameraPreview(_cameraController!),
+                    ),
                   ),
                 ),
-              ),
 
             // --- SKELETON OVERLAY ---
             if (_poses.isNotEmpty &&
@@ -397,12 +433,12 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xCC0A0E17),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0x4400F3FF)),
+                      border: Border.all(color: const Color(0x445BC8FA)),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.timer_outlined,
-                            color: Color(0xFF00F3FF), size: 16),
+                            color: Color(0xFF5BC8FA), size: 16),
                         const SizedBox(width: 6),
                         Text(
                           timerText,
@@ -434,7 +470,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isReady
-                        ? const Color(0xFF39FF14)
+                        ? const Color(0xFF3B9BFF)
                         : const Color(0xFFFF0055),
                   ),
                 ),
@@ -442,7 +478,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                   children: [
                     Icon(
                       isReady ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
-                      color: isReady ? const Color(0xFF39FF14) : Colors.white,
+                      color: isReady ? const Color(0xFF3B9BFF) : Colors.white,
                       size: 22,
                     ),
                     const SizedBox(width: 10),
@@ -472,12 +508,12 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                   color: const Color(0xEE0A0E17),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF00F3FF),
+                    color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF5BC8FA),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: isPlank ? const Color(0x66FF9F00) : const Color(0x6600F3FF),
+                      color: isPlank ? const Color(0x66FF9F00) : const Color(0x665BC8FA),
                       blurRadius: 16,
                     ),
                   ],
@@ -497,7 +533,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                     Text(
                       isPlank ? plankHoldText : '$count',
                       style: TextStyle(
-                        color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF00F3FF),
+                        color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF5BC8FA),
                         fontSize: isPlank ? 36 : 48,
                         fontWeight: FontWeight.w900,
                       ),
@@ -528,11 +564,11 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                     onPressed: _switchCamera,
                     style: IconButton.styleFrom(
                       backgroundColor: const Color(0xCC151A27),
-                      side: const BorderSide(color: Color(0x4400F3FF)),
+                      side: const BorderSide(color: Color(0x445BC8FA)),
                       padding: const EdgeInsets.all(14),
                     ),
                     icon: const Icon(Icons.flip_camera_ios_rounded,
-                        color: Color(0xFF00F3FF), size: 24),
+                        color: Color(0xFF5BC8FA), size: 24),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -541,7 +577,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _finishSession,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF39FF14),
+                          backgroundColor: const Color(0xFF3B9BFF),
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
@@ -566,6 +602,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
           ],
         ),
       ),
-    );
+    ),
+  );
   }
 }

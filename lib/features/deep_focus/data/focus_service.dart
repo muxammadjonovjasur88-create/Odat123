@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -62,10 +60,11 @@ typedef PendingCompletion = ({String taskId, FocusSignals signals});
 /// notification, and app blocking; this just schedules/stops sessions and reads
 /// the live state. On non-Android platforms every call is a safe no-op.
 class FocusService {
+  static final FocusService instance = FocusService();
   static const _channel = MethodChannel('flowa/focus');
   static const _events = EventChannel('flowa/focus/events');
 
-  bool get _supported => Platform.isAndroid;
+  bool get _supported => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   Future<T?> _invokeSafe<T>(String method, [dynamic arguments]) async {
     try {

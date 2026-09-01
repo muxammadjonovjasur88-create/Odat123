@@ -26,7 +26,7 @@ class BrandLogo extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          'Odat',
+          'ODAT',
           style: AppTextStyles.h3.copyWith(
             color: c,
             fontSize: fontSize,

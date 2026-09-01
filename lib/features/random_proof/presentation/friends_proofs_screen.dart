@@ -90,7 +90,7 @@ class FriendsProofsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Do\'stingizning Flowa foydalanuvchi ID sini kiriting. '
+              'Do\'stingizning Odat foydalanuvchi ID sini kiriting. '
               'U ID ni o\'z Sozlamalar → Profil sahifasida ko\'ra oladi.',
               style:
                   AppTextStyles.caption.copyWith(color: colors.textSecondary),
@@ -334,7 +334,7 @@ class _MissedPlaceholder extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('😅', style: const TextStyle(fontSize: 36)),
+          Icon(Icons.no_photography_outlined, color: colors.textTertiary, size: 36),
           const SizedBox(height: 10),
           Text(
             '$name bugungi isbotni o\'tkazib yubordi',

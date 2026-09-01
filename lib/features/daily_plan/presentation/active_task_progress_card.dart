@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -229,8 +229,8 @@ class _ActiveCardState extends State<_ActiveCard>
     final Color accent;
     final Color glowColor;
     if (completed) {
-      accent = const Color(0xFF00E676); // green — done
-      glowColor = const Color(0xFF00E676);
+      accent = const Color(0xFF3B9BFF); // green — done
+      glowColor = const Color(0xFF3B9BFF);
     } else if (progress >= 0.75) {
       accent = const Color(0xFFFFB74D); // amber — near the end
       glowColor = const Color(0xFFFFB74D);
@@ -248,7 +248,7 @@ class _ActiveCardState extends State<_ActiveCard>
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        color: const Color(0xFF151A27),
+        color: const Color(0xFF131929),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: accent.withValues(alpha: completed ? 0.6 : 0.35),

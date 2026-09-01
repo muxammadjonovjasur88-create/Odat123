@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,9 +59,9 @@ class _FeedbackSheetState extends ConsumerState<FeedbackSheet> {
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Xabaringiz yuborildi, rahmat!"),
-          backgroundColor: Color(0xFF22C55E),
+        SnackBar(
+          content: Text('settings.feedback_sent'.tr()),
+          backgroundColor: const Color(0xFF22C55E),
         ),
       );
     } catch (e) {

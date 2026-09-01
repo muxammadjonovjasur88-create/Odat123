@@ -6,17 +6,24 @@ import '../models/task.dart';
 import '../theme/app_motion.dart';
 import '../widgets/flowa_loading.dart';
 import '../services/auth_repository.dart';
+import '../services/locale_store.dart';
 import '../services/user_repository.dart';
 import '../../features/active_focus/presentation/active_focus_view.dart';
 import '../../features/add_goal/presentation/add_goal_screen.dart';
 import '../../features/ai_planner/presentation/ai_planner_screen.dart';
 import '../../features/blocking/presentation/blocking_permissions_screen.dart';
 import '../../features/blocking/presentation/blocking_settings_screen.dart';
+import '../../features/blocking/presentation/screens/digital_wellbeing_screen.dart';
+import '../../features/blocking/presentation/screens/app_limits_screen.dart';
+import '../../features/blocking/presentation/screens/digital_detox_screen.dart';
 import '../../features/intro/presentation/intro_video_screen.dart';
 import '../../features/community/presentation/community_screen.dart';
 import '../../features/daily_plan/presentation/daily_plan_screen.dart';
 import '../../features/deep_focus/data/focus_providers.dart';
 import '../../features/deep_focus/presentation/deep_focus_screen.dart';
+import '../../features/deep_focus/presentation/strict_discipline_screen.dart';
+import '../../features/deep_focus/presentation/discipline_hub_screen.dart';
+import '../../features/deep_focus/presentation/mission_alarm_screen.dart';
 import '../../features/discover/presentation/discover_screen.dart';
 import '../../features/goal_reached/domain/goal_reached_args.dart';
 import '../../features/goal_reached/presentation/goal_reached_screen.dart';
@@ -35,7 +42,19 @@ import '../../features/setup_profile/presentation/setup_profile_screen.dart';
 import '../../features/sign_in/presentation/sign_in_screen.dart';
 import '../../features/starting_soon/presentation/starting_soon_screen.dart';
 import '../../features/weekly_view/presentation/weekly_view_screen.dart';
+import '../../features/parent_mode/presentation/screens/role_selection_screen.dart';
+import '../../features/parent_mode/presentation/screens/family_agreement_screen.dart';
+import '../../features/parent_mode/presentation/screens/parent_home_screen.dart';
+import '../../features/parent_mode/presentation/screens/parent_study_screen.dart';
+import '../../features/parent_mode/presentation/screens/parent_missions_screen.dart';
+import '../../features/parent_mode/presentation/screens/parent_wallet_screen.dart';
+import '../../features/parent_mode/presentation/screens/parent_location_screen.dart';
+import '../../features/interactive_games/presentation/screens/play_hub_screen.dart';
+import '../../features/interactive_games/presentation/screens/skill_profile_screen.dart';
+import '../../features/subscription/presentation/screens/subscription_paywall_screen.dart';
+import '../../features/community/presentation/screens/community_hub_screen.dart';
 import '../../features/welcome/presentation/welcome_screen.dart';
+import '../../features/welcome/presentation/language_select_screen.dart';
 import '../../features/random_proof/presentation/proof_capture_screen.dart';
 import '../../features/random_proof/presentation/friends_proofs_screen.dart';
 import '../../features/settings/presentation/telegram_link_screen.dart';
@@ -49,11 +68,19 @@ import '../../features/shop/presentation/screens/shipping_form_screen.dart';
 import '../../features/shop/presentation/screens/my_purchases_screen.dart';
 import '../../features/library/presentation/screens/library_screen.dart';
 import '../../features/running/domain/models/run_session.dart';
+import '../../features/boss_raid/presentation/screens/boss_raid_screen.dart';
+import '../../features/knowledge/presentation/screens/subject_quiz_screen.dart';
+import '../../features/knowledge/presentation/screens/audiobooks_screen.dart';
 import '../../features/running/presentation/screens/running_screen.dart';
 import '../../features/running/presentation/screens/run_summary_screen.dart';
 import '../../features/exercise_vision/presentation/screens/exercise_selection_screen.dart';
 import '../../features/exercise_vision/presentation/screens/exercise_camera_screen.dart';
 import '../../features/exercise_vision/presentation/screens/exercise_summary_screen.dart';
+import '../../features/ai_assistant/presentation/screens/ai_assistant_screen.dart';
+import '../../features/battle/presentation/screens/battle_arena_screen.dart';
+import '../../features/battle/presentation/screens/battle_room_screen.dart';
+import '../../features/referral/presentation/screens/referral_screen.dart';
+import '../../features/news/presentation/screens/news_screen.dart';
 import 'app_routes.dart';
 
 
@@ -87,9 +114,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       // --- Onboarding / auth (real screens) ---
       route(AppRoutes.welcome, (_) => const WelcomeScreen()),
       route(AppRoutes.intro, (_) => const IntroVideoScreen()),
+      route(AppRoutes.languageSelect, (_) => const LanguageSelectScreen()),
       route(AppRoutes.discover, (_) => const DiscoverScreen()),
       route(AppRoutes.signIn, (_) => const SignInScreen()),
       route(AppRoutes.setupProfile, (_) => const SetupProfileScreen()),
+      route(AppRoutes.roleSelection, (_) => const RoleSelectionScreen()),
+      route(AppRoutes.familyAgreement, (_) => const FamilyAgreementScreen()),
+      route(AppRoutes.parentHome, (_) => const ParentHomeScreen()),
+      route(AppRoutes.parentStudy, (_) => const ParentStudyScreen()),
+      route(AppRoutes.parentMissions, (_) => const ParentMissionsScreen()),
+      route(AppRoutes.parentWallet, (_) => const ParentWalletScreen()),
+      route(AppRoutes.parentLocation, (_) => const ParentLocationScreen()),
+      route(AppRoutes.playHub, (_) => const PlayHubScreen()),
+      route(AppRoutes.skillProfile, (_) => const SkillProfileScreen()),
+      route(AppRoutes.subscriptionPaywall, (_) => const SubscriptionPaywallScreen()),
+      route(AppRoutes.communityHub, (_) => const CommunityHubScreen()),
 
       // --- Planning (real screens) ---
       route(AppRoutes.dailyPlan, (_) => const DailyPlanScreen()),
@@ -102,8 +141,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       route(AppRoutes.aiPlanner, (_) => const AiPlannerScreen()),
 
-      // --- Focus (real screens) ---
+      // --- Focus (Task Focus & Strict Discipline & Intizom Hub) ---
       route(AppRoutes.deepFocus, (_) => const FocusScreen()),
+      route(
+        AppRoutes.strictDiscipline,
+        (state) => StrictDisciplineScreen(reminderId: state.extra as String?),
+      ),
+      route(AppRoutes.disciplineHub, (_) => const DisciplineHubScreen()),
+      route(AppRoutes.missionAlarm, (_) => const MissionAlarmScreen()),
       GoRoute(
         path: AppRoutes.activeFocus,
         pageBuilder: (context, state) {
@@ -139,6 +184,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         AppRoutes.blockingPermissions,
         (_) => const BlockingPermissionsScreen(),
       ),
+      route(AppRoutes.digitalWellbeing, (_) => const DigitalWellbeingScreen()),
+      route(AppRoutes.appLimits, (_) => const AppLimitsScreen()),
+      route(AppRoutes.digitalDetox, (_) => const DigitalDetoxScreen()),
 
       // --- Community / stats / account (real screens) ---
       route(AppRoutes.community, (_) => const CommunityScreen()),
@@ -155,7 +203,19 @@ final routerProvider = Provider<GoRouter>((ref) {
       route(AppRoutes.editProfile, (_) => const EditProfileScreen()),
       route(AppRoutes.settings, (_) => const SettingsScreen()),
       route(AppRoutes.progress, (_) => const ProgressScreen()),
-      route(AppRoutes.leaderboard, (_) => const LeaderboardScreen()),
+      GoRoute(
+        path: AppRoutes.leaderboard,
+        pageBuilder: (context, state) {
+          final tabStr = state.uri.queryParameters['tab'];
+          final tab = switch (tabStr) {
+            'clans' => LeaderboardTab.clans,
+            'friends' => LeaderboardTab.friends,
+            'region' => LeaderboardTab.region,
+            _ => LeaderboardTab.global,
+          };
+          return _calmPage(context, state, LeaderboardScreen(initialTab: tab));
+        },
+      ),
 
       // Private lobbies
       route(AppRoutes.lobbies, (_) => const LobbiesScreen()),
@@ -250,6 +310,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           RunSummaryScreen(session: state.extra as RunSession),
         ),
       ),
+      GoRoute(
+        path: '/run-summary',
+        pageBuilder: (context, state) => _calmPage(
+          context,
+          state,
+          RunSummaryScreen(session: state.extra as RunSession),
+        ),
+      ),
 
       // --- Exercise Vision ---
       route(AppRoutes.exerciseSelect, (_) => const ExerciseSelectionScreen()),
@@ -259,12 +327,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           final extra = state.extra as Map<String, dynamic>? ?? {};
           final exerciseType = extra['exerciseType'] as String? ?? 'SQUAT';
           final targetReps = extra['targetReps'] as int? ?? 20;
+          final reminderId = extra['reminderId'] as String?;
           return _calmPage(
             context,
             state,
             ExerciseCameraScreen(
               exerciseType: exerciseType,
               targetReps: targetReps,
+              reminderId: reminderId,
             ),
           );
         },
@@ -279,6 +349,27 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ),
       ),
+      route(AppRoutes.aiAssistant, (_) => const AiAssistantScreen()),
+      route(AppRoutes.battle, (_) => const BattleArenaScreen()),
+      GoRoute(
+        path: '${AppRoutes.battle}/:id',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return _calmPage(context, state, BattleRoomScreen(battleId: id));
+        },
+      ),
+      GoRoute(
+        path: '${AppRoutes.battleRoom}/:id',
+        pageBuilder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return _calmPage(context, state, BattleRoomScreen(battleId: id));
+        },
+      ),
+      route(AppRoutes.referrals, (_) => const ReferralScreen()),
+      route(AppRoutes.bossRaid, (_) => const BossRaidScreen()),
+      route(AppRoutes.quiz, (_) => const SubjectQuizScreen()),
+      route(AppRoutes.audiobooks, (_) => const AudiobooksScreen()),
+      route(AppRoutes.news, (_) => const NewsScreen()),
     ],
   );
 });
@@ -320,6 +411,7 @@ Page<void> _calmPage(BuildContext context, GoRouterState state, Widget child) {
 /// Onboarding routes reachable while signed out.
 const _onboardingRoutes = {
   AppRoutes.welcome,
+  AppRoutes.languageSelect,
   AppRoutes.discover,
   AppRoutes.signIn,
 };
@@ -352,6 +444,7 @@ class _AuthGate extends ChangeNotifier {
     final preHome =
         inOnboarding ||
         loc == AppRoutes.setupProfile ||
+        loc == AppRoutes.roleSelection ||
         loc == AppRoutes.loading;
 
     // Auth status not yet known — show the calm branded loader.
@@ -361,7 +454,8 @@ class _AuthGate extends ChangeNotifier {
 
     final user = auth.asData?.value;
     if (user == null) {
-      return inOnboarding ? null : AppRoutes.welcome;
+      if (inOnboarding) return null;
+      return LocaleStore.hasSeenIntro() ? AppRoutes.signIn : AppRoutes.intro;
     }
 
     // Signed in: resolve the profile before deciding. Keep the loader visible
@@ -372,12 +466,43 @@ class _AuthGate extends ChangeNotifier {
       return loc == AppRoutes.loading ? null : AppRoutes.loading;
     }
 
-    final hasProfile = profile.asData?.value != null;
+    final userProfile = profile.asData?.value;
+    final hasProfile = userProfile != null;
     if (!hasProfile) {
       return loc == AppRoutes.setupProfile ? null : AppRoutes.setupProfile;
     }
 
-    // Fully onboarded — don't let them sit on onboarding/setup/loader screens.
+    // Post-registration role selection check
+    final hasSelectedRole = userProfile.roleSelected || userProfile.appRole != null;
+    if (!hasSelectedRole) {
+      return loc == AppRoutes.roleSelection ? null : AppRoutes.roleSelection;
+    }
+
+    // ── Parent Role Lock ────────────────────────────────────────
+    // If the user is a parent (appRole == 'family' && familyRole == 'parent'),
+    // they should ONLY access parent-specific routes.
+    // Block access to all personal / child screens.
+    if (userProfile.isParent) {
+      const parentRoutes = {
+        AppRoutes.parentHome,
+        AppRoutes.parentStudy,
+        AppRoutes.parentMissions,
+        AppRoutes.parentWallet,
+        AppRoutes.parentLocation,
+        AppRoutes.familyAgreement,
+        AppRoutes.settings,
+        AppRoutes.editProfile,
+        AppRoutes.profile,
+      };
+      final isOnParentRoute = parentRoutes.contains(loc);
+      if (!isOnParentRoute) {
+        return preHome ? AppRoutes.parentHome : AppRoutes.parentHome;
+      }
+      return null;
+    }
+    // ────────────────────────────────────────────────────────────
+
+    // Fully onboarded personal user — don't let them sit on onboarding/setup/loader/roleSelection screens.
     if (preHome) {
       return AppRoutes.dailyPlan;
     }

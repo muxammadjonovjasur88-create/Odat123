@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -404,26 +404,20 @@ class _RestControls extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _SquareButton(
-              icon: Icons.remove_rounded,
-              label: '−15s',
-              onTap: () => controller.adjustRest(-15),
-            ),
-            const SizedBox(width: 14),
             _CenterControl(running: !paused, onTap: controller.togglePause),
-            const SizedBox(width: 14),
-            _SquareButton(
-              icon: Icons.add_rounded,
-              label: '+15s',
-              onTap: () => controller.adjustRest(15),
+            const SizedBox(width: 16),
+            ElevatedButton.icon(
+              onPressed: controller.skipRest,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0x335BC8FA),
+                foregroundColor: const Color(0xFF5BC8FA),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              ),
+              icon: const Icon(Icons.fast_forward_rounded, size: 20),
+              label: Text('workout.skip_rest'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
-        ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          onPressed: controller.skipRest,
-          icon: const Icon(Icons.fast_forward_rounded, size: 18),
-          label: Text('workout.skip_rest'.tr()),
         ),
       ],
     );

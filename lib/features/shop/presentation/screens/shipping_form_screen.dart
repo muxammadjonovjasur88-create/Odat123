@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -89,6 +90,9 @@ class _ShippingFormScreenState extends ConsumerState<ShippingFormScreen> {
         address: _addressController.text.trim(),
       );
 
+      // Refresh profile data and points
+      ref.invalidate(userProfileProvider);
+
       if (!mounted) return;
       setState(() => _isLoading = false);
 
@@ -153,7 +157,7 @@ class _ShippingFormScreenState extends ConsumerState<ShippingFormScreen> {
               Navigator.of(ctx).pop();
               context.go(AppRoutes.shop);
             },
-            child: const Text('Bosh sahifa'),
+            child: Text('common.home'.tr()),
           ),
         ],
       ),

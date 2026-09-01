@@ -38,7 +38,7 @@ class SegmentedFilterChip extends StatelessWidget {
     final colors = context.colors;
 
     const activeGradient = LinearGradient(
-      colors: [AppColors.cyanAccent, Color(0xFF00B2CC)],
+      colors: [AppColors.cyanAccent, Color(0xFF0099CC)],
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
     );

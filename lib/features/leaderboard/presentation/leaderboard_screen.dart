@@ -1,5 +1,6 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,10 +11,18 @@ import '../../../core/router/nav_helpers.dart';
 import '../../../core/services/auth_repository.dart';
 import '../../../core/services/region_controller.dart';
 import '../../../core/services/user_repository.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/formatting.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../clan/data/clan_repository.dart';
+import '../../clan/domain/models/clan.dart';
+import '../../clan/presentation/screens/clan_detail_screen.dart';
+import '../../clan/presentation/widgets/create_clan_modal.dart';
+import '../../friends/data/friends_repository.dart';
+import '../../friends/presentation/widgets/add_friend_modal.dart';
+import '../../friends/presentation/widgets/direct_chat_screen.dart';
+import '../../inbox/data/inbox_repository.dart';
+import '../../inbox/domain/models/app_message.dart';
 import '../data/leaderboard_repository.dart';
 import '../domain/leaderboard_entry.dart';
 import '../domain/leaderboard_rank.dart';
@@ -22,7 +31,16 @@ import '../domain/leaderboard_rank.dart';
 // Tab enum
 // ---------------------------------------------------------------------------
 
-enum LeaderboardTab { global, region }
+enum LeaderboardTab { global, region, friends, clans }
+
+enum LeaderboardCategory {
+  points, // 🏆 Umumiy Chempionlar
+  ironTitans, // 🦾 Temir Tanlar (Turnik, Press, Squat, Pushup)
+  marathon, // 🏃 Marafonchilar (GPS Masofa)
+  wisdom, // 📚 Zukko Kitobxonlar (Mutolaa & Fokus)
+  streakMasters, // 🔥 Muntazamlik (Streak)
+  weeklyMomentum, // ⚡ Haftalik Tezkor O'sish
+}
 
 // ---------------------------------------------------------------------------
 // Providers
@@ -40,32 +58,13 @@ final _regionalLeaderboardProvider =
 });
 
 // ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-Widget _buildErrorBanner(BuildContext context, Object error) {
-  final colors = context.colors;
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: AppCard(
-      color: const Color(0xFF151A27),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Text(
-        'Xato: $error',
-        style: AppTextStyles.bodySmall.copyWith(
-          color: colors.primaryPressed.withValues(alpha: 0.9),
-        ),
-      ),
-    ),
-  );
-}
-
-// ---------------------------------------------------------------------------
 // LeaderboardScreen
 // ---------------------------------------------------------------------------
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
-  const LeaderboardScreen({super.key});
+  const LeaderboardScreen({super.key, this.initialTab});
+
+  final LeaderboardTab? initialTab;
 
   @override
   ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
@@ -74,12 +73,18 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     with SingleTickerProviderStateMixin {
   LeaderboardTab _tab = LeaderboardTab.global;
+  LeaderboardCategory _category = LeaderboardCategory.points;
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnim;
+  final TextEditingController _clanSearchController = TextEditingController();
+  String _clanSearchQuery = '';
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialTab != null) {
+      _tab = widget.initialTab!;
+    }
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 260),
       vsync: this,
@@ -94,17 +99,86 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
   @override
   void dispose() {
     _fadeController.dispose();
+    _clanSearchController.dispose();
     super.dispose();
   }
 
   void _switchTab(LeaderboardTab tab) {
     if (tab == _tab) return;
+    HapticFeedback.selectionClick();
     _fadeController.reverse().then((_) {
       if (mounted) {
         setState(() => _tab = tab);
         _fadeController.forward();
       }
     });
+  }
+
+  void _switchCategory(LeaderboardCategory cat) {
+    if (cat == _category) return;
+    HapticFeedback.selectionClick();
+    setState(() => _category = cat);
+  }
+
+  Widget _categoryChip(String label, LeaderboardCategory cat) {
+    final isSelected = _category == cat;
+    return GestureDetector(
+      onTap: () => _switchCategory(cat),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0x335BC8FA) : const Color(0xFF131929),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF5BC8FA) : const Color(0x22FFFFFF),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? const Color(0xFF5BC8FA) : Colors.white70,
+              fontSize: 11.5,
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrizeChip(String rankLabel, String prizeLabel, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 0.8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$rankLabel: ',
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          Text(
+            prizeLabel,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -115,55 +189,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
     final regionState = ref.watch(regionControllerProvider);
     final currentRegion = regionState.region;
 
-    // Choose the right stream based on active tab.
-    final AsyncValue<List<LeaderboardEntry>> leaderboardAsync = switch (_tab) {
-      LeaderboardTab.global => ref.watch(_globalLeaderboardProvider),
-      LeaderboardTab.region => currentRegion != null
-          ? ref.watch(_regionalLeaderboardProvider(currentRegion))
-          : const AsyncData([]),
-    };
-
-    final entries = leaderboardAsync.asData?.value ?? const [];
-    final rankedEntries = LeaderboardRepository.sortEntriesForDisplay(entries);
-
-    LeaderboardEntry? currentUserEntry;
-    for (final entry in rankedEntries) {
-      if (entry.uid == currentUserId) {
-        currentUserEntry = entry;
-        break;
-      }
-    }
-    final currentRank = currentUserEntry == null
-        ? null
-        : calculateUserRank(entries: rankedEntries, uid: currentUserId ?? '');
-    final displayCurrentUser = currentUserEntry ??
-        (profile != null && currentUserId != null
-            ? LeaderboardEntry(
-                uid: profile.uid,
-                name: profile.displayName ?? profile.name,
-                avatar: profile.avatar,
-                weeklyPoints: profile.weeklyPoints,
-                weeklyFocusMinutes: profile.weeklyFocusMinutes,
-                monthlyPoints: profile.monthlyPoints,
-                monthlyFocusMinutes: profile.monthlyFocusMinutes,
-                totalPoints: profile.totalPoints,
-                totalFocusMinutes: profile.totalFocusMinutes,
-                photoUrl: profile.photoUrl,
-                photoBase64: profile.photoBase64,
-              )
-            : null);
-
-    final listEntries = rankedEntries.length > 3
-        ? rankedEntries.skip(3).take(47).toList()
-        : <LeaderboardEntry>[];
-
-    final hasOtherUsers = rankedEntries.any((e) => e.uid != currentUserId);
-
     return Scaffold(
       backgroundColor: colors.background,
       appBar: const FlowaAppBar(
         showBackButton: false,
-        leading: SizedBox.shrink(),
       ),
       bottomNavigationBar: AppBottomNav(
         current: AppNavTab.leaderboard,
@@ -176,102 +205,25 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
           children: [
             // ── Tab bar ────────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               child: _TabBar(
                 selected: _tab,
                 currentRegion: currentRegion,
-                regionStatus: regionState.status,
-                onGlobal: () => _switchTab(LeaderboardTab.global),
-                onRegion: () {
-                  if (currentRegion == null) {
-                    // Trigger GPS detection if not yet resolved.
-                    ref
-                        .read(regionControllerProvider.notifier)
-                        .detectAndSave();
-                  }
-                  _switchTab(LeaderboardTab.region);
-                },
+                onSelectTab: _switchTab,
               ),
             ),
             const SizedBox(height: 8),
 
-            // ── Region status banner ───────────────────────────────────────
-            if (_tab == LeaderboardTab.region)
-              _RegionStatusBanner(
-                regionState: regionState,
-                onRetry: () =>
-                    ref.read(regionControllerProvider.notifier).detectAndSave(),
-                onManualPick: (region) =>
-                    ref.read(regionControllerProvider.notifier).setManually(region),
-              ),
-
-            // ── Content ────────────────────────────────────────────────────
+            // ── Body based on selected tab ─────────────────────────────────
             Expanded(
               child: FadeTransition(
                 opacity: _fadeAnim,
-                child: ListView(
-                  key: ValueKey(_tab),
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
-                  children: [
-                    if (leaderboardAsync.hasError) ...[
-                      _buildErrorBanner(
-                        context,
-                        leaderboardAsync.error ?? 'Unknown error',
-                      ),
-                      const SizedBox(height: 12),
-                    ],
-
-                    // Loading skeleton
-                    if (leaderboardAsync.isLoading)
-                      const AppCardSkeletonList()
-                    else ...[
-                      if (rankedEntries.isNotEmpty) ...[
-                        _Podium(entries: rankedEntries.take(3).toList()),
-                        const SizedBox(height: 20),
-                      ],
-
-                      if (!hasOtherUsers) ...[
-                        if (displayCurrentUser != null &&
-                            currentRank != null) ...[
-                          _CurrentUserRow(
-                            entry: displayCurrentUser,
-                            rank: currentRank,
-                            profile: profile,
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(
-                            _tab == LeaderboardTab.region
-                                ? 'Hali bu viloyatda boshqa foydalanuvchilar yo\'q.'
-                                : 'leaderboard.empty_state'.tr(),
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: colors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ] else ...[
-                        for (var i = 0; i < listEntries.length; i++)
-                          _LeaderboardRow(
-                            entry: listEntries[i],
-                            rank: i + 4,
-                            isCurrentUser: listEntries[i].uid == currentUserId,
-                            profile: profile,
-                          ),
-                        if (currentUserEntry == null &&
-                            displayCurrentUser != null) ...[
-                          const SizedBox(height: 12),
-                          _CurrentUserRow(
-                            entry: displayCurrentUser,
-                            rank: currentRank,
-                            profile: profile,
-                          ),
-                        ],
-                      ],
-                    ],
-                  ],
-                ),
+                child: switch (_tab) {
+                  LeaderboardTab.global || LeaderboardTab.region => _buildUserLeaderboard(
+                      context, profile, currentUserId, currentRegion),
+                  LeaderboardTab.friends => _buildFriendsTab(context, currentUserId),
+                  LeaderboardTab.clans => _buildClansTab(context, profile),
+                },
               ),
             ),
           ],
@@ -279,133 +231,697 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
       ),
     );
   }
+
+  // -------------------------------------------------------------------------
+  // Global & Regional Users Leaderboard
+  // -------------------------------------------------------------------------
+  Widget _buildUserLeaderboard(
+    BuildContext context,
+    UserProfile? profile,
+    String? currentUserId,
+    UzRegion? currentRegion,
+  ) {
+    final AsyncValue<List<LeaderboardEntry>> leaderboardAsync = switch (_tab) {
+      LeaderboardTab.global => ref.watch(_globalLeaderboardProvider),
+      _ => currentRegion != null
+          ? ref.watch(_regionalLeaderboardProvider(currentRegion))
+          : const AsyncData([]),
+    };
+
+    final entries = leaderboardAsync.asData?.value ?? const [];
+    final sortedEntries = List<LeaderboardEntry>.from(entries);
+    switch (_category) {
+      case LeaderboardCategory.ironTitans:
+        sortedEntries.sort((a, b) => b.pushUpCount.compareTo(a.pushUpCount));
+        break;
+      case LeaderboardCategory.marathon:
+        sortedEntries.sort((a, b) => b.runningDistanceKm.compareTo(a.runningDistanceKm));
+        break;
+      case LeaderboardCategory.wisdom:
+        sortedEntries.sort((a, b) => b.weeklyFocusMinutes.compareTo(a.weeklyFocusMinutes));
+        break;
+      case LeaderboardCategory.streakMasters:
+        sortedEntries.sort((a, b) => (b.monthlyPoints).compareTo(a.monthlyPoints));
+        break;
+      case LeaderboardCategory.weeklyMomentum:
+        sortedEntries.sort((a, b) => b.weeklyPoints.compareTo(a.weeklyPoints));
+        break;
+      case LeaderboardCategory.points:
+        sortedEntries.sort((a, b) => b.totalPoints.compareTo(a.totalPoints));
+        break;
+    }
+    final rankedEntries = sortedEntries;
+
+    final isParent = (profile?.appRole == 'family' && profile?.familyRole == 'parent') || (profile?.isParent ?? false);
+
+    LeaderboardEntry? currentUserEntry;
+    if (!isParent) {
+      for (final entry in rankedEntries) {
+        if (entry.uid == currentUserId) {
+          currentUserEntry = entry;
+          break;
+        }
+      }
+    }
+
+    final currentRank = (isParent || currentUserEntry == null)
+        ? null
+        : calculateUserRank(entries: rankedEntries, uid: currentUserId ?? '');
+
+    final displayCurrentUser = isParent
+        ? null
+        : (currentUserEntry ??
+            (profile != null && currentUserId != null
+                ? LeaderboardEntry(
+                    uid: profile.uid,
+                    name: profile.displayName ?? profile.name,
+                    avatar: profile.avatar,
+                    weeklyPoints: profile.weeklyPoints,
+                    weeklyFocusMinutes: profile.weeklyFocusMinutes,
+                    monthlyPoints: profile.monthlyPoints,
+                    monthlyFocusMinutes: profile.monthlyFocusMinutes,
+                    totalPoints: profile.totalPoints,
+                    totalFocusMinutes: profile.totalFocusMinutes,
+                    photoUrl: profile.photoUrl,
+                    photoBase64: profile.photoBase64,
+                    appRole: profile.appRole,
+                    familyRole: profile.familyRole,
+                  )
+                : null));
+
+    final listEntries = rankedEntries.length > 3
+        ? rankedEntries.skip(3).take(47).toList()
+        : <LeaderboardEntry>[];
+
+    return Column(
+      children: [
+        // Smart Category Selector Bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _categoryChip('🏆 ${'leaderboard_tabs.champions'.tr()}', LeaderboardCategory.points),
+                const SizedBox(width: 8),
+                _categoryChip('🦾 ${'leaderboard_tabs.iron_titans'.tr()}', LeaderboardCategory.ironTitans),
+                const SizedBox(width: 8),
+                _categoryChip('🏃 ${'leaderboard_tabs.marathon'.tr()}', LeaderboardCategory.marathon),
+                const SizedBox(width: 8),
+                _categoryChip('📚 Zukko Kitobxonlar', LeaderboardCategory.wisdom),
+                const SizedBox(width: 8),
+                _categoryChip('🔥 Streak Ustozlari', LeaderboardCategory.streakMasters),
+                const SizedBox(width: 8),
+                _categoryChip('⚡ Tezkor O‘sish', LeaderboardCategory.weeklyMomentum),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+
+        Expanded(
+          child: leaderboardAsync.when(
+            loading: () => const Center(child: FlowaLoading()),
+            error: (err, _) => Center(child: Text('Xatolik: $err', style: const TextStyle(color: Colors.red))),
+            data: (rawList) {
+              if (rankedEntries.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'Hozircha ma’lumotlar yo‘q',
+                    style: TextStyle(color: Colors.white54),
+                  ),
+                );
+              }
+
+              return RefreshIndicator(
+                color: const Color(0xFF5BC8FA),
+                backgroundColor: const Color(0xFF0D1220),
+                onRefresh: () async => ref.refresh(_globalLeaderboardProvider),
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                  children: [
+                    // Podium (Top 3)
+                    _Podium(
+                      entries: rankedEntries.take(3).toList(),
+                      currentUserId: currentUserId,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Current User Floating Card
+                    if (displayCurrentUser != null) ...[
+                      _CurrentUserStickyCard(
+                        entry: displayCurrentUser,
+                        rank: currentRank,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Rest of Leaderboard list (4..50)
+                    ...listEntries.asMap().entries.map((entry) {
+                      final itemRank = entry.key + 4;
+                      final item = entry.value;
+                      return _LeaderboardRow(
+                        entry: item,
+                        rank: itemRank,
+                        isCurrentUser: item.uid == currentUserId,
+                        profile: profile,
+                      );
+                    }),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Friends Leaderboard Tab
+  // -------------------------------------------------------------------------
+  Widget _buildFriendsTab(BuildContext context, String? currentUserId) {
+    final friendsAsync = ref.watch(friendsLeaderboardProvider);
+
+    return Column(
+      children: [
+        // Action Banner
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0x1539FF14),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0x3339FF14)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('👥', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'friends_ranking.weekly_banner'.tr(),
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton.icon(
+                onPressed: () => showAddFriendModal(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3B9BFF),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                ),
+                icon: const Icon(Icons.person_add_rounded, size: 18),
+                label: Text('friends_ranking.add_btn'.tr(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+              ),
+            ],
+          ),
+        ),
+
+        Expanded(
+          child: friendsAsync.when(
+            loading: () => const Center(child: FlowaLoading()),
+            error: (e, _) => Center(child: Text('Xato: $e', style: const TextStyle(color: Colors.red))),
+            data: (friendsList) {
+              if (friendsList.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🤝', style: TextStyle(fontSize: 48)),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Hali do‘stlar qo‘shilmagan',
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Do‘stlaringizni taklif qiling va ularning natijalari bilan bellashing!',
+                          style: TextStyle(color: Colors.white54, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: () => showAddFriendModal(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B9BFF),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          icon: const Icon(Icons.person_add_rounded),
+                          label: Text('friends.search_invite'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final nonSelfFriends = friendsList.where((f) => f.uid != currentUserId).toList();
+              if (nonSelfFriends.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🤝', style: TextStyle(fontSize: 48)),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Hali do‘stlar qo‘shilmagan',
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Do‘stlaringizni taklif qiling va ularning natijalari bilan bellashing!',
+                          style: TextStyle(color: Colors.white54, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton.icon(
+                          onPressed: () => showAddFriendModal(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3B9BFF),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                          icon: const Icon(Icons.person_add_rounded),
+                          label: Text('friends.search_invite'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                itemCount: nonSelfFriends.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final entry = nonSelfFriends[index];
+                  return _LeaderboardRow(
+                    entry: entry,
+                    rank: index + 1,
+                    isCurrentUser: false,
+                    profile: null,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // -------------------------------------------------------------------------
+  // Clans Leaderboard Tab
+  // -------------------------------------------------------------------------
+  Widget _buildClansTab(BuildContext context, UserProfile? profile) {
+    final clansAsync = ref.watch(topClansProvider);
+    final myClan = ref.watch(userClanProvider).asData?.value;
+
+    return Column(
+      children: [
+
+        // Search Bar for Clans
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: TextField(
+            controller: _clanSearchController,
+            onChanged: (val) => setState(() => _clanSearchQuery = val.trim().toLowerCase()),
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'clan.search_hint'.tr(),
+              hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
+              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF5BC8FA), size: 20),
+              suffixIcon: _clanSearchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 18),
+                      onPressed: () {
+                        _clanSearchController.clear();
+                        setState(() => _clanSearchQuery = '');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: const Color(0xFF0D1220),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x22FFFFFF))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x22FFFFFF))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF5BC8FA))),
+            ),
+          ),
+        ),
+
+        if (myClan == null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+            child: SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton.icon(
+                onPressed: () => showCreateClanModal(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF5BC8FA),
+                  foregroundColor: Colors.black,
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                icon: const Icon(Icons.shield_rounded, size: 18),
+                label: Text('clan.create_new_clan_btn'.tr(), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5)),
+              ),
+            ),
+          ),
+
+        Expanded(
+          child: clansAsync.when(
+            loading: () => const Center(child: FlowaLoading()),
+            error: (e, _) => Center(child: Text('Xato: $e', style: const TextStyle(color: Colors.red))),
+            data: (clansList) {
+              // Merge userClan if not present
+              final mergedList = List<Clan>.from(clansList);
+              if (myClan != null && !mergedList.any((c) => c.id == myClan.id)) {
+                mergedList.insert(0, myClan);
+              }
+
+              // Filter by query
+              final filteredList = _clanSearchQuery.isEmpty
+                  ? mergedList
+                  : mergedList.where((c) {
+                      final nameMatch = c.name.toLowerCase().contains(_clanSearchQuery);
+                      final tagMatch = c.tag.toLowerCase().contains(_clanSearchQuery);
+                      final descMatch = c.description.toLowerCase().contains(_clanSearchQuery);
+                      return nameMatch || tagMatch || descMatch;
+                    }).toList();
+
+              if (filteredList.isEmpty) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('🏰', style: TextStyle(fontSize: 48)),
+                        const SizedBox(height: 12),
+                        Text(
+                          _clanSearchQuery.isNotEmpty ? 'Qidiruv bo‘yicha klan topilmadi' : 'Hali klanlar yaratilmagan',
+                          style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _clanSearchQuery.isNotEmpty
+                              ? 'Boshqa kalit so‘z orqali qidirib ko‘ring'
+                              : 'Birinchi bo‘lib o‘z klaningizni oching va do‘stlaringizni taklif qiling!',
+                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                        if (_clanSearchQuery.isEmpty) ...[
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () => showCreateClanModal(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF5BC8FA),
+                              foregroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            icon: const Icon(Icons.shield_rounded),
+                            label: Text('leaderboard.create_first_clan'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              return ListView.separated(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+                itemCount: filteredList.length,
+                separatorBuilder: (context, index) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final clan = filteredList[index];
+                  final isMyClan = clan.memberUids.contains(profile?.uid) || clan.id == myClan?.id;
+                  return _ClanCard(
+                    clan: clan,
+                    rank: index + 1,
+                    isMyClan: isMyClan,
+                    user: profile,
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
-// _TabBar — Global | Mening viloyatim
+// _ClanCard Widget
+// ---------------------------------------------------------------------------
+
+class _ClanCard extends ConsumerWidget {
+  const _ClanCard({
+    required this.clan,
+    required this.rank,
+    required this.isMyClan,
+    required this.user,
+  });
+
+  final Clan clan;
+  final int rank;
+  final bool isMyClan;
+  final UserProfile? user;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Color rankColor;
+    if (rank == 1) {
+      rankColor = const Color(0xFFFFB703);
+    } else if (rank == 2) {
+      rankColor = const Color(0xFFB0BEC5);
+    } else if (rank == 3) {
+      rankColor = const Color(0xFFCD7F32);
+    } else {
+      rankColor = Colors.white54;
+    }
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => ClanDetailScreen(clan: clan)),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isMyClan ? const Color(0xFF111E36) : const Color(0xFF0D1220),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isMyClan ? const Color(0xFF5BC8FA) : const Color(0x22FFFFFF),
+            width: isMyClan ? 1.5 : 1,
+          ),
+          boxShadow: isMyClan
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF5BC8FA).withValues(alpha: 0.15),
+                    blurRadius: 16,
+                  )
+                ]
+              : null,
+        ),
+      child: Row(
+        children: [
+          // Rank badge
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: rankColor.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+              border: Border.all(color: rankColor.withValues(alpha: 0.5)),
+            ),
+            child: Center(
+              child: Text(
+                '#$rank',
+                style: TextStyle(
+                  color: rankColor,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Emblem
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: const Color(0x22FFFFFF),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(clan.emblem, style: const TextStyle(fontSize: 24)),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      clan.formattedTag,
+                      style: const TextStyle(
+                        color: Color(0xFF5BC8FA),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        clan.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '${'clan.leader'.tr()} ${clan.leaderName} · 👥 ${clan.membersCount} ${'clan.members'.tr()}',
+                  style: const TextStyle(color: Colors.white54, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+
+          // Points & Action
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${clan.formattedPoints} PTS',
+                style: const TextStyle(
+                  color: Color(0xFFFFB703),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 6),
+              if (user != null)
+                GestureDetector(
+                  onTap: () async {
+                    HapticFeedback.mediumImpact();
+                    if (isMyClan) {
+                      await ref.read(clanRepositoryProvider).leaveClan(clanId: clan.id, user: user!);
+                    } else {
+                      await ref.read(clanRepositoryProvider).joinClan(clanId: clan.id, user: user!);
+                    }
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isMyClan ? const Color(0x33FF0055) : const Color(0x335BC8FA),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isMyClan ? const Color(0xFFFF0055) : const Color(0xFF5BC8FA),
+                      ),
+                    ),
+                    child: Text(
+                      isMyClan ? 'clan.leave'.tr() : 'clan.join'.tr(),
+                      style: TextStyle(
+                        color: isMyClan ? const Color(0xFFFF0055) : const Color(0xFF5BC8FA),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _TabBar Widget
 // ---------------------------------------------------------------------------
 
 class _TabBar extends StatelessWidget {
   const _TabBar({
     required this.selected,
     required this.currentRegion,
-    required this.regionStatus,
-    required this.onGlobal,
-    required this.onRegion,
+    required this.onSelectTab,
   });
 
   final LeaderboardTab selected;
   final UzRegion? currentRegion;
-  final RegionStatus regionStatus;
-  final VoidCallback onGlobal;
-  final VoidCallback onRegion;
+  final ValueChanged<LeaderboardTab> onSelectTab;
 
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: const Color(0xFF151A27),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colors.border),
-      ),
-      child: Row(
-        children: [
-          _TabChip(
-            label: 'Global',
-            icon: Icons.public_rounded,
-            selected: selected == LeaderboardTab.global,
-            onTap: onGlobal,
-          ),
-          _TabChip(
-            label: currentRegion?.displayName ??
-                (regionStatus == RegionStatus.loading
-                    ? 'Aniqlanmoqda...'
-                    : 'Mening viloyatim'),
-            icon: Icons.location_on_rounded,
-            selected: selected == LeaderboardTab.region,
-            onTap: onRegion,
-            showLoading: regionStatus == RegionStatus.loading,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TabChip extends StatelessWidget {
-  const _TabChip({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-    this.showLoading = false,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool showLoading;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _tabItem(String label, LeaderboardTab tab, IconData icon) {
+    final isSelected = selected == tab;
     return Expanded(
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () => onSelectTab(tab),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.all(4),
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: selected
-                ? AppColors.cyanAccent.withValues(alpha: 0.15)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-            border: selected
-                ? Border.all(
-                    color: AppColors.cyanAccent.withValues(alpha: 0.5),
-                    width: 1,
-                  )
-                : null,
+            color: isSelected ? const Color(0xFF5BC8FA) : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (showLoading)
-                SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    color: selected
-                        ? AppColors.cyanAccent
-                        : context.colors.textSecondary,
-                  ),
-                )
-              else
-                Icon(
-                  icon,
-                  size: 14,
-                  color: selected
-                      ? AppColors.cyanAccent
-                      : context.colors.textSecondary,
-                ),
-              const SizedBox(width: 6),
+              Icon(
+                icon,
+                size: 15,
+                color: isSelected ? Colors.black : Colors.white70,
+              ),
+              const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(
-                    color: selected
-                        ? AppColors.cyanAccent
-                        : context.colors.textSecondary,
-                    fontWeight:
-                        selected ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 12,
+                  style: TextStyle(
+                    color: isSelected ? Colors.black : Colors.white70,
+                    fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                    fontSize: 11.5,
                   ),
                 ),
               ),
@@ -415,149 +931,23 @@ class _TabChip extends StatelessWidget {
       ),
     );
   }
-}
-
-// ---------------------------------------------------------------------------
-// _RegionStatusBanner — shown in regional tab when GPS failed / unavailable
-// ---------------------------------------------------------------------------
-
-class _RegionStatusBanner extends StatelessWidget {
-  const _RegionStatusBanner({
-    required this.regionState,
-    required this.onRetry,
-    required this.onManualPick,
-  });
-
-  final RegionState regionState;
-  final VoidCallback onRetry;
-  final ValueChanged<UzRegion> onManualPick;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    // If loaded — show info chip with region name
-    if (regionState.status == RegionStatus.loaded &&
-        regionState.region != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-        child: Row(
-          children: [
-            const Icon(Icons.location_on_rounded,
-                color: AppColors.cyanAccent, size: 14),
-            const SizedBox(width: 4),
-            Text(
-              regionState.region!.displayName,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.cyanAccent,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // If unavailable — show error + fallback
-    if (regionState.status == RegionStatus.unavailable) {
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-        child: AppCard(
-          color: const Color(0xFF151A27),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                regionState.errorMessage ?? 'Viloyat aniqlanmadi.',
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: colors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  // Retry GPS
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: onRetry,
-                      icon: const Icon(Icons.gps_fixed_rounded, size: 14),
-                      label: const Text('GPS qayta',
-                          style: TextStyle(fontSize: 12)),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.cyanAccent,
-                        side: const BorderSide(
-                            color: AppColors.cyanAccent, width: 1),
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  // Manual pick
-                  Expanded(
-                    child: _ManualRegionButton(onPick: onManualPick),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
-  }
-}
-
-/// Dropdown button to manually pick a region when GPS fails.
-class _ManualRegionButton extends StatefulWidget {
-  const _ManualRegionButton({required this.onPick});
-
-  final ValueChanged<UzRegion> onPick;
-
-  @override
-  State<_ManualRegionButton> createState() => _ManualRegionButtonState();
-}
-
-class _ManualRegionButtonState extends State<_ManualRegionButton> {
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<UzRegion>(
-      onSelected: widget.onPick,
-      color: const Color(0xFF1F2638),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      itemBuilder: (_) => UzRegion.values
-          .map((r) => PopupMenuItem(
-                value: r,
-                child: Text(
-                  r.displayName,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
-              ))
-          .toList(),
-      child: Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: AppColors.purpleAccent.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: AppColors.purpleAccent.withValues(alpha: 0.5),
-          ),
-        ),
-        child: Text(
-          'Qo\'lda tanlash',
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.purpleAccent,
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-          ),
-        ),
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D1220),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x22FFFFFF)),
+      ),
+      child: Row(
+        children: [
+          _tabItem('leaderboard_tabs.global'.tr(), LeaderboardTab.global, Icons.public_rounded),
+          _tabItem(currentRegion?.localizedName(context.locale.languageCode) ?? 'regions.regions'.tr(), LeaderboardTab.region, Icons.location_on_rounded),
+          _tabItem('leaderboard_tabs.friends'.tr(), LeaderboardTab.friends, Icons.people_alt_rounded),
+          _tabItem('leaderboard_tabs.clans'.tr(), LeaderboardTab.clans, Icons.shield_rounded),
+        ],
       ),
     );
   }
@@ -568,291 +958,242 @@ class _ManualRegionButtonState extends State<_ManualRegionButton> {
 // ---------------------------------------------------------------------------
 
 class _Podium extends StatelessWidget {
-  const _Podium({required this.entries});
-
-  final List<LeaderboardEntry> entries;
-
-  @override
-  Widget build(BuildContext context) {
-    final items = entries.isNotEmpty
-        ? entries.take(3).toList()
-        : const <LeaderboardEntry>[];
-    final first = items.isNotEmpty ? items[0] : null;
-    final second = items.length > 1 ? items[1] : null;
-    final third = items.length > 2 ? items[2] : null;
-    final podiumOrder = [second, first, third];
-    final heights = [160.0, 185.0, 160.0];
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        for (var index = 0; index < podiumOrder.length; index++)
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: index == 0 ? 0 : 6,
-                right: index == 2 ? 0 : 6,
-              ),
-              child: _PodiumCard(
-                entry: podiumOrder[index],
-                place: index == 0
-                    ? 2
-                    : index == 1
-                        ? 1
-                        : 3,
-                height: heights[index],
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _PodiumBadge extends StatelessWidget {
-  const _PodiumBadge({required this.place});
-
-  final int place;
-
-  @override
-  Widget build(BuildContext context) {
-    if (place == 1) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-        decoration: BoxDecoration(
-          gradient: AppColors.primaryGradient,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cyanAccent.withValues(alpha: 0.3),
-              blurRadius: 6,
-            ),
-          ],
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('👑 ', style: TextStyle(fontSize: 10)),
-            Text(
-              '1',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    final color = place == 2 ? AppColors.cyanAccent : AppColors.purpleAccent;
-    return Container(
-      width: 26,
-      height: 26,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.2),
-        shape: BoxShape.circle,
-        border: Border.all(color: color, width: 1.2),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        '$place',
-        style: TextStyle(
-          color: color,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-        ),
-      ),
-    );
-  }
-}
-
-class _PodiumCard extends StatelessWidget {
-  const _PodiumCard({
-    required this.entry,
-    required this.place,
-    required this.height,
+  const _Podium({
+    required this.entries,
+    required this.currentUserId,
   });
 
-  final LeaderboardEntry? entry;
-  final int place;
-  final double height;
+  final List<LeaderboardEntry> entries;
+  final String? currentUserId;
 
   @override
   Widget build(BuildContext context) {
-    final isFirst = place == 1;
+    if (entries.isEmpty) return const SizedBox.shrink();
 
-    Widget cardBody = Container(
-      height: height,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF151A27),
-        borderRadius: BorderRadius.circular(isFirst ? 18.5 : 20),
-        border: !isFirst
-            ? Border.all(
-                color: place == 2
-                    ? AppColors.cyanAccent
-                    : AppColors.purpleAccent,
-                width: 1.5,
-              )
-            : null,
-        boxShadow: !isFirst
-            ? [
-                BoxShadow(
-                  color: (place == 2
-                          ? AppColors.cyanAccent
-                          : AppColors.purpleAccent)
-                      .withValues(alpha: 0.2),
-                  blurRadius: 12,
-                  spreadRadius: 0,
-                ),
-              ]
-            : null,
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    final first = entries.isNotEmpty ? entries[0] : null;
+    final second = entries.length > 1 ? entries[1] : null;
+    final third = entries.length > 2 ? entries[2] : null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _PodiumBadge(place: place),
-          Container(
-            width: isFirst ? 62 : 52,
-            height: isFirst ? 62 : 52,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isFirst
-                    ? AppColors.cyanAccent
-                    : (place == 2
-                        ? AppColors.cyanAccent
-                        : AppColors.purpleAccent),
-                width: 2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isFirst || place == 2
-                          ? AppColors.cyanAccent
-                          : AppColors.purpleAccent)
-                      .withValues(alpha: 0.25),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
-            ),
-            child: ClipOval(
-              child: AvatarCircle(
-                avatarKey: entry?.avatar ?? 'leaf',
-                size: isFirst ? 62 : 52,
-                photoBase64: entry?.photoBase64,
-                photoUrl: entry?.photoUrl,
-              ),
-            ),
+          // 2nd Place
+          Expanded(
+            child: second != null
+                ? _PodiumSlot(
+                    entry: second,
+                    rank: 2,
+                    pedestalHeight: 85,
+                    accentColor: const Color(0xFFB0BEC5),
+                    isCurrentUser: second.uid == currentUserId,
+                  )
+                : const SizedBox.shrink(),
           ),
-          Column(
-            children: [
-              Text(
-                entry?.name ?? '-',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.label.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: isFirst ? 13 : 11.5,
-                ),
-              ),
-              const SizedBox(height: 2),
-              // Region chip inside podium card
-              if (entry?.region != null) ...[
-                Text(
-                  entry!.region!.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.purpleAccent.withValues(alpha: 0.85),
-                    fontSize: 9,
-                  ),
-                ),
-                const SizedBox(height: 2),
-              ],
-              Text(
-                entry != null ? '${entry!.totalPoints} pts' : '-',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.caption.copyWith(
-                  color: isFirst
-                      ? AppColors.cyanAccent
-                      : (place == 2
-                          ? AppColors.cyanAccent
-                          : AppColors.purpleAccent),
-                  fontWeight: FontWeight.w600,
-                  fontSize: isFirst ? 11.5 : 10.5,
-                ),
-              ),
-            ],
+          const SizedBox(width: 8),
+
+          // 1st Place (Center, tallest)
+          Expanded(
+            child: first != null
+                ? _PodiumSlot(
+                    entry: first,
+                    rank: 1,
+                    pedestalHeight: 110,
+                    accentColor: const Color(0xFFFFB703),
+                    isCurrentUser: first.uid == currentUserId,
+                  )
+                : const SizedBox.shrink(),
+          ),
+          const SizedBox(width: 8),
+
+          // 3rd Place
+          Expanded(
+            child: third != null
+                ? _PodiumSlot(
+                    entry: third,
+                    rank: 3,
+                    pedestalHeight: 70,
+                    accentColor: const Color(0xFFCD7F32),
+                    isCurrentUser: third.uid == currentUserId,
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),
     );
+  }
+}
 
-    if (isFirst) {
-      return Container(
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          gradient: AppColors.primaryGradient,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.cyanAccent.withValues(alpha: 0.35),
-              blurRadius: 16,
-              spreadRadius: 1,
-            ),
-            BoxShadow(
-              color: AppColors.purpleAccent.withValues(alpha: 0.25),
-              blurRadius: 16,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(1.5),
-        child: cardBody,
-      );
-    }
+class _PodiumSlot extends StatelessWidget {
+  const _PodiumSlot({
+    required this.entry,
+    required this.rank,
+    required this.pedestalHeight,
+    required this.accentColor,
+    required this.isCurrentUser,
+  });
 
-    return cardBody;
+  final LeaderboardEntry entry;
+  final int rank;
+  final double pedestalHeight;
+  final Color accentColor;
+  final bool isCurrentUser;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showUserDetailSheet(context, entry),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Avatar with crown / medal
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(2.5),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: accentColor, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withValues(alpha: 0.35),
+                      blurRadius: 12,
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: AvatarCircle(
+                    avatarKey: entry.avatar,
+                    size: rank == 1 ? 52 : 44,
+                    photoBase64: entry.photoBase64,
+                    photoUrl: entry.photoUrl,
+                  ),
+                ),
+              ),
+              Positioned(
+                top: -12,
+                child: Text(
+                  rank == 1 ? '👑' : rank == 2 ? '🥈' : '🥉',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Name
+          Text(
+            entry.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: rank == 1 ? 13 : 11.5,
+            ),
+          ),
+          const SizedBox(height: 2),
+
+          // Points
+          Text(
+            '${formatCompactNumber(entry.totalPoints)} PTS',
+            style: TextStyle(
+              color: accentColor,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 6),
+
+          // Pedestal
+          Container(
+            width: double.infinity,
+            height: pedestalHeight,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  accentColor.withValues(alpha: 0.25),
+                  accentColor.withValues(alpha: 0.05),
+                ],
+              ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    '$rank',
+                    style: TextStyle(
+                      color: accentColor,
+                      fontSize: rank == 1 ? 26 : 20,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                    decoration: BoxDecoration(
+                      color: accentColor.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: accentColor.withValues(alpha: 0.5), width: 0.8),
+                    ),
+                    child: Text(
+                      rank == 1
+                          ? '💻 Noutbuk'
+                          : rank == 2
+                              ? '📱 Smartfon'
+                              : '💵 500k so‘m',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontSize: rank == 1 ? 9.5 : (rank == 2 ? 9 : 8.5),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
 // ---------------------------------------------------------------------------
-// _CurrentUserRow
+// _CurrentUserStickyCard
 // ---------------------------------------------------------------------------
 
-class _CurrentUserRow extends StatelessWidget {
-  const _CurrentUserRow({
+class _CurrentUserStickyCard extends StatelessWidget {
+  const _CurrentUserStickyCard({
     required this.entry,
     required this.rank,
-    required this.profile,
   });
 
   final LeaderboardEntry entry;
   final int? rank;
-  final UserProfile? profile;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF151A27),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.cyanAccent.withValues(alpha: 0.5),
-          width: 1.2,
+        gradient: const LinearGradient(
+          colors: [Color(0x335BC8FA), Color(0x3339FF14)],
         ),
-        boxShadow: [
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF5BC8FA), width: 1.5),
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.cyanAccent.withValues(alpha: 0.15),
-            blurRadius: 10,
+            color: Color(0x225BC8FA),
+            blurRadius: 14,
           ),
         ],
       ),
@@ -872,45 +1213,36 @@ class _CurrentUserRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${entry.name} • ${'leaderboard.you'.tr()}',
-                  style: AppTextStyles.label.copyWith(
+                  '${entry.name} (${'leaderboard_tabs.you'.tr()})',
+                  style: const TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Text(
-                      '${entry.totalPoints} pts',
-                      style: AppTextStyles.caption.copyWith(
-                        color: const Color(0xFF9E9E9E),
-                      ),
-                    ),
-                    if (entry.region != null) ...[
-                      const SizedBox(width: 8),
-                      _RegionChip(region: entry.region!),
-                    ],
-                  ],
+                Text(
+                  '⚡ ${formatCompactNumber(entry.totalPoints)} PTS',
+                  style: const TextStyle(
+                    color: Color(0xFF5BC8FA),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.cyanAccent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: AppColors.cyanAccent,
-                width: 1,
-              ),
+              color: const Color(0xFF5BC8FA),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              rank == null ? '50+' : '#$rank',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.cyanAccent,
-                fontWeight: FontWeight.bold,
+              rank == null ? 'TOP 50+' : '#$rank',
+              style: const TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
               ),
             ),
           ),
@@ -939,163 +1271,430 @@ class _LeaderboardRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
-
-    return InkWell(
-      onTap: () {
-        final targetPath = isCurrentUser
-            ? AppRoutes.profile
-            : '${AppRoutes.profile}/${entry.uid}';
-        context.push(targetPath);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: isCurrentUser
-              ? const Color(0xFF151A27).withValues(alpha: 0.7)
-              : Colors.transparent,
-          border: const Border(
-            bottom: BorderSide(
-              color: Color(0xFF151A27),
-              width: 1,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showUserDetailSheet(context, entry),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: isCurrentUser
+                ? const Color(0x225BC8FA)
+                : const Color(0xFF0D1220),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isCurrentUser
+                  ? const Color(0x665BC8FA)
+                  : const Color(0x15FFFFFF),
             ),
           ),
-          borderRadius: isCurrentUser ? BorderRadius.circular(12) : null,
-        ),
-        child: Row(
-          children: [
-            // Rank bubble
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isCurrentUser
-                    ? AppColors.cyanAccent.withValues(alpha: 0.15)
-                    : const Color(0xFF151A27),
-                border: Border.all(
-                  color: isCurrentUser
-                      ? AppColors.cyanAccent.withValues(alpha: 0.5)
-                      : colors.border,
-                  width: 1,
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF131929),
+                  border: Border.all(color: Colors.white12),
                 ),
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '$rank',
-                style: AppTextStyles.caption.copyWith(
-                  color: isCurrentUser
-                      ? AppColors.cyanAccent
-                      : colors.textSecondary,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            ClipOval(
-              child: AvatarCircle(
-                avatarKey: entry.avatar,
-                size: 38,
-                photoBase64: entry.photoBase64,
-                photoUrl: entry.photoUrl,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          entry.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.label.copyWith(
-                            color: Colors.white,
-                            fontWeight: isCurrentUser
-                                ? FontWeight.bold
-                                : FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      if (isCurrentUser) ...[
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.cyanAccent.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            'leaderboard.you'.tr(),
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.cyanAccent,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                child: Center(
+                  child: Text(
+                    '$rank',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                    ),
                   ),
-                  // Region chip below name (only in global tab)
-                  if (entry.region != null)
-                    _RegionChip(region: entry.region!),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Stack(
+                children: [
+                  ClipOval(
+                    child: AvatarCircle(
+                      avatarKey: entry.avatar,
+                      size: 38,
+                      photoBase64: entry.photoBase64,
+                      photoUrl: entry.photoUrl,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: entry.isOnline ? const Color(0xFF3B9BFF) : Colors.grey,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF0D1220), width: 1.5),
+                      ),
+                    ),
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              '${entry.totalPoints} pts',
-              style: AppTextStyles.label.copyWith(
-                color: const Color(0xFF9E9E9E),
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (entry.region != null)
+                      Text(
+                        '📍 ${entry.region!.displayName}',
+                        style: const TextStyle(color: Colors.white38, fontSize: 10),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${formatCompactNumber(entry.totalPoints)} PTS',
+                    style: const TextStyle(
+                      color: Color(0xFFFFB703),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 13,
+                    ),
+                  ),
+                  if (rank == 4)
+                    _buildRowPrizeBadge('🎧 Quloqchin', const Color(0xFF5BC8FA))
+                  else if (rank == 5)
+                    _buildRowPrizeBadge('👕 Futbolka', const Color(0xFF3B9BFF))
+                  else if (rank == 6)
+                    _buildRowPrizeBadge('☕ Bakal', const Color(0xFFFF0055))
+                  else if (rank == 7)
+                    _buildRowPrizeBadge('⌚ Qo‘l soati', const Color(0xFFFFCC00)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildRowPrizeBadge(String title, Color color) {
+    return Container(
+      margin: const EdgeInsets.only(top: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.6), width: 0.8),
+      ),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: color,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// _RegionChip — small location badge shown next to a user's name
-// ---------------------------------------------------------------------------
+/// Shows user profile detail, friend request, direct messaging, and 1v1 battle challenge modal
+void _showUserDetailSheet(BuildContext context, LeaderboardEntry entry) {
+  HapticFeedback.lightImpact();
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => Consumer(
+      builder: (context, ref, _) {
+        final myProfile = ref.watch(userProfileProvider).asData?.value;
+        final isSelf = myProfile?.uid == entry.uid;
 
-class _RegionChip extends StatelessWidget {
-  const _RegionChip({required this.region});
-
-  final UzRegion region;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          Icons.location_on_rounded,
-          size: 10,
-          color: AppColors.purpleAccent.withValues(alpha: 0.7),
-        ),
-        const SizedBox(width: 2),
-        Text(
-          region.displayName,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.purpleAccent.withValues(alpha: 0.7),
-            fontSize: 9.5,
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          decoration: const BoxDecoration(
+            color: Color(0xFF0D1220),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
           ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              ),
+              const SizedBox(height: 16),
+              AvatarCircle(
+                avatarKey: entry.avatar,
+                size: 64,
+                photoBase64: entry.photoBase64,
+                photoUrl: entry.photoUrl,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                entry.name,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900),
+              ),
+              if (entry.region != null)
+                Text(
+                  '📍 ${entry.region!.displayName}',
+                  style: const TextStyle(color: Colors.white60, fontSize: 12),
+                ),
+              const SizedBox(height: 16),
+
+              // Mini Stats Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _statBadge('⚡ Jami Ballar', '${formatCompactNumber(entry.totalPoints)} PTS', const Color(0xFFFFB703)),
+                  _statBadge('🏃 Yugurish', '${entry.runningDistanceKm.toStringAsFixed(1)} KM', const Color(0xFF5BC8FA)),
+                  _statBadge('💪 Mashq', '${entry.pushUpCount}', const Color(0xFF3B9BFF)),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              if (!isSelf && myProfile != null) ...[
+                // Check if already friends
+                Builder(
+                  builder: (context) {
+                    final friendsList = ref.watch(friendsLeaderboardProvider).asData?.value ?? [];
+                    final isFriend = friendsList.any((f) => f.uid == entry.uid);
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Send Direct Message Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 46,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => DirectChatScreen(
+                                    myUid: myProfile.uid,
+                                    myName: myProfile.name,
+                                    myAvatar: myProfile.avatar,
+                                    friendUid: entry.uid,
+                                    friendName: entry.name,
+                                    friendAvatar: entry.avatar,
+                                  ),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0088CC),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            ),
+                            icon: const Icon(Icons.send_rounded, size: 18),
+                            label: Text('Xabar yozish (${entry.name})', style: const TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Add or Remove Friend Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 46,
+                          child: isFriend
+                              ? OutlinedButton.icon(
+                                  onPressed: () async {
+                                    Navigator.pop(ctx);
+                                    try {
+                                      await ref.read(friendsRepositoryProvider).removeFriend(myProfile.uid, entry.uid);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: const Color(0xFFFF0055),
+                                            content: Text('${entry.name} do‘stlar safidan o‘chirildi.'),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(backgroundColor: const Color(0xFFFF0055), content: Text('$e')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFFFF4444),
+                                    side: const BorderSide(color: Color(0xFFFF4444), width: 1.5),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                  icon: const Icon(Icons.person_remove_rounded, size: 18),
+                                  label: Text('friends.unfriend'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                )
+                              : OutlinedButton.icon(
+                                  onPressed: () async {
+                                    Navigator.pop(ctx);
+                                    try {
+                                      await ref.read(friendsRepositoryProvider).addFriend(myProfile.uid, entry.uid);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            backgroundColor: const Color(0xFF3B9BFF),
+                                            content: Text('🤝 ${entry.name} do‘stlar safiga qo‘shildi!'),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(backgroundColor: const Color(0xFFFF0055), content: Text('$e')),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: const Color(0xFF3B9BFF),
+                                    side: const BorderSide(color: Color(0xFF3B9BFF), width: 1.5),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                  ),
+                                  icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                                  label: Text('friends.send_request'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+
+                // 1v1 Battle Challenge
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.push(AppRoutes.battle);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF0055),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const Icon(Icons.sports_martial_arts_rounded, size: 18),
+                    label: Text('friends.challenge_1v1'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Widget _statBadge(String label, String value, Color color) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+    decoration: BoxDecoration(
+      color: const Color(0xFF131929),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: color.withValues(alpha: 0.4)),
+    ),
+    child: Column(
+      children: [
+        Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 2),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900)),
+      ],
+    ),
+  );
+}
+
+void _showDirectMessageDialog(
+  BuildContext context,
+  WidgetRef ref,
+  UserProfile me,
+  LeaderboardEntry target,
+) {
+  final controller = TextEditingController();
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: const Color(0xFF0D1220),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Color(0xFF0088CC)),
+      ),
+      title: Row(
+        children: [
+          const Icon(Icons.mail_outline_rounded, color: Color(0xFF0088CC)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '${target.name}ga xabar',
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+      content: TextField(
+        controller: controller,
+        style: const TextStyle(color: Colors.white),
+        maxLines: 3,
+        decoration: InputDecoration(
+          hintText: 'Xabaringizni yozing...',
+          hintStyle: const TextStyle(color: Colors.white38),
+          filled: true,
+          fillColor: const Color(0xFF131929),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: Text('common.cancel'.tr(), style: const TextStyle(color: Colors.white54)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            final text = controller.text.trim();
+            if (text.isEmpty) return;
+            Navigator.pop(ctx);
+
+            ref.read(inboxRepositoryProvider.notifier).addMessage(
+              AppMessage(
+                id: 'msg_${DateTime.now().millisecondsSinceEpoch}',
+                title: '${me.name} (Siz) -> ${target.name}',
+                body: text,
+                type: MessageType.friend,
+                icon: '💬',
+                createdAt: DateTime.now(),
+                isRead: true,
+              ),
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: const Color(0xFF0088CC),
+                content: Text('Xabar ${target.name}ga yuborildi! ✉️'),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0088CC)),
+          child: Text('common.send'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
       ],
-    );
-  }
+    ),
+  );
 }

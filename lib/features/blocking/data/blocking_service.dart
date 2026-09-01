@@ -1,5 +1,3 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,7 +36,7 @@ class BlockingStartResult {
 class BlockingService {
   static const _channel = MethodChannel('flowa/blocking');
 
-  bool get _supported => Platform.isAndroid;
+  bool get _supported => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   Future<T?> _invokeSafe<T>(String method, [dynamic arguments]) async {
     try {
@@ -222,7 +220,7 @@ class BlockingService {
 
   Future<bool> hasAudioPermission() async {
     if (!_supported) return false;
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       final audioStatus = await Permission.audio.status;
       if (audioStatus.isGranted) return true;
       final storageStatus = await Permission.storage.status;
@@ -233,7 +231,7 @@ class BlockingService {
 
   Future<void> requestAudioPermission() async {
     if (!_supported) return;
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       final audioResult = await Permission.audio.request();
       if (!audioResult.isGranted) {
         await Permission.storage.request();

@@ -43,7 +43,11 @@ class _AppCardState extends State<AppCard> {
       decoration: BoxDecoration(
         color: widget.color ?? colors.surface,
         borderRadius: borderRadius,
-        border: widget.border,
+        border: widget.border ??
+            Border.all(
+              color: colors.border.withValues(alpha: 0.6),
+              width: 1,
+            ),
         boxShadow: [
           BoxShadow(
             color: colors.shadow,

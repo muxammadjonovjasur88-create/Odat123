@@ -9,10 +9,10 @@ import {
   calculateBookProgressStatus,
 } from "../bookFunctions.js";
 
-test("validateBookPdfFile restricts format to PDF and max size to 50MB", () => {
+test("validateBookPdfFile restricts format to PDF and max size to 100MB", () => {
   // Valid PDF
   assert.equal(validateBookPdfFile("application/pdf", 10 * 1024 * 1024, "%PDF-1.4"), true);
-  assert.equal(validateBookPdfFile(null, 49 * 1024 * 1024, "%PDF-1.7"), true);
+  assert.equal(validateBookPdfFile(null, 99 * 1024 * 1024, "%PDF-1.7"), true);
 
   // Invalid MIME type
   assert.throws(
@@ -20,10 +20,10 @@ test("validateBookPdfFile restricts format to PDF and max size to 50MB", () => {
     /Faqat PDF formatidagi/
   );
 
-  // Exceeding 50MB size limit
+  // Exceeding 100MB size limit
   assert.throws(
-    () => validateBookPdfFile("application/pdf", 51 * 1024 * 1024, "%PDF-"),
-    /50MB dan oshmasligi kerak/
+    () => validateBookPdfFile("application/pdf", 101 * 1024 * 1024, "%PDF-"),
+    /100MB dan oshmasligi kerak/
   );
 
   // Invalid PDF header signature

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maxfiylik Siyosati / Privacy Policy - ODAT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070B14;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #38bdf8;
+      --primary-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #22c55e;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 40px 20px;
+      min-height: 100vh;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(56, 189, 248, 0.1) 0%, transparent 45%),
+        radial-gradient(circle at 85% 90%, rgba(129, 140, 248, 0.1) 0%, transparent 45%);
+    }
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .app-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.2);
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 18px;
+      border-radius: 9999px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
+    }
+    h1 {
+      font-size: 36px;
+      font-weight: 800;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+    .last-updated {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Language Switcher Tabs */
+    .lang-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 30px 0 25px 0;
+    }
+    .lang-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 10px 22px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .lang-btn:hover {
+      background: rgba(51, 65, 85, 0.9);
+      color: #fff;
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+    .lang-btn.active {
+      background: var(--primary-gradient);
+      color: #04101e;
+      border-color: transparent;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
+      font-weight: 700;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+      margin-bottom: 24px;
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-top: 30px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 8px;
+    }
+    h2:first-of-type {
+      margin-top: 0;
+    }
+    p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+      margin-bottom: 22px;
+    }
+    li {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 12px;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    li::before {
+      content: "•";
+      position: absolute;
+      left: 10px;
+      color: var(--primary);
+      font-size: 22px;
+      line-height: 1.3;
+    }
+    li strong {
+      color: var(--text);
+    }
+    .highlight-box {
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin: 22px 0;
+    }
+    .highlight-box p {
+      color: #bbf7d0;
+      margin-bottom: 0;
+      font-size: 15px;
+    }
+    .contact-box {
+      background: rgba(56, 189, 248, 0.06);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 26px;
+    }
+    .contact-box a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .contact-box a:hover {
+      text-decoration: underline;
+    }
+    .footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 40px;
+    }
+    .lang-section {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .lang-section.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="app-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="badge" id="doc-badge">Rasmiy Huquqiy Hujjat</div>
+      <h1 id="doc-title">Maxfiylik Siyosati</h1>
+      <div class="last-updated" id="doc-updated">ODAT Ilovasi • Oxirgi yangilanish: 2026-yil 24-avgust</div>
+    </div>
+
+    <!-- Language Selector -->
+    <div class="lang-switcher">
+      <button class="lang-btn active" onclick="switchLang('uz', this)">🇺🇿 O'zbekcha</button>
+      <button class="lang-btn" onclick="switchLang('ru', this)">🇷🇺 Русский</button>
+      <button class="lang-btn" onclick="switchLang('en', this)">🇬🇧 English</button>
+    </div>
+
+    <!-- O'ZBEKCHA -->
+    <div id="lang-uz" class="lang-section active">
+      <div class="card">
+        <h2>1. Umumiy Ma'lumot</h2>
+        <p>
+          <strong>ODAT (Flowa)</strong> ilovasi ("biz", "bizning") foydalanuvchilarga foydali odatlarni shakllantirish, chalg'ituvchi ilovalarni qat'iy intizom bilan cheklash va shaxsiy rivojlanishni rejalashtirishda yordam beruvchi unumdorlik dasturidir.
+        </p>
+        <div class="highlight-box">
+          <p><strong>Maxfiylik Kafolati:</strong> Biz sizning shaxsiy ma'lumotlaringizni hech qachon uchinchi shaxslarga sotmaymiz, reklama maqsadida ishlatmaymiz va qurilmangizdagi shaxsiy xabarlar yoki parollarni kuzatmaymiz.</p>
+        </div>
+
+        <h2>2. Biz To'playdigan Ma'lumotlar</h2>
+        <ul>
+          <li><strong>Hisob Ma'lumotlari:</strong> Google Sign-In yoki Telegram orqali kirganingizda profilingizni saqlash va sinxronizatsiya qilish uchun ismingiz, emailingiz va noyob foydalanuvchi ID raqami.</li>
+          <li><strong>Odatlar va Fokus Statistikasi:</strong> Ilovada yaratgan vazifalaringiz, fokus vaqtlari, odat zanjirlari va yutuqlaringiz.</li>
+          <li><strong>Bloklangan Ilovalar Ro'yxati:</strong> Fokus sessiyasi davomida chalg'imaslik uchun o'zingiz tanlagan dasturlar (Instagram, Telegram va h.k.) ro'yxati (faqat qurilmangizda saqlanadi).</li>
+        </ul>
+
+        <h2>3. Qurilma Ruxsatnomalari va Ulardan Foydalanish</h2>
+        <p>ODAT ilovasi chalg'ituvchi dasturlarni to'xtatib turish uchun quyidagi maxsus Android ruxsatlaridan foydalanadi:</p>
+        <ul>
+          <li><strong>Maxsus Imkoniyatlar (Accessibility Service API):</strong> Foydalanuvchining to'liq roziligi bilan, fokus sessiyasi paytida bloklangan ilova ochilganini aniqlash va darhol ODAT ekraniga qaytarish uchun ishlatiladi. Hech qanday shaxsiy yozishmalar, parollar, ekran matnlari o'qilmaydi va serverga yuborilmaydi.</li>
+          <li><strong>Foydalanish Statistikasi (Usage Access):</strong> Kunlik ekran vaqtini hisoblash va oldingi plandagi dasturni aniqlash uchun mahalliy ishlatiladi.</li>
+          <li><strong>Boshqa Ilovalar Ustidan Chiqish (Overlay):</strong> Bloklangan ilova ochilganda ogohlantiruvchi fokus oynasini chiqarish uchun.</li>
+          <li><strong>Bildirishnomalar (Notifications):</strong> Odat eslatmalari va motivatsion xabarlarni yetkazish uchun.</li>
+        </ul>
+
+        <h2>4. Ma'lumotlarni Saqlash va Xavfsizlik</h2>
+        <p>
+          Barcha ma'lumotlar Google Cloud va Firebase xavfsizlik standartlari asosida to'liq shifrlangan holda saqlanadi. Ma'lumotlaringizga faqat o'zingiz kirish huquqiga egasiz.
+        </p>
+
+        <h2>5. Hisobni O'chirish</h2>
+        <p>
+          Foydalanuvchi istalgan vaqtda o'z akkauntini va unga tegishli barcha ma'lumotlarni to'liq o'chirib tashlash huquqiga ega. Buning uchun ilova sozlamalari orqali yoki quyidagi email orqali murojaat qilishingiz mumkin.
+        </p>
+
+        <h2>6. Bog'lanish</h2>
+        <div class="contact-box">
+          <p>Maxfiylik siyosati yoki ilova bo'yicha savollaringiz bo'lsa, rasmiy aloqa manzilimizga yozing:</p>
+          <p>📧 Email: <a href="mailto:muxammadjonovjasur88@gmail.com">muxammadjonovjasur88@gmail.com</a></p>
+          <p>Dasturchi: <strong>ODAT / Flowa Team</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RUSSIAN -->
+    <div id="lang-ru" class="lang-section">
+      <div class="card">
+        <h2>1. Общие Положения</h2>
+        <p>
+          <strong>ODAT (Flowa)</strong> («мы», «наш») — это приложение для развития дисциплины, формирования полезных привычек и блокировки отвлекающих приложений во время глубокой концентрации.
+        </p>
+        <div class="highlight-box">
+          <p><strong>Гарантия Конфиденциальности:</strong> Мы никогда не продаем ваши персональные данные, не используем их для рекламы и не отслеживаем ваши личные сообщения или пароли.</p>
+        </div>
+
+        <h2>2. Собираемая Информация</h2>
+        <ul>
+          <li><strong>Данные Аккаунта:</strong> При авторизации через Google Sign-In или Telegram сохраняются имя, email и уникальный ID пользователя для синхронизации прогресса.</li>
+          <li><strong>Привычки и Статистика Фокуса:</strong> Созданные вами задачи, таймеры фокусировки, серии привычек и статистика прогресса.</li>
+          <li><strong>Список Заблокированных Приложений:</strong> Пакеты приложений, которые вы выбрали для ограничения во время сессий фокуса (обрабатываются исключительно на устройстве).</li>
+        </ul>
+
+        <h2>3. Разрешения Устройства</h2>
+        <p>ODAT использует специальные системные разрешения Android исключительно для блокировки отвлекающих факторов:</p>
+        <ul>
+          <li><strong>Специальные Возможности (Accessibility Service API):</strong> Используется строго с вашего явного согласия для обнаружения открытия заблокированных приложений во время сессии фокуса и автоматического перенаправления обратно в ODAT. Личный текст с экрана, пароли, переписки не считываются и никуда не передаются.</li>
+          <li><strong>Доступ к Истории Использования (Usage Access):</strong> Используется локально для расчета экранного времени и распознавания активных приложений.</li>
+          <li><strong>Отображение Поверх Других Приложений (Overlay):</strong> Для показа мотивирующего экрана фокуса при попытке открыть ограниченное приложение.</li>
+          <li><strong>Уведомления (Notifications):</strong> Для напоминаний о запланированных привычках и важных событиях.</li>
+        </ul>
+
+        <h2>4. Хранение и Безопасность Данных</h2>
+        <p>
+          Все данные надежно зашифрованы и хранятся на серверах Google Firebase в соответствии с международными стандартами безопасности.
+        </p>
+
+        <h2>5. Удаление Аккаунта</h2>
+        <p>
+          Вы имеете право в любой момент запросить полное удаление своего аккаунта и всех связанных данных через настройки приложения или по электронной почте.
+        </p>
+
+        <h2>6. Контакты</h2>
+        <div class="contact-box">
+          <p>По любым вопросам касательно конфиденциальности и работы приложения свяжитесь с нами:</p>
+          <p>📧 Email: <a href="mailto:muxammadjonovjasur88@gmail.com">muxammadjonovjasur88@gmail.com</a></p>
+          <p>Разработчик: <strong>ODAT / Flowa Team</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENGLISH -->
+    <div id="lang-en" class="lang-section">
+      <div class="card">
+        <h2>1. Overview</h2>
+        <p>
+          <strong>ODAT (Flowa)</strong> ("we", "us", or "our") is a mindful discipline and productivity app designed to help users build empowering habits, maintain deep focus, and block distracting applications during focus sessions.
+        </p>
+        <div class="highlight-box">
+          <p><strong>Privacy Commitment:</strong> We never sell your personal information, we do not track your personal messages or keystrokes, and we do not use your data for advertising.</p>
+        </div>
+
+        <h2>2. Information We Collect</h2>
+        <ul>
+          <li><strong>Account Data:</strong> When signing in via Google Sign-In or Telegram, we securely collect your email address, profile display name, and unique user identifier to sync your progress.</li>
+          <li><strong>Habits & Focus Statistics:</strong> Tasks, focus timers, habit streaks, and reflection journals you intentionally create in the app.</li>
+          <li><strong>Blocked App List:</strong> Applications you choose to restrict during strict discipline sessions (processed strictly on-device).</li>
+        </ul>
+
+        <h2>3. Device Permissions & Usage</h2>
+        <p>ODAT requires specific Android permissions strictly to operate distraction-blocking functionality:</p>
+        <ul>
+          <li><strong>Accessibility Service API:</strong> Used exclusively with your explicit permission to detect when blocked distracting apps are opened during an active session and immediately redirect you back to ODAT. No personal screen text, passwords, keystrokes, or messages are ever collected, read, stored, or transmitted.</li>
+          <li><strong>Usage Access (PACKAGE_USAGE_STATS):</strong> Used locally to detect foreground applications and calculate daily screen time statistics.</li>
+          <li><strong>Display Over Other Apps (Overlay):</strong> Used to present the focus shield overlay when a restricted application is opened during active focus mode.</li>
+          <li><strong>Notifications:</strong> Used to deliver your scheduled habit reminders and streak achievements.</li>
+        </ul>
+
+        <h2>4. Data Storage & Security</h2>
+        <p>
+          All user data is encrypted and securely stored on Google Cloud / Firebase infrastructure adhering to industry-leading security practices.
+        </p>
+
+        <h2>5. Account & Data Deletion</h2>
+        <p>
+          You have full control to request complete deletion of your account and all associated data at any time directly through the app settings or by contacting our support team.
+        </p>
+
+        <h2>6. Contact Us</h2>
+        <div class="contact-box">
+          <p>If you have any questions or requests regarding this Privacy Policy, please contact us at:</p>
+          <p>📧 Email: <a href="mailto:muxammadjonovjasur88@gmail.com">muxammadjonovjasur88@gmail.com</a></p>
+          <p>Developer: <strong>ODAT / Flowa Team</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      &copy; 2026 ODAT (Flowa). All rights reserved.
+    </div>
+  </div>
+
+  <script>
+    const meta = {
+      uz: {
+        badge: "Rasmiy Huquqiy Hujjat",
+        title: "Maxfiylik Siyosati",
+        updated: "ODAT Ilovasi • Oxirgi yangilanish: 2026-yil 24-avgust"
+      },
+      ru: {
+        badge: "Официальный Документ",
+        title: "Политика Конфиденциальности",
+        updated: "Приложение ODAT • Последнее обновление: 24 августа 2026 г."
+      },
+      en: {
+        badge: "Official Legal Document",
+        title: "Privacy Policy",
+        updated: "ODAT Application • Last updated: August 24, 2026"
+      }
+    };
+
+    function switchLang(lang, btn) {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.lang-section').forEach(s => s.classList.remove('active'));
+      
+      btn.classList.add('active');
+      document.getElementById('lang-' + lang).classList.add('active');
+
+      document.getElementById('doc-badge').textContent = meta[lang].badge;
+      document.getElementById('doc-title').textContent = meta[lang].title;
+      document.getElementById('doc-updated').textContent = meta[lang].updated;
+    }
+  </script>
+</body>
+</html>

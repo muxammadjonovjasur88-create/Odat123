@@ -1,10 +1,10 @@
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/router/nav_helpers.dart';
-import '../../../../core/theme/app_motion.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/ai_date_parser.dart';
 import '../../../../core/widgets/app_bottom_nav.dart';
 import '../../../../core/widgets/flowa_app_bar.dart';
 import '../../data/reminders_notification_service.dart';
@@ -13,27 +13,24 @@ import '../providers/reminders_provider.dart';
 import '../widgets/reminder_card.dart';
 import 'add_reminder_screen.dart';
 
-/// Main reminders list screen.
-///
-/// Tab layout: Pending / Past / Completed.
-/// Empty, loading, and error states are handled explicitly — no placeholders.
+/// Main Goals & Focus Hub Screen with 1-Week Interactive Calendar & AI Scheduler.
 class RemindersListScreen extends ConsumerStatefulWidget {
   const RemindersListScreen({super.key});
 
   @override
-  ConsumerState<RemindersListScreen> createState() =>
-      _RemindersListScreenState();
+  ConsumerState<RemindersListScreen> createState() => _RemindersListScreenState();
 }
 
 class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final String _selectedCategory = 'all';
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    // Request permissions on first enter — no-op if already granted.
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkPermissions());
   }
 
@@ -46,157 +43,378 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
   Future<void> _checkPermissions() async {
     if (!mounted) return;
     final svc = ref.read(remindersNotificationServiceProvider);
-
-    // Android 13+ POST_NOTIFICATIONS
-    final hasNotif = await svc.requestNotificationPermission();
-
-    if (!hasNotif && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Eslatmalar uchun bildirishnoma ruxsati kerak.',
-          ),
-          action: SnackBarAction(
-            label: 'Sozlamalar',
-            onPressed: () => svc.openExactAlarmSettings(),
-          ),
-          duration: const Duration(seconds: 5),
-        ),
-      );
-      return;
-    }
-
-    // Exact alarm (Android 12+)
-    final canExact = await svc.canScheduleExact();
-    if (!canExact && mounted) {
-      _showExactAlarmDialog();
-    }
+    await svc.requestNotificationPermission();
   }
 
-  void _showExactAlarmDialog() {
-    final colors = context.colors;
-    showDialog<void>(
+  List<DateTime> _getCurrentWeekDays() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    return List.generate(7, (i) => DateTime(monday.year, monday.month, monday.day + i));
+  }
+
+  void _showAiMeetingSchedulerModal(BuildContext context) {
+    final controller = TextEditingController();
+    bool isProcessing = false;
+
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.surface,
-        title: Text(
-          'Aniq budilnik ruxsati',
-          style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
-        ),
-        content: Text(
-          'Eslatmalar belgilangan vaqtda kelishi uchun "Alarmlar va eslatmalar" '
-          'ruxsatini yoqing. Aks holda, eslatmalar bir necha daqiqa kechikishi mumkin.',
-          style: AppTextStyles.body.copyWith(color: colors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(
-              'Keyinroq',
-              style: TextStyle(color: colors.textSecondary),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
+            decoration: const BoxDecoration(
+              color: Color(0xFF0D1220),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              ref
-                  .read(remindersNotificationServiceProvider)
-                  .openExactAlarmSettings();
-            },
-            child: Text(
-              'Ruxsat berish',
-              style: TextStyle(color: colors.primary),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Row(
+                  children: [
+                    Icon(Icons.auto_awesome_rounded, color: Color(0xFF5BC8FA), size: 24),
+                    SizedBox(width: 10),
+                    Text(
+                      'AI Uchrashuv & Rejalashtiruvchi',
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Uchrashuv yoki ishingiz haqida yozing (masalan: "Ertaga soat 15:00 da investor bilan uchrashuvim bor"). AI vaqtni avtomatik aniqlab kalendarga kiritadi.',
+                  style: TextStyle(color: Colors.white60, fontSize: 12, height: 1.4),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Uchrashuv haqida yozing...',
+                    hintStyle: const TextStyle(color: Colors.white30),
+                    filled: true,
+                    fillColor: const Color(0xFF131929),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x335BC8FA))),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: isProcessing
+                        ? null
+                        : () async {
+                            final text = controller.text.trim();
+                            if (text.isEmpty) return;
+                            setModalState(() => isProcessing = true);
+                            try {
+                              // Intelligent AI date & time parser
+                              final parsed = AiDateParser.parse(text, fallbackBaseDate: _selectedDate);
+                              final scheduledTime = parsed.scheduledDateTime;
+                              final reminderTitle = parsed.cleanTitle;
+
+                              await ref.read(remindersProvider.notifier).add(
+                                    title: reminderTitle,
+                                    dateTime: scheduledTime,
+                                    repeatType: RepeatType.once,
+                                  );
+
+                              if (ctx.mounted) {
+                                Navigator.pop(ctx);
+                                setState(() => _selectedDate = scheduledTime);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: const Color(0xFF3B9BFF),
+                                    content: Text('Uchrashuv jadvalga qo‘shildi: ${DateFormat('dd-MMM HH:mm').format(scheduledTime)} 📅', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              setModalState(() => isProcessing = false);
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5BC8FA),
+                      foregroundColor: Colors.black,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: isProcessing
+                        ? const CircularProgressIndicator(color: Colors.black, strokeWidth: 2)
+                        : const Text('JADVALGA QO‘SHISH ✨', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
-    final colors = context.colors;
     final remindersAsync = ref.watch(remindersProvider);
+    final weekDays = _getCurrentWeekDays();
+    final dayNames = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
 
     return Scaffold(
+      backgroundColor: const Color(0xFF080B14),
       appBar: FlowaAppBar(
         showBackButton: Navigator.canPop(context),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_rounded),
-            tooltip: 'Yangi eslatma',
-            onPressed: () => RemindersSheet.show(context),
-          ),
-        ],
       ),
       bottomNavigationBar: AppBottomNav(
         current: AppNavTab.zametka,
         onSelected: (tab) => goToTab(context, tab),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF5BC8FA),
+        foregroundColor: Colors.black,
+        icon: const Icon(Icons.add_rounded, size: 22),
+        label: Text(
+          'reminders.new_goal'.tr(),
+          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+        ),
+        onPressed: () => RemindersSheet.show(context),
+      ),
       body: Column(
         children: [
-          // ── Tab bar ────────────────────────────────────────────────────
+          // ── 1-WEEK CALENDAR GRAPHIC BAR (Tepada 1 Haftalik Grafik) ────────
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF131929), Color(0xFF0D1220)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0x335BC8FA)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2035),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.dark(
+                                  primary: Color(0xFF5BC8FA),
+                                  onPrimary: Colors.black,
+                                  surface: Color(0xFF0D1220),
+                                  onSurface: Colors.white,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          setState(() => _selectedDate = picked);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF131929),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0x665BC8FA)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_month_rounded, color: Color(0xFF5BC8FA), size: 18),
+                            const SizedBox(width: 6),
+                            Text(
+                              DateFormat('MMMM yyyy', context.locale.languageCode).format(_selectedDate).toUpperCase(),
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.8),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF5BC8FA), size: 18),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5BC8FA), size: 22),
+                          tooltip: 'AI Uchrashuv & Rejalashtiruvchi',
+                          onPressed: () => _showAiMeetingSchedulerModal(context),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.calendar_today_rounded, color: Color(0xFF5BC8FA), size: 20),
+                          tooltip: 'Sana tanlash',
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _selectedDate,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2035),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: Color(0xFF5BC8FA),
+                                      onPrimary: Colors.black,
+                                      surface: Color(0xFF0D1220),
+                                      onSurface: Colors.white,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (picked != null) {
+                              setState(() => _selectedDate = picked);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(7, (index) {
+                    final day = weekDays[index];
+                    final isSelected = day.year == _selectedDate.year && day.month == _selectedDate.month && day.day == _selectedDate.day;
+                    final isToday = day.year == DateTime.now().year && day.month == DateTime.now().month && day.day == DateTime.now().day;
+
+                    return GestureDetector(
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        setState(() => _selectedDate = day);
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 42,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF5BC8FA)
+                              : (isToday ? const Color(0x3300FF88) : Colors.transparent),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF5BC8FA)
+                                : (isToday ? const Color(0xFF3B9BFF) : Colors.white12),
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              dayNames[index],
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white60,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${day.day}',
+                              style: TextStyle(
+                                color: isSelected ? Colors.black : Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Clean 3-Tab Bar (Faol maqsadlar / O'tib ketgan / Bajarilgan) ─────────────
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: DecoratedBox(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Container(
+              height: 44,
               decoration: BoxDecoration(
-                color: colors.surfaceMuted,
+                color: const Color(0xFF0D1220),
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0x225BC8FA)),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  gradient: colors.primaryGradient,
+                  color: const Color(0xFF5BC8FA),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 dividerColor: Colors.transparent,
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelStyle: AppTextStyles.chip.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                unselectedLabelStyle: AppTextStyles.chip,
-                labelColor: Colors.white,
-                unselectedLabelColor: colors.textSecondary,
-                splashFactory: NoSplash.splashFactory,
-                tabs: const [
-                  Tab(text: 'Kutilmoqda'),
-                  Tab(text: "O'tib ketdi"),
-                  Tab(text: 'Bajarildi'),
+                labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5),
+                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.white60,
+                tabs: [
+                  Tab(text: 'reminders.tab_active'.tr()),
+                  Tab(text: 'reminders.tab_past'.tr()),
+                  Tab(text: 'reminders.tab_completed'.tr()),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 10),
 
-          // ── Tab views ─────────────────────────────────────────────────
+          // ── Tab Views ─────────────────────────────────────────────────
           Expanded(
             child: remindersAsync.when(
-              loading: () => const _LoadingState(),
-              error: (e, _) => _ErrorState(error: e.toString()),
+              loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF5BC8FA))),
+              error: (e, _) => Center(child: Text('Xatolik: $e', style: const TextStyle(color: Colors.red))),
               data: (_) => TabBarView(
                 controller: _tabController,
                 children: [
-                  _ReminderTabView(
+                  _GoalsTabView(
                     listProvider: pendingRemindersProvider,
-                    emptyIcon: Icons.alarm_rounded,
-                    emptyTitle: 'Hali eslatma yo\'q',
-                    emptySubtitle:
-                        'Yangi eslatma qo\'shish uchun + tugmasini bosing',
-                    isGrouped: true,
+                    selectedDate: _selectedDate,
+                    filterCategory: _selectedCategory,
+                    emptyIcon: Icons.track_changes_rounded,
+                    emptyTitle: 'reminders.empty_active_title'.tr(),
+                    emptySubtitle: 'reminders.empty_active_sub'.tr(),
                   ),
-                  _ReminderTabView(
+                  _GoalsTabView(
                     listProvider: pastRemindersProvider,
+                    selectedDate: _selectedDate,
+                    filterCategory: _selectedCategory,
                     emptyIcon: Icons.history_rounded,
-                    emptyTitle: 'O\'tib ketgan eslatma yo\'q',
-                    emptySubtitle: 'Barchasi o\'z vaqtida ko\'rildi',
+                    emptyTitle: 'reminders.empty_past_title'.tr(),
+                    emptySubtitle: 'reminders.empty_past_sub'.tr(),
                   ),
-                  _ReminderTabView(
+                  _GoalsTabView(
                     listProvider: completedRemindersProvider,
+                    selectedDate: _selectedDate,
+                    filterCategory: _selectedCategory,
                     emptyIcon: Icons.check_circle_outline_rounded,
-                    emptyTitle: 'Hali bajarilgan eslatma yo\'q',
-                    emptySubtitle: 'Eslatmalarni bajargach bu yerda ko\'rinadi',
+                    emptyTitle: 'reminders.empty_completed_title'.tr(),
+                    emptySubtitle: 'reminders.empty_completed_sub'.tr(),
                   ),
                 ],
               ),
@@ -204,261 +422,83 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
           ),
         ],
       ),
-
-      // ── FAB ──────────────────────────────────────────────────────────────
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => RemindersSheet.show(context),
-        backgroundColor: colors.surface,
-        foregroundColor: colors.primary,
-        elevation: 4,
-        icon: ShaderMask(
-          shaderCallback: (r) => colors.primaryGradient.createShader(r),
-          child: const Icon(Icons.add_rounded, color: Colors.white),
-        ),
-        label: ShaderMask(
-          shaderCallback: (r) => colors.primaryGradient.createShader(r),
-          child: Text(
-            'Eslatma qo\'shish',
-            style: AppTextStyles.label.copyWith(color: Colors.white),
-          ),
-        ),
-      ),
     );
   }
 }
 
-// ── Tab content ───────────────────────────────────────────────────────────
-
-class _ReminderTabView extends ConsumerWidget {
-  const _ReminderTabView({
+class _GoalsTabView extends ConsumerWidget {
+  const _GoalsTabView({
     required this.listProvider,
+    required this.selectedDate,
+    required this.filterCategory,
     required this.emptyIcon,
     required this.emptyTitle,
     required this.emptySubtitle,
-    this.isGrouped = false,
   });
 
   final Provider<List<Reminder>> listProvider;
+  final DateTime selectedDate;
+  final String filterCategory;
   final IconData emptyIcon;
   final String emptyTitle;
   final String emptySubtitle;
-  final bool isGrouped;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = ref.watch(listProvider);
+    final allItems = ref.watch(listProvider);
+
+    final items = allItems.where((item) {
+      if (filterCategory == 'focus' && !item.isFocusGoal) return false;
+      if (filterCategory == 'exercise' && !item.isExerciseGoal) return false;
+      if (filterCategory == 'note' && !item.isNoteGoal) return false;
+
+      // Filter by selected date:
+      if (item.repeatType == RepeatType.daily) return true;
+      if (item.repeatType == RepeatType.weekly) {
+        return item.dateTime.weekday == selectedDate.weekday;
+      }
+      // Once: only matches the specific day
+      return item.dateTime.year == selectedDate.year &&
+          item.dateTime.month == selectedDate.month &&
+          item.dateTime.day == selectedDate.day;
+    }).toList();
 
     if (items.isEmpty) {
-      return _EmptyState(
-        icon: emptyIcon,
-        title: emptyTitle,
-        subtitle: emptySubtitle,
-      );
-    }
-
-    if (!isGrouped) {
-      return ListView.builder(
-        key: PageStorageKey(listProvider.runtimeType),
-        padding: const EdgeInsets.only(bottom: 100, top: 4),
-        itemCount: items.length,
-        itemBuilder: (context, i) {
-          final reminder = items[i];
-          return ReminderCard(
-            key: ValueKey(reminder.id),
-            reminder: reminder,
-            index: i,
-          );
-        },
-      );
-    }
-
-    final groups = _groupReminders(items);
-    return ListView.builder(
-      key: PageStorageKey(listProvider.runtimeType),
-      padding: const EdgeInsets.only(bottom: 100, top: 4),
-      itemCount: groups.length,
-      itemBuilder: (context, i) {
-        final group = groups[i];
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Text(
-                group.title,
-                style: AppTextStyles.h3.copyWith(
-                  color: context.colors.textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            ...group.items.asMap().entries.map((entry) {
-              return ReminderCard(
-                key: ValueKey(entry.value.id),
-                reminder: entry.value,
-                index: entry.key,
-              );
-            }),
-          ],
-        );
-      },
-    );
-  }
-
-  List<_ReminderGroup> _groupReminders(List<Reminder> reminders) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final tomorrow = today.add(const Duration(days: 1));
-    final nextWeek = today.add(const Duration(days: 7));
-
-    final todayList = <Reminder>[];
-    final tomorrowList = <Reminder>[];
-    final thisWeekList = <Reminder>[];
-    final laterList = <Reminder>[];
-
-    for (final r in reminders) {
-      final dt = r.dateTime;
-      final date = DateTime(dt.year, dt.month, dt.day);
-      if (date.isBefore(tomorrow)) {
-        todayList.add(r);
-      } else if (date == tomorrow) {
-        tomorrowList.add(r);
-      } else if (date.isBefore(nextWeek)) {
-        thisWeekList.add(r);
-      } else {
-        laterList.add(r);
-      }
-    }
-
-    final groups = <_ReminderGroup>[];
-    if (todayList.isNotEmpty) groups.add(_ReminderGroup('Bugun', todayList));
-    if (tomorrowList.isNotEmpty) groups.add(_ReminderGroup('Ertaga', tomorrowList));
-    if (thisWeekList.isNotEmpty) groups.add(_ReminderGroup('Bu hafta', thisWeekList));
-    if (laterList.isNotEmpty) groups.add(_ReminderGroup('Keyinroq', laterList));
-    return groups;
-  }
-}
-
-class _ReminderGroup {
-  final String title;
-  final List<Reminder> items;
-  _ReminderGroup(this.title, this.items);
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AnimatedOpacity(
-      duration: AppMotion.fade,
-      opacity: 1.0,
-      child: Center(
+      return Center(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
+          padding: const EdgeInsets.all(32),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: colors.tintSage,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 40, color: colors.primary),
-              ),
-              const SizedBox(height: 20),
+              Icon(emptyIcon, color: Colors.white24, size: 54),
+              const SizedBox(height: 14),
               Text(
-                title,
+                emptyTitle,
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
-                style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
-                subtitle,
+                emptySubtitle,
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: colors.textSecondary,
-                ),
               ),
             ],
           ),
         ),
-      ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 8, bottom: 90),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        return ReminderCard(
+          key: ValueKey(items[index].id),
+          reminder: items[index],
+          index: index,
+        );
+      },
     );
   }
 }
-
-// ── Loading state ─────────────────────────────────────────────────────────
-
-class _LoadingState extends StatelessWidget {
-  const _LoadingState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: CircularProgressIndicator(
-        strokeWidth: 2.5,
-        color: context.colors.primary,
-      ),
-    );
-  }
-}
-
-// ── Error state ────────────────────────────────────────────────────────────
-
-class _ErrorState extends ConsumerWidget {
-  const _ErrorState({required this.error});
-
-  final String error;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = context.colors;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: colors.primary),
-            const SizedBox(height: 16),
-            Text(
-              'Ma\'lumotlarni yuklashda xato',
-              style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error,
-              style: AppTextStyles.bodySmall.copyWith(
-                color: colors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            TextButton(
-              onPressed: () => ref.invalidate(remindersProvider),
-              child: Text(
-                'Qayta urinish',
-                style: TextStyle(color: colors.primary),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-

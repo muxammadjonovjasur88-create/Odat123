@@ -46,10 +46,71 @@ class FocusForegroundService : Service() {
     /** Consecutive seconds spent away, for the gentle re-nudge cadence. */
     private var awayTicks = 0
 
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    private fun acquireWakeLock() {
+        if (wakeLock?.isHeld == true) return
+        val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Flowa:FocusWakeLock").apply {
+            setReferenceCounted(false)
+            acquire(4 * 60 * 60 * 1000L)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (_: Throwable) {}
+    }
+
     private val ticker = object : Runnable {
         override fun run() {
             tick()
             handler.postDelayed(this, 1000L)
+        }
+    }
+
+    private val fastBlocker = object : Runnable {
+        override fun run() {
+            try {
+                if (BlockerState.inWindow()) {
+                    val pkg = ForegroundAppDetector.current(this@FocusForegroundService)
+                    if (pkg != null && pkg != packageName) {
+                        if (BlockerState.shouldBlock(pkg)) {
+                            Log.d(TAG, "FocusForegroundService FAST DETECT BLOCKED: $pkg (strict=${BlockerState.strict})")
+                            if (BlockerState.strict) {
+                                AppBlockerAccessibilityService.performHomeAction()
+                                try {
+                                    val appIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                    }
+                                    if (appIntent != null) startActivity(appIntent)
+                                } catch (_: Throwable) {}
+                            }
+                            if (!BlockerState.overlayShowing) {
+                                BlockerState.overlayShowing = true
+                                startActivity(
+                                    Intent(this@FocusForegroundService, BlockingOverlayActivity::class.java).addFlags(
+                                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                                            Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                                            Intent.FLAG_ACTIVITY_NO_ANIMATION,
+                                    ),
+                                )
+                            }
+                        } else {
+                            BlockerState.overlayShowing = false
+                        }
+                    } else if (pkg == packageName) {
+                        BlockerState.overlayShowing = false
+                    }
+                }
+            } catch (t: Throwable) {
+                Log.e(TAG, "fastBlocker error: ${t.message}")
+            } finally {
+                handler.postDelayed(this, 250L)
+            }
         }
     }
 
@@ -173,9 +234,12 @@ class FocusForegroundService : Service() {
             Log.w(TAG, "onStartCommand: intent has no EXTRA_END — skipping BlockerState.start()")
         }
 
+        acquireWakeLock()
         startForeground(NOTIFICATION_ID, buildNotification())
         handler.removeCallbacks(ticker)
         handler.post(ticker)
+        handler.removeCallbacks(fastBlocker)
+        handler.post(fastBlocker)
         // Kick the immediate-focus enforcement AFTER startForeground so we are
         // allowed to launch activities from the foreground context. Retry for up
         // to 3 seconds in case the OS hasn't fully propagated the window change.
@@ -361,24 +425,14 @@ class FocusForegroundService : Service() {
     }
 
     private fun detectAndBlock() {
-        // The accessibility service is the primary, instant blocker; only fall
-        // back to polling when it isn't enabled.
-        if (AppBlockerAccessibilityService.running) {
-            // Accessibility service is active — it handles blocking, no polling needed.
-            return
-        }
         if (!BlockerState.inWindow() || BlockerState.overlayShowing) return
-        val pkg = ForegroundAppDetector.current(this) ?: run {
-            Log.w(TAG, "detectAndBlock: ForegroundAppDetector returned null — check Usage Access permission")
-            return
-        }
+        val pkg = ForegroundAppDetector.current(this) ?: return
         if (pkg == packageName) return
         if (BlockerState.shouldBlock(pkg)) {
-            Log.d(TAG, "detectAndBlock: blocking $pkg via UsageAccess polling")
-            // A blocked/distracting app was opened during the session. The
-            // distraction count is recorded by the overlay (on the hard wall, or
-            // on \"Open anyway\" for soft friction) — not here — so resisting the
-            // soft reminder is never penalized.
+            Log.d(TAG, "detectAndBlock: blocking $pkg via FocusForegroundService detector")
+            if (BlockerState.strict) {
+                AppBlockerAccessibilityService.performHomeAction()
+            }
             BlockerState.overlayShowing = true
             startActivity(
                 Intent(this, BlockingOverlayActivity::class.java).addFlags(
@@ -419,8 +473,11 @@ class FocusForegroundService : Service() {
     }
 
     private fun stopNow() {
-        cancelNudge()
         handler.removeCallbacks(ticker)
+        handler.removeCallbacks(fastBlocker)
+        releaseWakeLock()
+        if (wasAway) cancelNudge()
+        BlockerState.stop()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)
         } else {
@@ -432,6 +489,8 @@ class FocusForegroundService : Service() {
 
     override fun onDestroy() {
         handler.removeCallbacks(ticker)
+        handler.removeCallbacks(fastBlocker)
+        releaseWakeLock()
         super.onDestroy()
     }
 
@@ -510,10 +569,10 @@ class FocusForegroundService : Service() {
             manager.createNotificationChannel(
                 NotificationChannel(
                     NUDGE_CHANNEL_ID,
-                    "Come back to focus",
+                    "Odat diqqat rejimi",
                     NotificationManager.IMPORTANCE_DEFAULT,
                 ).apply {
-                    description = "Gentle reminder when you leave a focus session."
+                    description = "Odat intizomi eslatmasi."
                     setShowBadge(false)
                     setSound(soundUri, soundAttrs)
                 },

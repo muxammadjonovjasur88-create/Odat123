@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 
@@ -23,11 +23,11 @@ class SkeletonPainter extends CustomPainter {
     final paintLine = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
-      ..color = const Color(0xFF39FF14); // Neon Green
+      ..color = const Color(0xFF3B9BFF); // Neon Green
 
     final paintJoint = Paint()
       ..style = PaintingStyle.fill
-      ..color = const Color(0xFF00F3FF); // Neon Cyan
+      ..color = const Color(0xFF5BC8FA); // Neon Cyan
 
     final paintJointBorder = Paint()
       ..style = PaintingStyle.stroke
@@ -36,10 +36,13 @@ class SkeletonPainter extends CustomPainter {
 
     if (size.width <= 0 || size.height <= 0) return;
 
-    final double imageWidth = absoluteImageSize.width;
-    final double imageHeight = absoluteImageSize.height;
+    final double rawW = absoluteImageSize.width;
+    final double rawH = absoluteImageSize.height;
+    if (rawW <= 0 || rawH <= 0) return;
 
-    if (imageWidth <= 0 || imageHeight <= 0) return;
+    final bool isViewportPortrait = size.height >= size.width;
+    final double imageWidth = isViewportPortrait ? math.min(rawW, rawH) : math.max(rawW, rawH);
+    final double imageHeight = isViewportPortrait ? math.max(rawW, rawH) : math.min(rawW, rawH);
 
     final double scale = math.max(
       size.width / imageWidth,

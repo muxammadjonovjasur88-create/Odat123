@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +15,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/widgets.dart';
+import '../../library/presentation/screens/admin_books_screen.dart';
 import '../../premium/data/premium_providers.dart';
 import '../../streak/data/streak_repository.dart';
 import 'feedback_sheet.dart';
@@ -135,8 +137,8 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   _Row(
                     icon: Icons.help_outline_rounded,
-                    title: 'Yordam va taklif',
-                    subtitle: 'Fikr-mulohaza yoki muammo haqida yozing',
+                    title: 'settings.help_feedback'.tr(),
+                    subtitle: 'settings.help_feedback_sub'.tr(),
                     onTap: () => showFeedbackSheet(context),
                   ),
                 ],
@@ -150,8 +152,8 @@ class SettingsScreen extends ConsumerWidget {
                 child: _Row(
                   icon: Icons.workspace_premium_rounded,
                   title: ref.watch(isPremiumProvider)
-                      ? 'Flowa Premium ✓'
-                      : 'Flowa Premium',
+                      ? 'Odat Premium ✓'
+                      : 'Odat Premium',
                   subtitle: ref.watch(isPremiumProvider)
                       ? 'Premium is active — thank you 🌿'
                       : 'Unlock unlimited AI, deep stats & more',
@@ -164,10 +166,66 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
 
+            // --- Rejimni almashtirish (Ota-ona rejimi) ---
+            const SizedBox(height: 22),
+            _SectionLabel('family.card_title'.tr()),
+            AppCard(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: _Row(
+                icon: Icons.supervisor_account_rounded,
+                title: 'family.parent_title'.tr(),
+                subtitle: 'family.card_sub'.tr(),
+                onTap: () async {
+                  final uid = ref.read(authStateProvider).asData?.value?.uid;
+                  if (uid != null) {
+                    await ref.read(userRepositoryProvider).updateRole(
+                      uid,
+                      appRole: 'family',
+                      familyRole: 'parent',
+                    );
+                  }
+                  if (context.mounted) {
+                    context.go(AppRoutes.parentHome);
+                  }
+                },
+              ),
+            ),
+
             // --- Joylashuv bo'limi ---
             const SizedBox(height: 22),
-            _SectionLabel('Joylashuv'),
+            _SectionLabel('settings.location_title'.tr()),
             _LocationSection(),
+
+            // --- Admin Panel (faqat owner ko'radi) ---
+            Builder(builder: (ctx) {
+              final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+              // Faqat siz — owner UID qo'shing:
+              const ownerUids = <String>[
+                // TODO: owner UID larni shu yerga qo'shing
+                // 'ABC123...yourUid',
+              ];
+              if (!ownerUids.contains(uid)) return const SizedBox.shrink();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 22),
+                  _SectionLabel('⚙️ Admin'),
+                  AppCard(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: _Row(
+                      icon: Icons.admin_panel_settings_rounded,
+                      title: 'Kitoblar Admin Paneli',
+                      subtitle: 'Kitob va audio kitob qo\'shish / tahrirlash',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const AdminBooksScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }),
 
             const SizedBox(height: 28),
             Center(
@@ -513,14 +571,14 @@ class _LocationSection extends ConsumerWidget {
     final regionState = ref.watch(regionControllerProvider);
 
     final (String subtitle, Color subtitleColor) = switch (regionState.status) {
-      RegionStatus.initial => ('Aniqlanmagan', colors.textSecondary),
-      RegionStatus.loading => ('Aniqlanmoqda...', AppColors.cyanAccent),
+      RegionStatus.initial => ('location.not_detected'.tr(), colors.textSecondary),
+      RegionStatus.loading => ('location.detecting'.tr(), AppColors.cyanAccent),
       RegionStatus.loaded => (
-          regionState.region?.displayName ?? "Noma'lum",
+          regionState.region?.displayName ?? 'location.unknown'.tr(),
           AppColors.cyanAccent,
         ),
       RegionStatus.unavailable => (
-          regionState.errorMessage ?? 'Viloyat aniqlanmadi',
+          regionState.errorMessage ?? 'location.failed'.tr(),
           colors.textSecondary,
         ),
     };
@@ -545,7 +603,7 @@ class _LocationSection extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Sizning viloyatingiz',
+                        'location.your_region'.tr(),
                         style: AppTextStyles.label.copyWith(
                           color: colors.textPrimary,
                         ),
@@ -607,14 +665,14 @@ class _LocationSection extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Joylashuvni yangilash',
+                          'location.refresh_gps'.tr(),
                           style: AppTextStyles.label.copyWith(
                             color: colors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'GPS orqali viloyatni qayta aniqlash',
+                          'location.refresh_gps_sub'.tr(),
                           style: AppTextStyles.caption.copyWith(
                             color: colors.textSecondary,
                           ),
@@ -676,13 +734,13 @@ class _ManualRegionRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Qo\'lda tanlash',
+                    'location.manual_select'.tr(),
                     style: AppTextStyles.label
                         .copyWith(color: colors.textPrimary),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'GPS ishlamaganda ro\'yxatdan tanlang',
+                    'location.manual_select_sub'.tr(),
                     style: AppTextStyles.caption
                         .copyWith(color: colors.textSecondary),
                   ),

@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.util.Log
 import com.flowa.flowa.MainActivity
 import com.flowa.flowa.R
 
@@ -34,12 +35,13 @@ class BlockingForegroundService : Service() {
     }
 
     companion object {
+        private const val TAG = "BlockingForeground"
         private const val CHANNEL_ID = "flowa_focus_blocking"
         private const val NOTIFICATION_ID = 4711
         private const val EXTRA_END_TIME = "endTime"
 
         /** How often to check the foreground app. */
-        private const val POLL_INTERVAL_MS = 800L
+        private const val POLL_INTERVAL_MS = 150L
 
         fun start(context: Context, endTime: Long) {
             val intent = Intent(context, BlockingForegroundService::class.java)
@@ -73,25 +75,40 @@ class BlockingForegroundService : Service() {
 
     /** One poll: if a blocked app is in front, raise the blocking overlay. */
     private fun detectAndBlock() {
-        // Defer to the accessibility service when it's enabled (instant + no lag).
-        if (AppBlockerAccessibilityService.running) return
-        if (!BlockerState.active || BlockerState.isExpired()) return
-        if (BlockerState.overlayShowing) return
+        if (!BlockerState.inWindow()) return
 
         val pkg = ForegroundAppDetector.current(this) ?: return
         if (pkg == packageName) return // never block ourselves / the overlay
 
         if (BlockerState.shouldBlock(pkg)) {
-            // Optimistically guard against a double-launch before onResume runs.
-            BlockerState.overlayShowing = true
-            val intent = Intent(this, BlockingOverlayActivity::class.java).apply {
-                addFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TASK or
-                        Intent.FLAG_ACTIVITY_NO_ANIMATION,
-                )
+            Log.d(TAG, "BlockingForegroundService detected blocked app: $pkg")
+            if (BlockerState.strict) {
+                AppBlockerAccessibilityService.instance?.performGlobalAction(android.accessibilityservice.AccessibilityService.GLOBAL_ACTION_HOME)
+                try {
+                    val flowaIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    }
+                    if (flowaIntent != null) {
+                        startActivity(flowaIntent)
+                    }
+                } catch (t: Throwable) {
+                    Log.w(TAG, "Flowa intent launch failed: ${t.message}")
+                }
             }
-            startActivity(intent)
+            try {
+                val intent = Intent(this, BlockingOverlayActivity::class.java).apply {
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_NO_ANIMATION,
+                    )
+                    putExtra(BlockingOverlayActivity.EXTRA_BLOCKED_PACKAGE, pkg)
+                }
+                startActivity(intent)
+            } catch (t: Throwable) {
+                Log.w(TAG, "Overlay launch failed: ${t.message}")
+            }
         }
     }
 

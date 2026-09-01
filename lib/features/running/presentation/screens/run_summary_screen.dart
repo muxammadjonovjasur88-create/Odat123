@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
@@ -26,14 +26,14 @@ class RunSummaryScreen extends StatelessWidget {
         RunningTelemetryCalculator.formatDuration(session.durationSeconds);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07090E),
+      backgroundColor: const Color(0xFF080B14),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0C101A),
+        backgroundColor: const Color(0xFF080B14),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Row(
           children: [
-            Icon(Icons.military_tech_rounded, color: Color(0xFF39FF14), size: 24),
+            Icon(Icons.military_tech_rounded, color: Color(0xFF3B9BFF), size: 24),
             SizedBox(width: 8),
             Text(
               'Mashg\'ulot Natijasi',
@@ -64,19 +64,19 @@ class RunSummaryScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: isCompleted
-                            ? const [Color(0xFF00F3FF), Color(0xFF0077FF)]
-                            : const [Color(0xFF1E293B), Color(0xFF0F172A)],
+                            ? const [Color(0xFF5BC8FA), Color(0xFF0077FF)]
+                            : const [Color(0xFF1C2540), Color(0xFF0D1220)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: isCompleted
                           ? null
-                          : Border.all(color: const Color(0x3300F3FF)),
+                          : Border.all(color: const Color(0x335BC8FA)),
                       boxShadow: [
                         BoxShadow(
                           color: isCompleted
-                              ? const Color(0x6600F3FF)
+                              ? const Color(0x665BC8FA)
                               : Colors.black45,
                           blurRadius: 16,
                           offset: const Offset(0, 4),
@@ -89,7 +89,7 @@ class RunSummaryScreen extends StatelessWidget {
                           isCompleted
                               ? Icons.stars_rounded
                               : Icons.directions_run_rounded,
-                          color: isCompleted ? Colors.black : const Color(0xFF00F3FF),
+                          color: isCompleted ? Colors.black : const Color(0xFF5BC8FA),
                           size: 44,
                         ),
                         const SizedBox(height: 10),
@@ -131,7 +131,7 @@ class RunSummaryScreen extends StatelessWidget {
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0x3300F3FF)),
+                  border: Border.all(color: const Color(0x335BC8FA)),
                 ),
                 child: FlutterMap(
                   options: MapOptions(
@@ -152,8 +152,8 @@ class RunSummaryScreen extends StatelessWidget {
                               .toList();
                           return Polygon(
                             points: points,
-                            color: const Color(0x6600F3FF),
-                            borderColor: const Color(0xFF00F3FF),
+                            color: const Color(0x665BC8FA),
+                            borderColor: const Color(0xFF5BC8FA),
                             borderStrokeWidth: 3.0,
                           );
                         }).toList(),
@@ -166,7 +166,7 @@ class RunSummaryScreen extends StatelessWidget {
                                 .map((p) => LatLng(p.latitude, p.longitude))
                                 .toList(),
                             strokeWidth: 4.0,
-                            color: const Color(0xFF39FF14),
+                            color: const Color(0xFF3B9BFF),
                           ),
                         ],
                       ),
@@ -199,7 +199,7 @@ class RunSummaryScreen extends StatelessWidget {
                     'MASOFA',
                     '${session.distanceKm.toStringAsFixed(2)} km',
                     Icons.straighten_rounded,
-                    const Color(0xFF00F3FF),
+                    const Color(0xFF5BC8FA),
                   ),
                   _buildSummaryTile(
                     'VAQT',
@@ -229,7 +229,7 @@ class RunSummaryScreen extends StatelessWidget {
                     'EGALLANGAN HUDUD',
                     '${session.territoriesGained.length} ta polygon',
                     Icons.map_rounded,
-                    const Color(0xFF39FF14),
+                    const Color(0xFF3B9BFF),
                   ),
                 ],
               ),
@@ -245,7 +245,7 @@ class RunSummaryScreen extends StatelessWidget {
                     context.go('/daily');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF39FF14),
+                    backgroundColor: const Color(0xFF3B9BFF),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -274,7 +274,7 @@ class RunSummaryScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF151A27),
+        color: const Color(0xFF131929),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF262D40)),
       ),

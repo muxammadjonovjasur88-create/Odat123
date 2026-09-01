@@ -1,29 +1,36 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/services/user_repository.dart';
 import '../../data/running_repository.dart';
+import '../../domain/models/defense_structure.dart';
 import '../../domain/models/run_session.dart';
+import '../../domain/models/territory_battle.dart';
 import '../../domain/models/territory_polygon.dart';
 import '../../domain/services/anti_cheat_validator.dart';
 import '../../domain/services/haversine_calculator.dart';
 import '../../domain/services/running_telemetry_calculator.dart';
+import '../../domain/services/territory_battle_service.dart';
 import '../../domain/services/territory_conquest_service.dart';
+import '../../domain/services/territory_geometry_service.dart';
 
-enum WorkoutState { idle, running, paused, completed }
+enum WorkoutState { idle, selectingStart, running, paused, loopCompleted, completed }
 
 @immutable
 class RunningState {
   const RunningState({
     this.workoutState = WorkoutState.idle,
     this.currentPos,
+    this.startPos,
     this.gpsPath = const [],
     this.territories = const [],
+    this.defenseStructures = const [],
     this.elapsedSeconds = 0,
     this.distanceKm = 0.0,
     this.calories = 0,
@@ -35,15 +42,23 @@ class RunningState {
     this.antiCheatWarning,
     this.closedLoopNotification,
     this.capturedLoopCount = 0,
+    this.totalAreaSqMeters = 0.0,
     this.isWalking = false,
     this.targetKm = 3.0,
     this.completedSession,
+    this.activeMapFilter = 'all', // 'all', 'my_territories', 'nearby_runners', 'under_attack', 'my_defenses'
+    this.startFinishRadiusMeters = 25.0,
+    this.pendingBattleResult,
+    this.pendingTargetTerritory,
+    this.isLoopClosed = false,
   });
 
   final WorkoutState workoutState;
   final GpsPoint? currentPos;
+  final GpsPoint? startPos;
   final List<GpsPoint> gpsPath;
   final List<TerritoryPolygon> territories;
+  final List<DefenseStructure> defenseStructures;
   final int elapsedSeconds;
   final double distanceKm;
   final int calories;
@@ -55,15 +70,43 @@ class RunningState {
   final String? antiCheatWarning;
   final String? closedLoopNotification;
   final int capturedLoopCount;
+  final double totalAreaSqMeters;
   final bool isWalking;
   final double targetKm;
   final RunSession? completedSession;
+  final String activeMapFilter;
+  final double startFinishRadiusMeters;
+  final BattleResult? pendingBattleResult;
+  final TerritoryPolygon? pendingTargetTerritory;
+  final bool isLoopClosed;
+
+  /// Distance in meters back to START point
+  double? get distanceToStartMeters {
+    if (startPos == null || currentPos == null) return null;
+    final distKm = HaversineCalculator.calculateDistanceBetweenPoints(
+      startPos!,
+      currentPos!,
+    );
+    return distKm * 1000.0;
+  }
+
+  /// Whether current position is inside the START finish radius
+  bool get isInsideStartRadius {
+    final dist = distanceToStartMeters;
+    if (dist == null) return false;
+    return dist <= startFinishRadiusMeters;
+  }
+
+  String get formattedTotalArea =>
+      TerritoryConquestService.formatArea(totalAreaSqMeters);
 
   RunningState copyWith({
     WorkoutState? workoutState,
     GpsPoint? currentPos,
+    GpsPoint? startPos,
     List<GpsPoint>? gpsPath,
     List<TerritoryPolygon>? territories,
+    List<DefenseStructure>? defenseStructures,
     int? elapsedSeconds,
     double? distanceKm,
     int? calories,
@@ -75,18 +118,28 @@ class RunningState {
     String? antiCheatWarning,
     String? closedLoopNotification,
     int? capturedLoopCount,
+    double? totalAreaSqMeters,
     bool? isWalking,
     double? targetKm,
     RunSession? completedSession,
+    String? activeMapFilter,
+    double? startFinishRadiusMeters,
+    BattleResult? pendingBattleResult,
+    TerritoryPolygon? pendingTargetTerritory,
+    bool? isLoopClosed,
     bool clearGpsError = false,
     bool clearAntiCheatWarning = false,
     bool clearNotification = false,
+    bool clearBattle = false,
+    bool clearStartPos = false,
   }) {
     return RunningState(
       workoutState: workoutState ?? this.workoutState,
       currentPos: currentPos ?? this.currentPos,
+      startPos: clearStartPos ? null : (startPos ?? this.startPos),
       gpsPath: gpsPath ?? this.gpsPath,
       territories: territories ?? this.territories,
+      defenseStructures: defenseStructures ?? this.defenseStructures,
       elapsedSeconds: elapsedSeconds ?? this.elapsedSeconds,
       distanceKm: distanceKm ?? this.distanceKm,
       calories: calories ?? this.calories,
@@ -102,22 +155,33 @@ class RunningState {
           ? null
           : (closedLoopNotification ?? this.closedLoopNotification),
       capturedLoopCount: capturedLoopCount ?? this.capturedLoopCount,
+      totalAreaSqMeters: totalAreaSqMeters ?? this.totalAreaSqMeters,
       isWalking: isWalking ?? this.isWalking,
       targetKm: targetKm ?? this.targetKm,
       completedSession: completedSession ?? this.completedSession,
+      activeMapFilter: activeMapFilter ?? this.activeMapFilter,
+      startFinishRadiusMeters:
+          startFinishRadiusMeters ?? this.startFinishRadiusMeters,
+      pendingBattleResult:
+          clearBattle ? null : (pendingBattleResult ?? this.pendingBattleResult),
+      pendingTargetTerritory: clearBattle
+          ? null
+          : (pendingTargetTerritory ?? this.pendingTargetTerritory),
+      isLoopClosed: isLoopClosed ?? this.isLoopClosed,
     );
   }
 }
 
 class RunningNotifier extends Notifier<RunningState> {
   StreamSubscription<Position>? _positionSubscription;
-  StreamSubscription? _serviceStateSub;
-  StreamSubscription? _serviceLocationSub;
-  StreamSubscription? _serviceLoopSub;
+  StreamSubscription? _territorySub;
+  StreamSubscription? _defenseSub;
   Timer? _timer;
+  GpsPoint? _previousPos;
   DateTime? _lastPosTime;
   Timer? _warningTimer;
   Timer? _notificationTimer;
+  DateTime? _lastFirestoreUpdate;
 
   @override
   RunningState build() {
@@ -126,13 +190,54 @@ class RunningNotifier extends Notifier<RunningState> {
       _warningTimer?.cancel();
       _notificationTimer?.cancel();
       _positionSubscription?.cancel();
-      _serviceStateSub?.cancel();
-      _serviceLocationSub?.cancel();
-      _serviceLoopSub?.cancel();
+      _territorySub?.cancel();
+      _defenseSub?.cancel();
     });
 
+    _subscribeToPersistentData();
     Future.microtask(initGps);
     return const RunningState();
+  }
+
+  void _subscribeToPersistentData() {
+    // 1. Stream Global Territories
+    _territorySub?.cancel();
+    _territorySub = ref
+        .read(runningRepositoryProvider)
+        .watchAllConqueredTerritories()
+        .listen((loadedPolygons) {
+      if (loadedPolygons.isEmpty) return;
+
+      // Attach matching defense structures to each territory
+      final currentDefenses = state.defenseStructures;
+      final updatedList = loadedPolygons.map((poly) {
+        final matchingDefenses = currentDefenses
+            .where((d) => d.territoryId == poly.id)
+            .toList();
+        return poly.copyWith(defenseStructures: matchingDefenses);
+      }).toList();
+
+      state = state.copyWith(territories: updatedList);
+    });
+
+    // 2. Stream Global Defense Structures
+    _defenseSub?.cancel();
+    _defenseSub = ref
+        .read(runningRepositoryProvider)
+        .watchAllDefenseStructures()
+        .listen((defenses) {
+      state = state.copyWith(defenseStructures: defenses);
+
+      // Re-link structures to territories
+      if (state.territories.isNotEmpty) {
+        final updatedList = state.territories.map((poly) {
+          final matchingDefenses =
+              defenses.where((d) => d.territoryId == poly.id).toList();
+          return poly.copyWith(defenseStructures: matchingDefenses);
+        }).toList();
+        state = state.copyWith(territories: updatedList);
+      }
+    });
   }
 
   /// Requests permissions and initializes high-accuracy GPS stream.
@@ -168,7 +273,6 @@ class RunningNotifier extends Notifier<RunningState> {
         return;
       }
 
-      // Step 1: Instant location fallback from Last Known Position
       try {
         final lastPos = await Geolocator.getLastKnownPosition();
         if (lastPos != null) {
@@ -178,12 +282,11 @@ class RunningNotifier extends Notifier<RunningState> {
           );
           state = state.copyWith(
             currentPos: lastPoint,
-            gpsPath: state.gpsPath.isEmpty ? [lastPoint] : state.gpsPath,
+            startPos: state.startPos ?? lastPoint,
           );
         }
       } catch (_) {}
 
-      // Step 2: Try fetching current fresh position with fast fallback
       try {
         final initPosition = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
@@ -191,104 +294,245 @@ class RunningNotifier extends Notifier<RunningState> {
             timeLimit: Duration(seconds: 5),
           ),
         );
-
         final initPoint = GpsPoint(
           latitude: initPosition.latitude,
           longitude: initPosition.longitude,
         );
-
         state = state.copyWith(
           currentPos: initPoint,
-          gpsPath: state.gpsPath.isEmpty ? [initPoint] : state.gpsPath,
+          startPos: state.startPos ?? initPoint,
+          clearGpsError: true,
         );
       } catch (_) {}
 
-      // Step 3: Always start continuous high-accuracy location stream
-      final locationSettings = defaultTargetPlatform == TargetPlatform.android
-          ? AndroidSettings(
-              accuracy: LocationAccuracy.high,
-              distanceFilter: 2,
-              forceLocationManager: false,
-              intervalDuration: const Duration(seconds: 2),
-            )
-          : const LocationSettings(
-              accuracy: LocationAccuracy.high,
-              distanceFilter: 2,
-            );
-
-      _positionSubscription?.cancel();
-      _positionSubscription = Geolocator.getPositionStream(
-        locationSettings: locationSettings,
-      ).listen(
-        _onPositionUpdate,
-        onError: (err) {
-          state = state.copyWith(
-            gpsError: 'GPS signali yo\'qoldi. Qayta ulanmoqda...',
-          );
-        },
-      );
+      _startGpsStream();
     } catch (e) {
-      state = state.copyWith(
-        gpsError: 'GPS joylashuvini olishda xatolik yuz berdi.',
-      );
+      state = state.copyWith(gpsError: 'GPS ishga tushirishda xatolik: $e');
     }
   }
 
-  void _onPositionUpdate(Position pos) {
-    final newPoint = GpsPoint(
-      latitude: pos.latitude,
-      longitude: pos.longitude,
+  void _startGpsStream() {
+    _positionSubscription?.cancel();
+
+    const locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.bestForNavigation,
+      distanceFilter: 3,
     );
 
-    // Calculate instantaneous speed (m/s to km/h) from GPS sensor
-    double instantSpeedKmh = state.currentSpeedKmh;
-    if (pos.speed > 0) {
-      instantSpeedKmh = double.parse((pos.speed * 3.6).toStringAsFixed(1));
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: locationSettings,
+    ).listen(
+      _onPositionUpdate,
+      onError: (e) {
+        state = state.copyWith(gpsError: 'GPS ulanish uzildi: $e');
+      },
+    );
+  }
+
+  /// Sets the explicit START POINT for the run
+  void setStartPoint(GpsPoint point) {
+    state = state.copyWith(
+      startPos: point,
+      workoutState: WorkoutState.idle,
+      isLoopClosed: false,
+    );
+  }
+
+  /// Toggles map filter tab
+  void setMapFilter(String filter) {
+    state = state.copyWith(activeMapFilter: filter);
+  }
+
+  /// Begins workout tracking from the chosen START POINT
+  void startRun({bool isWalking = false, double targetKm = 3.0}) {
+    final startCoordinate = state.startPos ?? state.currentPos;
+    if (startCoordinate == null) {
+      state = state.copyWith(gpsError: 'Iltimos, avval START nuqtasini belgilang!');
+      return;
     }
 
-    final newHeading = pos.heading >= 0 ? pos.heading : state.heading;
+    _timer?.cancel();
+    _lastPosTime = DateTime.now();
+    _previousPos = startCoordinate;
 
-    // Always update current display marker, heading, and live speed
     state = state.copyWith(
-      currentPos: newPoint,
-      heading: newHeading,
-      currentSpeedKmh: instantSpeedKmh,
+      workoutState: WorkoutState.running,
+      startPos: startCoordinate,
+      isWalking: isWalking,
+      targetKm: targetKm,
+      elapsedSeconds: 0,
+      distanceKm: 0.0,
+      calories: 0,
+      avgSpeedKmh: 0.0,
+      currentSpeedKmh: 0.0,
+      gpsPath: [startCoordinate],
+      isLoopClosed: false,
+      clearBattle: true,
       clearGpsError: true,
     );
 
-    // Only process distance & loop conquest when workout is running!
-    if (state.workoutState != WorkoutState.running) return;
+    _startForegroundTimer();
+    _initBackgroundService();
+  }
+
+  void _startForegroundTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (state.workoutState == WorkoutState.running) {
+        final newElapsed = state.elapsedSeconds + 1;
+        final now = DateTime.now();
+        final lastTime = _lastPosTime ?? now;
+        final secondsSinceLastFix = now.difference(lastTime).inSeconds;
+
+        // If stationary for > 3s, drop instantaneous speed to 0.0
+        final double currentSpeed = secondsSinceLastFix > 3 ? 0.0 : state.currentSpeedKmh;
+
+        final updatedSpeed = RunningTelemetryCalculator.calculateAverageSpeed(
+          distanceKm: state.distanceKm,
+          durationSeconds: newElapsed,
+        );
+        final updatedPace = RunningTelemetryCalculator.formatPace(
+          distanceKm: state.distanceKm,
+          durationSeconds: newElapsed,
+        );
+        final updatedCalories = RunningTelemetryCalculator.calculateCalories(
+          distanceKm: state.distanceKm,
+          isWalking: state.isWalking,
+        );
+
+        state = state.copyWith(
+          elapsedSeconds: newElapsed,
+          avgSpeedKmh: updatedSpeed,
+          currentSpeedKmh: currentSpeed,
+          pace: updatedPace,
+          calories: updatedCalories,
+        );
+
+        // Sync persistent foreground notification
+        try {
+          FlutterBackgroundService().invoke('update_notification', {
+            'distanceKm': state.distanceKm,
+            'elapsedSeconds': newElapsed,
+            'calories': updatedCalories,
+            'pace': updatedPace,
+            'isPaused': false,
+          });
+        } catch (_) {}
+      }
+    });
+  }
+
+  Future<void> _initBackgroundService() async {
+    try {
+      final service = FlutterBackgroundService();
+      final isRunning = await service.isRunning();
+      if (!isRunning) {
+        await service.startService();
+        // Wait briefly for service to fully start before sending first notification
+        await Future.delayed(const Duration(milliseconds: 800));
+      }
+      // Send initial notification immediately after service is ready
+      service.invoke('update_notification', {
+        'distanceKm': state.distanceKm,
+        'elapsedSeconds': state.elapsedSeconds,
+        'calories': state.calories,
+        'pace': state.pace,
+        'isPaused': false,
+      });
+    } catch (_) {}
+  }
+
+  void pauseRun() {
+    _timer?.cancel();
+    state = state.copyWith(
+      workoutState: WorkoutState.paused,
+      currentSpeedKmh: 0.0,
+    );
+    try {
+      FlutterBackgroundService().invoke('update_notification', {
+        'distanceKm': state.distanceKm,
+        'elapsedSeconds': state.elapsedSeconds,
+        'calories': state.calories,
+        'pace': state.pace,
+        'isPaused': true,
+      });
+    } catch (_) {}
+  }
+
+  void resumeRun() {
+    _lastPosTime = DateTime.now();
+    state = state.copyWith(workoutState: WorkoutState.running);
+    _startForegroundTimer();
+  }
+
+  void _onPositionUpdate(Position pos) {
+    // 1. Filter out very low-accuracy / heavy indoor GPS jitter (> 20.0m accuracy)
+    if (pos.accuracy > 20.0) {
+      return;
+    }
+
+    final newPoint = GpsPoint(
+      latitude: pos.latitude,
+      longitude: pos.longitude,
+      timestamp: DateTime.now(),
+    );
+
+    final newHeading = pos.heading >= 0 ? pos.heading : state.heading;
+
+    // When not running, just smoothly update marker position without recording path
+    if (state.workoutState != WorkoutState.running) {
+      _previousPos = newPoint;
+      state = state.copyWith(
+        currentPos: newPoint,
+        startPos: state.startPos ?? newPoint,
+        heading: newHeading,
+        currentSpeedKmh: 0.0,
+        clearGpsError: true,
+      );
+      return;
+    }
 
     final now = DateTime.now();
     final lastTime = _lastPosTime ?? now;
-    final timeDiffSec = now.difference(lastTime).inMilliseconds / 1000.0;
+    final timeDiffSec = math.max(0.4, now.difference(lastTime).inMilliseconds / 1000.0);
 
-    final lastPoint = state.currentPos;
-    if (lastPoint == null) {
-      _lastPosTime = now;
-      return;
+    final lastPoint = _previousPos;
+    double deltaKm = 0.0;
+    double deltaMeters = 0.0;
+
+    if (lastPoint != null) {
+      deltaKm = HaversineCalculator.calculateDistanceBetweenPoints(lastPoint, newPoint);
+      deltaMeters = deltaKm * 1000.0;
+
+      // 2. Anti-teleport glitch filter (> 12 m/s / 43 km/h jump)
+      final speedMps = deltaMeters / timeDiffSec;
+      if (speedMps > 12.0 && deltaMeters > 30.0) {
+        _lastPosTime = now;
+        _previousPos = newPoint;
+        state = state.copyWith(currentPos: newPoint, heading: newHeading);
+        return;
+      }
     }
 
-    final deltaKm = HaversineCalculator.calculateDistanceBetweenPoints(
-      lastPoint,
-      newPoint,
-    );
-
-    // Ignore stationary jitter (< 4 meters)
-    if (!AntiCheatValidator.isSignificantMovement(deltaKm)) {
-      return;
-    }
-
-    // Fallback instant speed calculation if pos.speed is 0
-    if (pos.speed <= 0 && timeDiffSec > 0) {
-      instantSpeedKmh = double.parse(((deltaKm / timeDiffSec) * 3600.0).toStringAsFixed(1));
-    }
-
-    // ANTI-CHEAT CHECK (speed limit 25 km/h)
-    if (!AntiCheatValidator.isValidSpeed(deltaKm, timeDiffSec)) {
+    // 3. Stationary Deadband Filter: Ignore jitter movements (< 3.8 meters)
+    // This strictly prevents zig-zag lines and fake distance when standing still!
+    if (lastPoint != null && deltaMeters < 3.8) {
       state = state.copyWith(
+        currentPos: newPoint,
+        heading: newHeading,
+        clearGpsError: true,
+      );
+      return;
+    }
+
+    // 4. Anti-cheat vehicle speed check (> 28 km/h)
+    if (!AntiCheatValidator.isValidSpeed(deltaKm, timeDiffSec)) {
+      HapticFeedback.heavyImpact();
+      state = state.copyWith(
+        currentPos: newPoint,
+        heading: newHeading,
         antiCheatWarning:
-            '⚠️ TEZLIK CHEKLOVI BUZILDI! (Avtomobil yoki soxta GPS)',
+            '⚠️ MASHINA YOKI SKUTER TEZLIGI ANIQLANDI! (>28 km/soat). Masofa hisoblanmadi.',
       );
       _warningTimer?.cancel();
       _warningTimer = Timer(const Duration(seconds: 4), () {
@@ -298,8 +542,25 @@ class RunningNotifier extends Notifier<RunningState> {
     }
 
     _lastPosTime = now;
+    _previousPos = newPoint;
+
+    // Calculate instantaneous speed in km/h
+    double instantSpeedKmh = 0.0;
+    if (pos.speed > 0.2) {
+      instantSpeedKmh = pos.speed * 3.6;
+    } else if (timeDiffSec > 0) {
+      instantSpeedKmh = (deltaKm / (timeDiffSec / 3600.0));
+    }
+    instantSpeedKmh = instantSpeedKmh.clamp(0.0, 25.0);
+
+    // Exponential moving average for smooth display
+    final double smoothedSpeed = state.currentSpeedKmh > 0.1
+        ? (0.75 * instantSpeedKmh + 0.25 * state.currentSpeedKmh)
+        : instantSpeedKmh;
+
     final updatedDistance = state.distanceKm + deltaKm;
-    final updatedPath = [...state.gpsPath, newPoint];
+    final updatedPath =
+        state.gpsPath.isEmpty ? [newPoint] : [...state.gpsPath, newPoint];
 
     final updatedCalories = RunningTelemetryCalculator.calculateCalories(
       distanceKm: updatedDistance,
@@ -308,196 +569,358 @@ class RunningNotifier extends Notifier<RunningState> {
 
     final updatedSpeed = RunningTelemetryCalculator.calculateAverageSpeed(
       distanceKm: updatedDistance,
-      durationSeconds: state.elapsedSeconds,
+      durationSeconds: math.max(1, state.elapsedSeconds),
     );
 
     final updatedPace = RunningTelemetryCalculator.formatPace(
       distanceKm: updatedDistance,
-      durationSeconds: state.elapsedSeconds,
+      durationSeconds: math.max(1, state.elapsedSeconds),
     );
 
     state = state.copyWith(
+      currentPos: newPoint,
+      heading: newHeading,
       distanceKm: updatedDistance,
       gpsPath: updatedPath,
       calories: updatedCalories,
       avgSpeedKmh: updatedSpeed,
-      currentSpeedKmh: instantSpeedKmh,
+      currentSpeedKmh: double.parse(smoothedSpeed.toStringAsFixed(1)),
       pace: updatedPace,
+      clearGpsError: true,
     );
 
-    // CLOSED-LOOP CONQUEST CHECK
+    // Live runner broadcast
     final user = ref.read(userProfileProvider).asData?.value;
     final userName = user?.displayName ?? user?.name ?? 'Siz';
     final userId = user?.uid ?? 'user-1';
 
-    final polygon = TerritoryConquestService.detectClosedLoop(
-      path: updatedPath,
-      ownerId: userId,
-      ownerName: userName,
-    );
+    if (user != null) {
+      final now = DateTime.now();
+      if (_lastFirestoreUpdate == null || now.difference(_lastFirestoreUpdate!).inSeconds >= 4) {
+        _lastFirestoreUpdate = now;
+        final sampleTrail = updatedPath.length > 80
+            ? updatedPath.sublist(updatedPath.length - 80)
+            : updatedPath;
+        final trailMap = sampleTrail
+            .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+            .toList();
 
-    if (polygon != null) {
-      state = state.copyWith(
-        territories: [...state.territories, polygon],
-        capturedLoopCount: state.capturedLoopCount + 1,
-        closedLoopNotification:
-            '🎉 DAVRA YOPILDI! HUDUD TO‘LIQ BO‘YALDI VA EGALLANDI!',
-      );
-
-      _notificationTimer?.cancel();
-      _notificationTimer = Timer(const Duration(seconds: 4), () {
-        state = state.copyWith(clearNotification: true);
-      });
-    }
-  }
-
-  Future<void> startWorkout({bool isWalking = false, double targetKm = 3.0}) async {
-    _lastPosTime = DateTime.now();
-    state = state.copyWith(
-      workoutState: WorkoutState.running,
-      isWalking: isWalking,
-      targetKm: targetKm,
-    );
-
-    // Start Android Foreground Service for background location tracking (safely guarded)
-    try {
-      if (await Permission.notification.isDenied) {
-        await Permission.notification.request();
+        ref.read(runningRepositoryProvider).updateActiveRunnerLocation(
+              uid: user.uid,
+              userName: userName,
+              clanTag: user.clanTag ?? 'SOLO',
+              latitude: newPoint.latitude,
+              longitude: newPoint.longitude,
+              heading: newHeading,
+              speedKmh: instantSpeedKmh,
+              avatar: user.avatar,
+              photoUrl: user.photoUrl,
+              photoBase64: user.photoBase64,
+              distanceKm: updatedDistance,
+              trail: trailMap,
+            );
       }
-      if (await Permission.location.isDenied) {
-        await Permission.location.request();
-      }
-      final service = FlutterBackgroundService();
-      final isRunning = await service.isRunning();
-      if (!isRunning) {
-        await service.startService();
-      }
-      service.invoke('set_params', {
-        'isWalking': isWalking,
-        'targetKm': targetKm,
-      });
-
-      _subscribeToBackgroundService(service);
-    } catch (e) {
-      debugPrint('Background service launch warning (main UI tracking active): $e');
     }
 
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (state.workoutState != WorkoutState.running) return;
-
-      final nextSec = state.elapsedSeconds + 1;
-      final updatedSpeed = RunningTelemetryCalculator.calculateAverageSpeed(
-        distanceKm: state.distanceKm,
-        durationSeconds: nextSec,
-      );
-      final updatedPace = RunningTelemetryCalculator.formatPace(
-        distanceKm: state.distanceKm,
-        durationSeconds: nextSec,
+    // ── CLOSED-LOOP REQUIREMENT VERIFICATION ────────────────────────────────
+    // Territory is ONLY considered when player returns to original START point!
+    final start = state.startPos;
+    if (start != null && !state.isLoopClosed && updatedPath.length >= 10 && updatedDistance >= 0.15) {
+      final isClosed = TerritoryGeometryService.isLoopClosedAtStart(
+        startPoint: start,
+        currentPoint: newPoint,
+        finishRadiusMeters: state.startFinishRadiusMeters,
+        minTotalDistanceMeters: 150.0,
+        currentDistanceRanMeters: updatedDistance * 1000.0,
       );
 
-      state = state.copyWith(
-        elapsedSeconds: nextSec,
-        avgSpeedKmh: updatedSpeed,
-        pace: updatedPace,
-      );
-    });
-  }
-
-  void _subscribeToBackgroundService(FlutterBackgroundService service) {
-    _serviceStateSub?.cancel();
-    _serviceStateSub = service.on('update_state').listen((event) {
-      if (event != null && state.workoutState == WorkoutState.running) {
-        final bgSec = event['elapsedSeconds'] as int? ?? state.elapsedSeconds;
-        final bgDist = (event['distanceKm'] as num?)?.toDouble() ?? state.distanceKm;
-        final bgCal = event['calories'] as int? ?? state.calories;
-        final bgSpeed = (event['avgSpeedKmh'] as num?)?.toDouble() ?? state.avgSpeedKmh;
-        final bgPace = event['pace'] as String? ?? state.pace;
-
-        state = state.copyWith(
-          elapsedSeconds: bgSec > state.elapsedSeconds ? bgSec : state.elapsedSeconds,
-          distanceKm: bgDist > state.distanceKm ? bgDist : state.distanceKm,
-          calories: bgCal > state.calories ? bgCal : state.calories,
-          avgSpeedKmh: bgSpeed,
-          pace: bgPace,
+      if (isClosed) {
+        _handleClosedLoopCompletion(
+          path: updatedPath,
+          userId: userId,
+          userName: userName,
+          userAvatar: user?.avatar,
+          clanId: user?.clanId,
+          clanName: user?.clanName ?? user?.clanTag,
         );
       }
-    });
+    }
+  }
 
-    _serviceLocationSub?.cancel();
-    _serviceLocationSub = service.on('location_update').listen((event) {
-      if (event != null && state.workoutState == WorkoutState.running) {
-        final lat = (event['latitude'] as num?)?.toDouble();
-        final lng = (event['longitude'] as num?)?.toDouble();
-        final heading = (event['heading'] as num?)?.toDouble() ?? state.heading;
-        final speedMs = (event['speed'] as num?)?.toDouble() ?? 0.0;
-        final speedKmh = speedMs > 0 ? double.parse((speedMs * 3.6).toStringAsFixed(1)) : state.currentSpeedKmh;
+  /// Handles the completed loop: calculates area, checks for enemy territory intersection (Battle),
+  /// or claims new territory.
+  void _handleClosedLoopCompletion({
+    required List<GpsPoint> path,
+    required String userId,
+    required String userName,
+    String? userAvatar,
+    String? clanId,
+    String? clanName,
+  }) {
+    final simplifiedLoop = TerritoryGeometryService.simplifyRoute(path);
+    final areaSqMeters =
+        TerritoryGeometryService.calculatePolygonAreaSqMeters(simplifiedLoop);
 
-        if (lat != null && lng != null) {
-          final pt = GpsPoint(latitude: lat, longitude: lng);
-          state = state.copyWith(
-            currentPos: pt,
-            heading: heading,
-            currentSpeedKmh: speedKmh,
-          );
+    if (areaSqMeters < 100.0) return; // Ignore microscopic loops (< 100 m²)
+
+    final centroid = TerritoryGeometryService.calculateCentroid(simplifiedLoop);
+
+    // Check if this closed loop intersects any enemy territory
+    TerritoryPolygon? targetEnemyTerritory;
+    for (final existing in state.territories) {
+      if (existing.ownerId != userId) {
+        if (TerritoryGeometryService.doPolygonsIntersect(
+            simplifiedLoop, existing.points)) {
+          targetEnemyTerritory = existing;
+          break;
         }
       }
-    });
-
-    _serviceLoopSub?.cancel();
-    _serviceLoopSub = service.on('closed_loop_detected').listen((event) {
-      if (event != null && state.workoutState == WorkoutState.running) {
-        final polyMap = event['polygon'] as Map<String, dynamic>?;
-        if (polyMap != null) {
-          final poly = TerritoryPolygon.fromMap(polyMap);
-          if (!state.territories.contains(poly)) {
-            state = state.copyWith(
-              territories: [...state.territories, poly],
-              capturedLoopCount: state.capturedLoopCount + 1,
-              closedLoopNotification: '🎉 DAVRA YOPILDI! HUDUD TO‘LIQ BO‘YALDI VA EGALLANDI!',
-            );
-          }
-        }
-      }
-    });
-  }
-
-  void pauseWorkout() {
-    _timer?.cancel();
-    state = state.copyWith(workoutState: WorkoutState.paused);
-  }
-
-  void resumeWorkout() {
-    startWorkout(isWalking: state.isWalking, targetKm: state.targetKm);
-  }
-
-  Future<RunSession?> finishWorkout() async {
-    _timer?.cancel();
-    _warningTimer?.cancel();
-    _notificationTimer?.cancel();
-    _serviceStateSub?.cancel();
-    _serviceLocationSub?.cancel();
-    _serviceLoopSub?.cancel();
-
-    // Stop Android Foreground Service
-    try {
-      final service = FlutterBackgroundService();
-      service.invoke('stop_service');
-    } catch (e) {
-      debugPrint('Error stopping background service: $e');
     }
 
+    HapticFeedback.heavyImpact();
+
+    if (targetEnemyTerritory != null) {
+      // ⚔️ INITIATE TERRITORY ATTACK BATTLE
+      final attackerPower = TerritoryBattleService.calculateAttackerPower(
+        distanceKm: state.distanceKm,
+        avgSpeedKmh: state.avgSpeedKmh,
+        areaSqMeters: areaSqMeters,
+      );
+
+      final battleResult = TerritoryBattleService.resolveBattle(
+        attackerPower: attackerPower,
+        territory: targetEnemyTerritory,
+        structures: targetEnemyTerritory.defenseStructures,
+        attackerName: userName,
+      );
+
+      // Record battle event
+      final battleEvent = TerritoryBattleEvent(
+        id: const Uuid().v4(),
+        territoryId: targetEnemyTerritory.id,
+        attackerUid: userId,
+        attackerName: userName,
+        attackerAvatar: userAvatar,
+        defenderUid: targetEnemyTerritory.ownerId,
+        defenderName: targetEnemyTerritory.ownerName,
+        defenderAvatar: targetEnemyTerritory.ownerAvatar,
+        attackerPower: attackerPower,
+        defenderPower: battleResult.defenderTotalPower,
+        isAttackerWinner: battleResult.isAttackerWinner,
+        pointsTransferred: battleResult.pointsAwarded,
+        timestamp: DateTime.now(),
+        territoryAreaSqMeters: targetEnemyTerritory.areaSqMeters,
+        structuresCount: targetEnemyTerritory.defenseStructures.length,
+      );
+
+      ref.read(runningRepositoryProvider).recordTerritoryBattle(battleEvent);
+
+      if (battleResult.isAttackerWinner) {
+        // Transfer ownership of attacked territory
+        ref.read(runningRepositoryProvider).transferTerritoryOwnership(
+              territoryId: targetEnemyTerritory.id,
+              newOwnerUid: userId,
+              newOwnerName: userName,
+              newOwnerAvatar: userAvatar,
+              clanId: clanId,
+              clanTag: clanName,
+            );
+        ref.read(userRepositoryProvider).awardPoints(userId, battleResult.pointsAwarded);
+      }
+
+      // Also register the runner's newly enclosed area as their conquered territory
+      final pointsMap = simplifiedLoop
+          .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+          .toList();
+
+      ref.read(runningRepositoryProvider).saveConqueredTerritory(
+            uid: userId,
+            userName: userName,
+            clanTag: clanName ?? 'SOLO',
+            clanId: clanId,
+            clanName: clanName,
+            ownerAvatar: userAvatar,
+            points: pointsMap,
+            areaSqMeters: areaSqMeters,
+            centroidLat: centroid.latitude,
+            centroidLng: centroid.longitude,
+          );
+
+      state = state.copyWith(
+        isLoopClosed: true,
+        workoutState: WorkoutState.loopCompleted,
+        pendingBattleResult: battleResult,
+        pendingTargetTerritory: targetEnemyTerritory,
+        closedLoopNotification: battleResult.summaryMessage,
+      );
+    } else {
+      // 🏰 CLAIM NEW UNCONTESTED TERRITORY
+      final newPolygon = TerritoryPolygon(
+        id: 'poly-${DateTime.now().millisecondsSinceEpoch}',
+        ownerId: userId,
+        ownerName: userName,
+        ownerColor: '#5BC8FA',
+        points: simplifiedLoop,
+        capturedAt: DateTime.now(),
+        areaSqMeters: areaSqMeters,
+        clanId: clanId,
+        clanName: clanName,
+        ownerAvatar: userAvatar,
+        centroid: centroid,
+      );
+
+      final ptsEarned = ((areaSqMeters / 15.0).round() + 50).clamp(50, 800);
+
+      final pointsMap = simplifiedLoop
+          .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+          .toList();
+
+      ref.read(runningRepositoryProvider).saveConqueredTerritory(
+            uid: userId,
+            userName: userName,
+            clanTag: clanName ?? 'SOLO',
+            clanId: clanId,
+            clanName: clanName,
+            ownerAvatar: userAvatar,
+            points: pointsMap,
+            areaSqMeters: areaSqMeters,
+            centroidLat: centroid.latitude,
+            centroidLng: centroid.longitude,
+          );
+
+      ref.read(userRepositoryProvider).awardPoints(userId, ptsEarned);
+
+      final formattedArea = TerritoryConquestService.formatArea(areaSqMeters);
+      final newTerritories = [...state.territories, newPolygon];
+      final newTotalArea = newTerritories.fold<double>(
+        0.0,
+        (sum, poly) => sum + poly.areaSqMeters,
+      );
+
+      state = state.copyWith(
+        isLoopClosed: true,
+        workoutState: WorkoutState.loopCompleted,
+        territories: newTerritories,
+        capturedLoopCount: state.capturedLoopCount + 1,
+        totalAreaSqMeters: newTotalArea,
+        closedLoopNotification:
+            '🎯 LOOP YOPILDI! $formattedArea hudud zabt etildi! (+$ptsEarned PTS) 👑',
+      );
+    }
+
+    _notificationTimer?.cancel();
+    _notificationTimer = Timer(const Duration(seconds: 8), () {
+      state = state.copyWith(clearNotification: true);
+    });
+  }
+
+  /// Places a defense tower inside an owned territory.
+  Future<String?> placeDefenseStructure({
+    required TerritoryPolygon territory,
+    required int level,
+    required GpsPoint location,
+  }) async {
     final user = ref.read(userProfileProvider).asData?.value;
-    final userId = user?.uid ?? 'anonymous';
-    final sessionId = const Uuid().v4();
+    if (user == null) return 'Foydalanuvchi tizimga kirmagan.';
+
+    // 1. Verify location is strictly INSIDE the owned territory
+    final isInside = TerritoryGeometryService.isPointInPolygon(
+      location,
+      territory.points,
+    );
+    if (!isInside) {
+      return 'Bu hudud sizga tegishli emas. Minora faqat o‘z hududingiz ichiga joylashtirilishi shart.';
+    }
+
+    // 2. Verify defense capacity limit
+    final currentCount = state.defenseStructures
+        .where((d) => d.territoryId == territory.id)
+        .length;
+    if (currentCount >= territory.defenseCapacity) {
+      return 'Ushbu hududda minoralar sig‘imi to‘lgan (maksimum: ${territory.defenseCapacity} ta).';
+    }
+
+    // 3. Verify PTS balance & deduct
+    final tier = DefenseShopConfig.getTier(level);
+    if (user.totalPoints < tier.costPoints) {
+      return 'Ballaringiz yetarli emas! Minora narxi: ${tier.costPoints} PTS (Sizda: ${user.totalPoints} PTS).';
+    }
+
+    await ref.read(userRepositoryProvider).deductPoints(user.uid, tier.costPoints);
+
+    final structure = DefenseStructure(
+      id: 'def-${const Uuid().v4()}',
+      territoryId: territory.id,
+      ownerId: user.uid,
+      level: level,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      hp: tier.hp,
+      maxHp: tier.maxHp,
+      attackPower: tier.attackPower,
+      defensePower: tier.defensePower,
+      placedAt: DateTime.now(),
+      name: tier.name,
+      icon: tier.icon,
+    );
+
+    await ref.read(runningRepositoryProvider).saveDefenseStructure(structure);
+    HapticFeedback.mediumImpact();
+    return null; // Success
+  }
+
+  /// Upgrades an existing defense structure to the next level
+  Future<String?> upgradeDefenseStructure(DefenseStructure structure) async {
+    final user = ref.read(userProfileProvider).asData?.value;
+    if (user == null) return 'Foydalanuvchi tizimga kirmagan.';
+
+    final nextLevel = structure.level + 1;
+    if (nextLevel > 5) return 'Ushbu minora allaqachon maksimal darajaga (Lv.5) yetgan.';
+
+    final nextTier = DefenseShopConfig.getTier(nextLevel);
+    if (user.totalPoints < nextTier.costPoints) {
+      return 'Yangilash uchun ball yetarli emas! Narxi: ${nextTier.costPoints} PTS (Sizda: ${user.totalPoints} PTS).';
+    }
+
+    await ref.read(userRepositoryProvider).deductPoints(user.uid, nextTier.costPoints);
+
+    await ref.read(runningRepositoryProvider).upgradeDefenseStructure(
+          structureId: structure.id,
+          newLevel: nextLevel,
+          newHp: nextTier.hp,
+          newMaxHp: nextTier.maxHp,
+          newAttack: nextTier.attackPower,
+          newDefense: nextTier.defensePower,
+          name: nextTier.name,
+          icon: nextTier.icon,
+        );
+
+    HapticFeedback.mediumImpact();
+    return null;
+  }
+
+  /// Concludes workout session, calculates final PTS, and saves run history
+  Future<RunSession> finishRun() async {
+    _timer?.cancel();
+
+    try {
+      FlutterBackgroundService().invoke('stop_service');
+    } catch (_) {}
+
+    final user = ref.read(userProfileProvider).asData?.value;
+    final userId = user?.uid ?? 'user-1';
+
+    if (user != null) {
+      ref.read(runningRepositoryProvider).removeActiveRunner(user.uid);
+    }
 
     final pointsEarned = RunningTelemetryCalculator.calculatePointsEarned(
       distanceKm: state.distanceKm,
       targetKm: state.targetKm,
-    );
+    ) + (state.capturedLoopCount * 50);
 
     final session = RunSession(
-      id: sessionId,
+      id: const Uuid().v4(),
       userId: userId,
       exerciseType: state.isWalking ? 'WALKING' : 'RUNNING',
       startedAt: DateTime.now().subtract(Duration(seconds: state.elapsedSeconds)),
@@ -508,42 +931,38 @@ class RunningNotifier extends Notifier<RunningState> {
       avgSpeedKmh: state.avgSpeedKmh,
       avgPaceMinKm: state.pace,
       gpsPath: state.gpsPath,
-      territoriesGained: state.territories,
+      territoriesGained: state.territories.where((t) => t.ownerId == userId).toList(),
       pointsEarned: pointsEarned,
     );
+
+    await ref.read(runningRepositoryProvider).saveRunSession(session);
 
     state = state.copyWith(
       workoutState: WorkoutState.completed,
       completedSession: session,
     );
 
-    // Save to Firestore & Award Points
-    if (userId != 'anonymous') {
-      try {
-        await ref.read(runningRepositoryProvider).saveRunSession(session);
-      } catch (e) {
-        debugPrint('Error saving run session to Firestore: $e');
-      }
-    }
-
     return session;
   }
 
-  void reset() {
+  void resetWorkout() {
     _timer?.cancel();
-    _warningTimer?.cancel();
-    _notificationTimer?.cancel();
-    _serviceStateSub?.cancel();
-    _serviceLocationSub?.cancel();
-    _serviceLoopSub?.cancel();
 
     try {
-      final service = FlutterBackgroundService();
-      service.invoke('stop_service');
+      FlutterBackgroundService().invoke('stop_service');
     } catch (_) {}
 
-    state = const RunningState();
-    initGps();
+    state = state.copyWith(
+      workoutState: WorkoutState.idle,
+      distanceKm: 0.0,
+      elapsedSeconds: 0,
+      calories: 0,
+      avgSpeedKmh: 0.0,
+      currentSpeedKmh: 0.0,
+      gpsPath: [],
+      isLoopClosed: false,
+      clearBattle: true,
+    );
   }
 }
 

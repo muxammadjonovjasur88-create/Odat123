@@ -41,7 +41,7 @@ void main() {
       expect(find.text('Kupon'), findsOneWidget);
       expect(find.text('Yandex Go'), findsOneWidget);
       expect(find.text('Yandex Taxi 20% Chegirma'), findsOneWidget);
-      expect(find.text('250 ochko'), findsOneWidget);
+      expect(find.text('250 PTS'), findsOneWidget);
 
       await tester.tap(find.byType(ShopItemCard));
       expect(tapped, isTrue);

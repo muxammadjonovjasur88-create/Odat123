@@ -14,6 +14,46 @@
       },
       "oauth_client": [
         {
+          "client_id": "124357149675-287cq31qg0bepadqqv7gtcggfh430tmc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.flova",
+            "certificate_hash": "7d2b204497213d6aee13601ace325e2cadbe71f5"
+          }
+        },
+        {
+          "client_id": "124357149675-cusflcdmva2nl5l57lb93d0u7shvpjva.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.flova",
+            "certificate_hash": "24c1d56146645c121b4cb2aab796fe7174c073fd"
+          }
+        },
+        {
+          "client_id": "124357149675-h4qqgve1dmm1d5jk0b5nnafkkq1q95i3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.flova",
+            "certificate_hash": "774e0d8f45f0c3b7facfebe586805786e12c77d9"
+          }
+        },
+        {
+          "client_id": "124357149675-se89cp68sk9h87qmkergivd19cc6abbj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.flova",
+            "certificate_hash": "55692f7095729dbae2dfa01e82f5dda25fc3e7eb"
+          }
+        },
+        {
+          "client_id": "124357149675-taehnq12obr3tctijial46cild65v5e2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.company.flova",
+            "certificate_hash": "5ac2bca38dcbc3452ee5e5b77fac50a2cc1c4742"
+          }
+        },
+        {
           "client_id": "124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com",
           "client_type": 3
         }

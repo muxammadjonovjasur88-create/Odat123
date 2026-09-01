@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -114,7 +114,7 @@ class _BlockingPermissionDialog extends StatelessWidget {
           'Odat bloklash funksiyasini ishlatish uchun '
               'Accessibility xizmatiga ruxsat kerak.\n\n'
               'Sozlamalar → Maxsus imkoniyatlar → Odat → Yoqish.',
-          'Accessibility sozlamalarini ochish',
+          'SOZLAMALARNI OCHISH ⚙️',
           () async {
             Navigator.of(context).pop();
             await service.openAccessibilitySettings();
@@ -127,7 +127,7 @@ class _BlockingPermissionDialog extends StatelessWidget {
               'chizish" ruxsatiga muhtoj.\n\n'
               'Sozlamalar → Ilova ruxsatlari → Maxsus ruxsatlar → '
               'Boshqa ilovalar ustiga chizish → Odat → Yoqish.',
-          'Ruxsatni berish',
+          'RUXSATNI BERISH ✨',
           () async {
             Navigator.of(context).pop();
             await service.requestOverlayPermission();
@@ -136,51 +136,51 @@ class _BlockingPermissionDialog extends StatelessWidget {
     };
 
     return AlertDialog(
-      backgroundColor: colors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      icon: Icon(icon, color: AppColors.forest, size: 36),
+      backgroundColor: const Color(0xFF0D1220),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Color(0xFF5BC8FA), width: 1.2)),
+      icon: Icon(icon, color: const Color(0xFF5BC8FA), size: 40),
       title: Text(
         title,
-        style: AppTextStyles.h3.copyWith(color: colors.textPrimary),
+        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
         textAlign: TextAlign.center,
       ),
       content: Text(
         body,
-        style: AppTextStyles.body.copyWith(color: colors.textSecondary),
+        style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
       ),
       actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       actions: [
-        Row(
+        Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: OutlinedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Text(
-                  'Bloklashsiz davom etish',
-                  style: AppTextStyles.label
-                      .copyWith(color: colors.textSecondary),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
+            SizedBox(
+              width: double.infinity,
+              height: 46,
               child: FilledButton(
                 onPressed: onPressed,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.forest,
+                  backgroundColor: const Color(0xFF5BC8FA),
+                  foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
                 child: Text(
                   buttonText,
-                  style: AppTextStyles.label.copyWith(color: Colors.white),
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
                   textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            SizedBox(
+              width: double.infinity,
+              height: 38,
+              child: TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Bloklashsiz davom etish',
+                  style: TextStyle(color: Colors.white54, fontSize: 12),
                 ),
               ),
             ),

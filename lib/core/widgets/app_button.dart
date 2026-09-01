@@ -96,6 +96,15 @@ class _AppButtonState extends State<AppButton> {
             border: isPrimary
                 ? null
                 : Border.all(color: colors.border, width: 1.4),
+            boxShadow: isPrimary && enabled
+                ? [
+                    BoxShadow(
+                      color: colors.primary.withValues(alpha: 0.35),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ]
+                : null,
           ),
           child: Material(
             color: Colors.transparent,

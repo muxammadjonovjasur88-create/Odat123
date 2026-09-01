@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="accessibility_service_label">Flowa Focus Blocking</string>
-    <string name="accessibility_service_description">Flowa uses this only to detect when a blocked app opens during a focus session, so it can pause that app and show the calm focus screen. It never reads screen content and collects nothing.</string>
+    <string name="app_name">ODAT</string>
+    <string name="accessibility_service_label">Odat Fokus Bloklash</string>
+    <string name="accessibility_service_description">Odat ushbu xizmatdan faqat fokus sessiyasi paytida chalg‘ituvchi ilovalar ochilganda ularni to‘xtatish va xotirjamlik ekranini ko‘rsatish uchun foydalanadi. Ekran ma’lumotlarini o‘qimaydi va hech narsa yig‘maydi.</string>
 </resources>

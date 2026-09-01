@@ -1,91 +1,149 @@
 import 'package:flutter/material.dart';
 
-/// Flowa's **Zen Kinetic** color system — deep navy dark mode with
-/// Neon Lime (#39FF14) and Electric Cyan (#00F3FF) accents.
+/// Odat app **brand** color system — extracted directly from the ODAT intro
+/// video and Phoenix logo artwork.
 ///
-/// Generated from the Stitch "Zen Kinetic" design system.
+/// Palette — extracted from Phoenix logo & intro animation:
+///  • Background    : #04050D  (deep cosmic black-blue, video bg)
+///  • Sky Cyan      : #4AADDC  (phoenix wing tip highlight / logo ring top)
+///  • Ocean Blue    : #3A7FCC  (ring gradient mid)
+///  • Deep Violet   : #6B25CC  (phoenix body / gradient anchor)
+///  • Mystic Purple : #9B4FE8  (wing glow, dominant brand tone)
+///  • Magenta Glow  : #C44DE8  (inner wing accent, energy spark)
+///  • Silver-White  : #E2E8F0  (wordmark "ODAT")
+///  • Smoke Blue    : #6EA8C8  (subtitle / "HAR KUNI YAXSHIROQ")
 abstract final class AppColors {
   AppColors._();
 
-  // ── Neon Brand Accents ────────────────────────────────────────────────────
+  // ── ODAT Brand Palette ─────────────────────────────────────────────────────
 
-  /// Primary Accent — Neon Lime (movement / completion / actions)
-  static const Color neonLime = Color(0xFF39FF14);
+  /// Sky Cyan — phoenix wing tip highlight, logo ring top
+  static const Color odatCyan = Color(0xFF4AADDC);
 
-  /// Secondary Accent — Electric Cyan (telemetry / flow / data)
-  static const Color cyanAccent = Color(0xFF00F3FF);
+  /// Ocean Blue — ring gradient mid-stop
+  static const Color odatBlue = Color(0xFF3A7FCC);
 
-  /// Legacy alias for compatibility
-  static const Color purpleAccent = Color(0xFFAA00FF);
+  /// Deep Violet — phoenix body core, gradient anchor
+  static const Color odatViolet = Color(0xFF6B25CC);
 
-  /// Primary gradient: Cyan → Neon Lime (left to right)
+  /// Mystic Purple — dominant wing glow, brand primary
+  static const Color odatPurple = Color(0xFF9B4FE8);
+
+  /// Magenta Glow — inner energy spark / accent
+  static const Color odatMagenta = Color(0xFFC44DE8);
+
+  /// Silver — "ODAT" wordmark
+  static const Color odatSilver = Color(0xFFE2E8F0);
+
+  /// Smoke Blue — "HAR KUNI YAXSHIROQ" subtitle
+  static const Color odatSubtitle = Color(0xFF6EA8C8);
+
+  // ── Backwards-compatible aliases ───────────────────────────────────────────
+  static const Color electricBlue     = odatCyan;
+  static const Color neonPurple       = odatViolet;
+  static const Color brightCyan       = odatBlue;
+  static const Color violetHighlight  = odatPurple;
+  static const Color neonLime         = odatCyan;
+  static const Color cyanAccent       = odatCyan;
+  static const Color purpleAccent     = odatPurple;
+  static const Color forest           = odatCyan;
+  static const Color forestDark       = Color(0xFF2A6BAA);
+  static const Color sage             = odatCyan;
+
+  // ── Brand Gradients ────────────────────────────────────────────────────────
+
+  /// Main brand gradient: Cyan → Blue → Violet → Purple
+  /// Mirrors the phoenix wing sweep and logo ring colours.
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [cyanAccent, neonLime],
-    begin: Alignment.centerLeft,
-    end: Alignment.centerRight,
-  );
-
-  /// Zen glow gradient — used on progress rings and active indicators
-  static const LinearGradient zenGlowGradient = LinearGradient(
-    colors: [Color(0xFF00F3FF), Color(0xFF39FF14)],
+    colors: [odatCyan, odatBlue, odatViolet, odatPurple],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  // ── Glassmorphism Surface Tokens ──────────────────────────────────────────
+  /// Glow / AI gradient — two-stop signature
+  static const LinearGradient glowGradient = LinearGradient(
+    colors: [odatCyan, odatMagenta],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
-  /// Glass card surface — semi-transparent slate
-  static const Color glassSurface = Color(0xCC122131);
+  /// Subtle subtitle / accent gradient
+  static const LinearGradient subtitleGradient = LinearGradient(
+    colors: [odatSubtitle, odatCyan],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+  );
 
-  /// Glass card border — subtle inner glow
-  static const Color glassBorder = Color(0x1AFFFFFF);
+  // ── Glassmorphism Surface Tokens ───────────────────────────────────────────
 
-  /// Glass card top/left edge highlight — light hitting glass
-  static const Color glassEdge = Color(0x29FFFFFF);
+  static const Color glassSurfaceDark  = Color(0xCC08091A);
+  static const Color glassBorderDark   = Color(0x1A4AADDC);
+  static const Color glassEdgeDark     = Color(0x296B25CC);
 
-  // ── Category Accents ──────────────────────────────────────────────────────
-  static const Color studyFill     = Color(0x2600F3FF);
-  static const Color studyText     = Color(0xFF00F3FF);
+  static const Color glassSurfaceLight = Color(0xCCF1F5F9);
+  static const Color glassBorderLight  = Color(0x1A3A7FCC);
+  static const Color glassEdgeLight    = Color(0x294AADDC);
 
-  static const Color sportFill     = Color(0x2639FF14);
-  static const Color sportText     = Color(0xFF39FF14);
+  static const Color glassSurface = glassSurfaceDark;
+  static const Color glassBorder  = glassBorderDark;
+  static const Color glassEdge    = glassEdgeDark;
 
-  static const Color workFill      = Color(0x269E9E9E);
-  static const Color workText      = Color(0xFFE0E0E0);
+  // ── Category Accents ───────────────────────────────────────────────────────
 
-  static const Color personalFill  = Color(0x26FF9100);
-  static const Color personalText  = Color(0xFFFFB74D);
+  static const Color studyFill    = Color(0x264AADDC);
+  static const Color studyText    = Color(0xFF4AADDC);
 
-  static const Color wellnessFill  = Color(0x2600E676);
-  static const Color wellnessText  = Color(0xFF69F0AE);
+  static const Color sportFill    = Color(0x266B25CC);
+  static const Color sportText    = Color(0xFF9B4FE8);
 
-  // ── Zen Kinetic Dark Scheme ───────────────────────────────────────────────
+  static const Color workFill     = Color(0x26E2E8F0);
+  static const Color workText     = Color(0xFFD0D8E8);
 
+  static const Color personalFill = Color(0x263A7FCC);
+  static const Color personalText = Color(0xFF5A9AE0);
+
+  static const Color wellnessFill = Color(0x26C44DE8);
+  static const Color wellnessText = Color(0xFFC44DE8);
+
+  // ── Dark Scheme ───────────────────────────────────────────────────────────
+  // Deep cosmic background matching the intro video canvas.
   static const AppColorScheme dark = AppColorScheme(
-    background:      Color(0xFF051424),  // Deep Slate Navy void
-    surface:         Color(0xFF0D1C2D),  // surface-container-low
-    surfaceMuted:    Color(0xFF122131),  // surface-container
-    primary:         neonLime,           // Neon Lime — movement / CTA
-    secondary:       cyanAccent,         // Electric Cyan — telemetry
-    primaryPressed:  Color(0xFF2AE500),  // primary-fixed-dim
-    onPrimary:       Color(0xFF053900),  // on-primary (dark for contrast)
-    textPrimary:     Color(0xFFD4E4FA),  // on-surface
-    textSecondary:   Color(0xFFBACCB0),  // on-surface-variant
-    textTertiary:    Color(0xFF85967C),  // outline
-    border:          Color(0xFF273647),  // surface-variant
-    shadow:          Color(0x80000000),
-    tintSage:        Color(0x1A39FF14),  // Lime tint
-    tintBlue:        Color(0x1A00F3FF),  // Cyan tint
+    background:      Color(0xFF04050D),   // Deep cosmic black-blue (video bg)
+    surface:         Color(0xFF090B18),   // Card surface — slightly lifted
+    surfaceMuted:    Color(0xFF0E1020),   // Muted surface (inputs, rows)
+    primary:         odatPurple,          // Mystic purple — dominant brand tone
+    secondary:       odatCyan,            // Sky cyan — secondary highlight
+    primaryPressed:  Color(0xFF7A35C0),   // Pressed (darker purple)
+    onPrimary:       Color(0xFFFFFFFF),   // White text on purple
+    textPrimary:     Color(0xFFE8EDF5),   // Silver-white — logo wordmark tone
+    textSecondary:   odatSubtitle,        // Smoke blue — subtitle tone
+    textTertiary:    Color(0xFF4A5980),   // Muted slate
+    border:          Color(0xFF141830),   // Subtle border (dark blue tint)
+    shadow:          Color(0xCC000000),
+    tintSage:        Color(0x1A6B25CC),   // Violet tint overlay
+    tintBlue:        Color(0x1A4AADDC),   // Cyan tint overlay
     primaryGradient: primaryGradient,
   );
 
-  /// Light is mapped to dark (global dark mode).
-  static const AppColorScheme light = dark;
-
-  // ── Legacy aliases (keep so existing code compiles) ──────────────────────
-  static const Color forest     = cyanAccent;
-  static const Color forestDark = Color(0xFF00B2CC);
-  static const Color sage       = neonLime;
+  // ── Light Scheme ──────────────────────────────────────────────────────────
+  // Brand accents preserved; surfaces flip to clean whites.
+  static const AppColorScheme light = AppColorScheme(
+    background:      Color(0xFFF0F4FA),   // Very light blue-gray
+    surface:         Color(0xFFFFFFFF),   // White card
+    surfaceMuted:    Color(0xFFE8EDF5),   // Light silver
+    primary:         odatViolet,          // Deep violet as primary on light
+    secondary:       odatCyan,            // Cyan secondary
+    primaryPressed:  Color(0xFF531BAA),   // Darker violet pressed
+    onPrimary:       Color(0xFFFFFFFF),   // White on violet
+    textPrimary:     Color(0xFF080B14),   // Near-black text
+    textSecondary:   Color(0xFF3B4A72),   // Dark slate-blue
+    textTertiary:    Color(0xFF64748B),   // Muted gray
+    border:          Color(0xFFD1D9E9),   // Light border
+    shadow:          Color(0x1A000000),
+    tintSage:        Color(0x1A6B25CC),   // Violet tint
+    tintBlue:        Color(0x1A3A7FCC),   // Blue tint
+    primaryGradient: primaryGradient,
+  );
 }
 
 /// A semantic set of colors for one brightness.
@@ -96,7 +154,7 @@ class AppColorScheme {
     required this.surface,
     required this.surfaceMuted,
     required this.primary,
-    this.secondary = AppColors.cyanAccent,
+    this.secondary = AppColors.neonPurple,
     required this.primaryPressed,
     required this.onPrimary,
     required this.textPrimary,
@@ -121,14 +179,8 @@ class AppColorScheme {
   final Color textTertiary;
   final Color border;
   final Color shadow;
-
-  /// Lime/green highlight tint
   final Color tintSage;
-
-  /// Cyan informational tint
   final Color tintBlue;
-
-  /// Gradient from cyan to lime
   final LinearGradient primaryGradient;
 }
 
@@ -171,4 +223,3 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     );
   }
 }
-

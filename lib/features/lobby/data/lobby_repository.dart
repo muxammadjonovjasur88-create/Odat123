@@ -237,17 +237,15 @@ class LobbyRepository {
     }, SetOptions(merge: true));
   }
 
-  /// Normalizes user-typed codes: upper-cases, trims, and adds the FLOWA-
+  /// Normalizes user-typed codes: upper-cases, trims, and adds the ODAT-
   /// prefix if the user only typed the suffix.
   static String normalizeCode(String input) {
     var c = input.trim().toUpperCase().replaceAll(' ', '');
     if (c.isEmpty) return '';
-    if (!c.startsWith('FLOWA-')) {
-      c = c.startsWith('FLOWA')
-          ? c.replaceFirst('FLOWA', 'FLOWA-')
-          : 'FLOWA-$c';
-    }
-    return c;
+    if (c.startsWith('FLOWA-') || c.startsWith('ODAT-')) return c;
+    if (c.startsWith('FLOWA')) return c.replaceFirst('FLOWA', 'FLOWA-');
+    if (c.startsWith('ODAT')) return c.replaceFirst('ODAT', 'ODAT-');
+    return 'ODAT-$c';
   }
 
   String _generateCode([int length = 4]) {
@@ -256,7 +254,7 @@ class LobbyRepository {
       length,
       (_) => _alphabet[r.nextInt(_alphabet.length)],
     ).join();
-    return 'FLOWA-$chars';
+    return 'ODAT-$chars';
   }
 
   /// Returns UTC midnight on [d].

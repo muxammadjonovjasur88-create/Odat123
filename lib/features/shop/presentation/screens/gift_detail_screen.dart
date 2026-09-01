@@ -1,3 +1,4 @@
+﻿import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,38 +44,31 @@ class GiftDetailScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Gift Image
+                    // Gift Image (Fuller & wider 4:3)
                     ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(22),
                       child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: item.imageUrl.isNotEmpty
-                            ? Image.network(
-                                item.imageUrl,
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
-
-                              )
-                            : _buildPlaceholder(),
+                        aspectRatio: 4 / 3,
+                        child: _buildImage(item.imageUrl),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
 
-                    // Badge & Stock Status
+                    // Badge (Sovg'a)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                           decoration: BoxDecoration(
                             color: AppColors.purpleAccent.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.card_giftcard_rounded, size: 14, color: Colors.white),
-                              SizedBox(width: 4),
+                              SizedBox(width: 5),
                               Text(
                                 'Fizik Sovg\'a',
                                 style: TextStyle(
@@ -86,17 +80,25 @@ class GiftDetailScreen extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        if (item.stock != null)
-                          Text(
-                            isOutOfStock ? 'Zaxirada tugadi' : 'Mavjud: ${item.stock} dona',
-                            style: AppTextStyles.caption.copyWith(
-                              color: isOutOfStock ? Colors.redAccent : colors.textSecondary,
-                              fontWeight: FontWeight.w600,
+                        if (isOutOfStock)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.redAccent.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Text(
+                              'Zaxirada tugadi',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
 
                     // Title
                     Text(
@@ -219,9 +221,50 @@ class GiftDetailScreen extends ConsumerWidget {
     );
   }
 
+  Widget _buildImage(String url) {
+    if (url.isEmpty) return _buildPlaceholder();
+
+    if (url.startsWith('data:image') || url.startsWith('data:application')) {
+      try {
+        final commaIndex = url.indexOf(',');
+        final base64Str = commaIndex != -1 ? url.substring(commaIndex + 1) : url;
+        final bytes = base64Decode(base64Str.trim());
+        return Image.memory(
+          bytes,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
+        );
+      } catch (_) {
+        return _buildPlaceholder();
+      }
+    }
+
+    return Image.network(
+      url,
+      fit: BoxFit.cover,
+      errorBuilder: (ctx, err, stack) => _buildPlaceholder(),
+      loadingBuilder: (ctx, child, progress) {
+        if (progress == null) return child;
+        return Container(
+          color: const Color(0xFF1C2540),
+          child: const Center(
+            child: SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.cyanAccent,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildPlaceholder() {
     return Container(
-      color: const Color(0xFF1E2638),
+      color: const Color(0xFF1C2540),
       child: const Center(
         child: Icon(
           Icons.card_giftcard_rounded,

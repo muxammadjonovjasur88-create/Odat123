@@ -26,7 +26,6 @@ class AuthRepository {
 
   final FirebaseAuth _auth;
   final Ref? _ref;
-  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   final FirebaseFirestore _firestore;
   final FirebaseFunctions? _functions;
 
@@ -36,17 +35,24 @@ class AuthRepository {
 
   User? get currentUser => _auth.currentUser;
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId:
+        '124357149675-60ed8ur6q3mbh49a4cfrj8isjf97ghpv.apps.googleusercontent.com',
+  );
+
   /// Signs in with Google, creates a lightweight profile document if needed,
   /// and returns the Firebase auth result.
   Future<UserCredential?> signInWithGoogle() async {
     try {
-      await _googleSignIn.initialize();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null; // user cancelled
 
-      final googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-      final googleAuth = googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
+        accessToken: googleAuth.accessToken,
       );
 
       final result = await _auth.signInWithCredential(credential);
@@ -56,15 +62,96 @@ class AuthRepository {
       throw AuthException(e.message ?? 'Autentifikatsiya xatosi yuz berdi.');
     } on PlatformException catch (e) {
       if (e.code == 'network_error') {
-        throw const AuthException(
-          'Tarmoq xatosi. Internetga ulanishni tekshiring.',
-        );
+        throw const AuthException('Tarmoq xatosi. Internetga ulanishni tekshiring.');
       }
-      throw AuthException('Tizimga kirishda xato: ${e.message ?? e.code}');
+      if (e.code == 'sign_in_canceled' || e.code == '12501') return null;
+      throw AuthException('Google xatosi (${e.code}): ${e.message ?? e.details ?? ""}');
     } catch (e) {
-      throw const AuthException(
-        'Kutilmagan xatolik yuz berdi. Qayta urinib ko\'ring.',
+      final errStr = e.toString();
+      if (errStr.contains('canceled') ||
+          errStr.contains('cancelled') ||
+          errStr.contains('12501')) {
+        return null;
+      }
+      throw AuthException(
+          'Google orqali kirishda xatolik: ${errStr.replaceAll("Exception:", "").trim()}');
+    }
+  }
+
+  /// Quick direct entry (Guest / Anonymous sign in)
+  Future<UserCredential> signInAnonymously() async {
+    try {
+      final result = await _auth.signInAnonymously();
+      await _ensureProfile(result.user);
+      return result;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.message ?? 'Tezkor kirishda xatolik yuz berdi.');
+    } catch (e) {
+      throw AuthException('Kirishda xatolik: $e');
+    }
+  }
+
+  /// Sends SMS verification code to [phoneNumber].
+  Future<void> verifyPhoneNumber({
+    required String phoneNumber,
+    required void Function(PhoneAuthCredential credential) onVerificationCompleted,
+    required void Function(FirebaseAuthException e) onVerificationFailed,
+    required void Function(String verificationId, int? resendToken) onCodeSent,
+    required void Function(String verificationId) onCodeAutoRetrievalTimeout,
+    int? resendToken,
+  }) async {
+    try {
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: onVerificationCompleted,
+        verificationFailed: onVerificationFailed,
+        codeSent: onCodeSent,
+        codeAutoRetrievalTimeout: onCodeAutoRetrievalTimeout,
+        forceResendingToken: resendToken,
+        timeout: const Duration(seconds: 60),
       );
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.message ?? 'Telefon raqamni tekshirishda xatolik.');
+    } catch (e) {
+      throw AuthException('Xatolik: $e');
+    }
+  }
+
+  /// Signs in with SMS code
+  Future<UserCredential> signInWithSmsCode({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode,
+      );
+      final result = await _auth.signInWithCredential(credential);
+      await _ensureProfile(result.user);
+      return result;
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-verification-code') {
+        throw const AuthException('Kiritilgan SMS kod noto‘g‘ri.');
+      } else if (e.code == 'session-expired') {
+        throw const AuthException('SMS kod muddati tugagan. Qaytadan kod so‘rang.');
+      }
+      throw AuthException(e.message ?? 'SMS orqali kirishda xatolik yuz berdi.');
+    } catch (e) {
+      throw AuthException('Kirishda xatolik: $e');
+    }
+  }
+
+  /// Signs in directly with PhoneAuthCredential (e.g. auto-retrieved on Android)
+  Future<UserCredential> signInWithPhoneCredential(PhoneAuthCredential credential) async {
+    try {
+      final result = await _auth.signInWithCredential(credential);
+      await _ensureProfile(result.user);
+      return result;
+    } on FirebaseAuthException catch (e) {
+      throw AuthException(e.message ?? 'Avtomatik tasdiqlashda xatolik.');
+    } catch (e) {
+      throw AuthException('Kirishda xatolik: $e');
     }
   }
 
@@ -76,14 +163,12 @@ class AuthRepository {
     if (existing.exists) {
       final existingData = existing.data();
       await docRef.set({
-        'email': user.email,
+        'email': user.email ?? existingData?['email'] as String?,
+        'phoneNumber': user.phoneNumber ?? existingData?['phoneNumber'] as String?,
+        'phone': user.phoneNumber ?? existingData?['phone'] as String?,
         'photoUrl': user.photoURL ?? existingData?['photoUrl'] as String?,
         'photoBase64': existingData?['photoBase64'] as String?,
         'name': user.displayName ?? existingData?['name'] ?? 'Friend',
-        'totalPoints': (existingData?['totalPoints'] as num?)?.toInt() ?? 0,
-        'weeklyPoints': (existingData?['weeklyPoints'] as num?)?.toInt() ?? 0,
-        'streak': (existingData?['streak'] as num?)?.toInt() ?? 0,
-        'longestStreak': (existingData?['longestStreak'] as num?)?.toInt() ?? 0,
       }, SetOptions(merge: true));
       return;
     }
@@ -315,7 +400,7 @@ class AuthRepository {
       }
     }
 
-    await _googleSignIn.signOut();
+    try { await GoogleSignIn().signOut(); } catch (_) {}
     await _auth.signOut();
   }
 }

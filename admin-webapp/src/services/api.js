@@ -14,8 +14,7 @@ export function getTelegramInitData() {
   const paramInitData = urlParams.get("initData");
   if (paramInitData) return paramInitData;
 
-  // Default fallback for authorized Super Admin (8774615237)
-  return "user=" + encodeURIComponent(JSON.stringify({ id: "8774615237", username: "Admin", first_name: "SuperAdmin" }));
+  return null;
 }
 
 /**

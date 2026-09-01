@@ -4,15 +4,16 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_motion.dart';
 import '../theme/app_text_styles.dart';
+import 'bouncy_scale.dart';
 
-/// The five primary destinations matching the Zen Kinetic dark theme:
+/// The five primary destinations matching the Phoenix dark theme:
 /// Dashboard (0), Eslatma (1), AI (2 - Center), Leaderboard (3), Profile (4).
 enum AppNavTab {
-  dashboard('Dashboard', 'nav.dashboard', Icons.dashboard_rounded),
-  zametka('Eslatma', 'nav_note', Icons.edit_note_rounded),
-  ai('AI', 'nav.ai', Icons.auto_awesome_rounded),
-  leaderboard('Leaderboard', 'nav.leaderboard', Icons.emoji_events_rounded),
-  profile('Profile', 'nav.profile', Icons.person_rounded);
+  dashboard('Bosh sahifa', 'nav.dashboard', Icons.dashboard_rounded),
+  zametka('Eslatma', 'nav_note', Icons.alarm_rounded),
+  ai('Odat AI', 'nav.ai', Icons.auto_awesome_rounded),
+  leaderboard('Reyting', 'nav.leaderboard', Icons.emoji_events_rounded),
+  profile('Profil', 'nav.profile', Icons.person_rounded);
 
   const AppNavTab(this.defaultLabel, this.translationKey, this.icon);
 
@@ -23,9 +24,9 @@ enum AppNavTab {
   String get label => translationKey.tr();
 }
 
-/// Floating glassmorphism 5-tab bottom nav — Zen Kinetic design system.
-/// Active state: Neon Lime icon + label + small glowing dot underneath.
-/// Inactive state: muted slate-blue icon, no label color.
+/// Floating glassmorphism 5-tab bottom nav — Phoenix design system.
+/// Active state: Electric Blue icon + label + small glowing dot underneath.
+/// Inactive state: muted cool gray icon, no label color.
 class AppBottomNav extends StatelessWidget {
   const AppBottomNav({
     super.key,
@@ -45,23 +46,23 @@ class AppBottomNav extends StatelessWidget {
         child: Container(
           height: 72,
           decoration: BoxDecoration(
-            // Glassmorphism: semi-transparent dark base
-            color: const Color(0xE6051424),
+            // Glassmorphism: semi-transparent deep navy base
+            color: const Color(0xF00D1220),
             borderRadius: BorderRadius.circular(36),
             border: Border.all(
-              color: AppColors.glassEdge,
+              color: const Color(0x2E3B9BFF),
               width: 1,
             ),
             boxShadow: [
-              // Cyan underglow — Zen Kinetic atmospheric glow
+              // Cyan/Purple underglow — Phoenix atmospheric glow
               BoxShadow(
-                color: AppColors.cyanAccent.withValues(alpha: 0.12),
-                blurRadius: 32,
+                color: AppColors.electricBlue.withValues(alpha: 0.15),
+                blurRadius: 30,
                 spreadRadius: 0,
                 offset: const Offset(0, 0),
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.6),
+                color: Colors.black.withValues(alpha: 0.65),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -104,17 +105,14 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Zen Kinetic: Neon Lime for active, muted slate for inactive
-    const activeColor = AppColors.neonLime;
-    const inactiveColor = Color(0xFF5A6A7A);
+    // Phoenix: Electric Blue for active, muted cool gray for inactive
+    const activeColor = AppColors.electricBlue;
+    const inactiveColor = Color(0xFF64748B);
 
     final color = active ? activeColor : inactiveColor;
 
-    return InkWell(
+    return BouncyScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      splashColor: activeColor.withValues(alpha: 0.08),
-      highlightColor: activeColor.withValues(alpha: 0.04),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         child: Column(
@@ -127,7 +125,7 @@ class _NavItem extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               decoration: active
                   ? BoxDecoration(
-                      color: AppColors.neonLime.withValues(alpha: 0.08),
+                      color: AppColors.electricBlue.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     )
                   : null,
@@ -147,7 +145,7 @@ class _NavItem extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 3),
-            // Neon dot — Zen Kinetic active indicator
+            // Electric Blue dot active indicator
             AnimatedOpacity(
               opacity: active ? 1 : 0,
               duration: context.reduceMotion ? Duration.zero : AppMotion.subtle,
@@ -155,11 +153,11 @@ class _NavItem extends StatelessWidget {
                 width: 5,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: AppColors.neonLime,
+                  color: AppColors.electricBlue,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.neonLime.withValues(alpha: 0.8),
+                      color: AppColors.electricBlue.withValues(alpha: 0.9),
                       blurRadius: 6,
                       spreadRadius: 1,
                     ),
@@ -185,8 +183,9 @@ class _CenterAiNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return BouncyScale(
       onTap: onTap,
+      scaleFactor: 0.88,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -196,33 +195,38 @@ class _CenterAiNavItem extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [AppColors.cyanAccent, AppColors.neonLime],
+                colors: [AppColors.brightCyan, AppColors.electricBlue, AppColors.neonPurple],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.cyanAccent.withValues(alpha: active ? 0.7 : 0.35),
-                  blurRadius: active ? 20 : 10,
+                  color: AppColors.neonPurple.withValues(alpha: active ? 0.7 : 0.35),
+                  blurRadius: active ? 22 : 12,
                   spreadRadius: active ? 3 : 0,
+                ),
+                BoxShadow(
+                  color: AppColors.electricBlue.withValues(alpha: active ? 0.6 : 0.25),
+                  blurRadius: active ? 16 : 8,
+                  spreadRadius: active ? 2 : 0,
                 ),
               ],
               border: active
-                  ? Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2)
+                  ? Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2)
                   : null,
             ),
             child: const Icon(
               Icons.auto_awesome,
               size: 22,
-              color: Color(0xFF051424),
+              color: Colors.white,
             ),
           ),
           const SizedBox(height: 2),
           Text(
             'AI',
             style: AppTextStyles.caption.copyWith(
-              color: active ? AppColors.cyanAccent : const Color(0xFF5A6A7A),
+              color: active ? AppColors.electricBlue : const Color(0xFF64748B),
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               fontSize: 10,
             ),
