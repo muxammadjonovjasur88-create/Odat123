@@ -183,7 +183,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final progress = rankTier.progress(profile.totalPoints);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF04050D),
+      backgroundColor: const Color(0xFF0A0E17),
       bottomNavigationBar: AppBottomNav(
         current: AppNavTab.profile,
         onSelected: (tab) => goToTab(context, tab),
@@ -197,7 +197,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             _buildTopBar(profile),
             const SizedBox(height: 16),
 
-            // Hero Cyberpunk Rank Tier Profile Card
+            // Hero Profile Card
             _buildHeroProfileCard(profile, rankTier, progress),
             const SizedBox(height: 16),
 
@@ -216,9 +216,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget _buildUnifiedSettingsMenu(int friendsCount) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF090B18),
+        color: const Color(0xFF121826),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
+        border: Border.all(color: const Color(0xFF1E283D)),
       ),
       child: Column(
         children: [
@@ -228,11 +228,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               HapticFeedback.lightImpact();
               context.push(AppRoutes.wallet);
             },
-            leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFC9A24B)),
-            title: Text('profile.premium_title'.trFallback('ODAT Premium'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
+            leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFF59E0B)),
+            title: Text('profile.premium_title'.trFallback('ODAT Premium'), style: const TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF64748B), size: 13),
           ),
-          const Divider(color: Colors.white10, height: 1),
+          const Divider(color: Color(0xFF1E283D), height: 1),
           // Badges
           ListTile(
             onTap: () {
@@ -380,18 +380,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF161B26), Color(0xFF04050D)],
-            ),
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0x334AADDC), width: 1.5),
+            color: const Color(0xFF121826),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF1E283D), width: 1),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x224AADDC),
-                blurRadius: 20,
-                offset: Offset(0, 8),
+                color: Color(0x33000000),
+                blurRadius: 16,
+                offset: Offset(0, 4),
               ),
             ],
           ),
@@ -750,50 +746,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           onTap: () => showInventoryModal(context),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF090B18), Color(0xFF0F1726)],
-              ),
+              color: const Color(0xFF121826),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.6), width: 1.5),
+              border: Border.all(color: const Color(0xFF1E283D), width: 1),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x224AADDC),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
+                  color: Color(0x22000000),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
                 ),
               ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.backpack_rounded, color: Color(0xFF4AADDC), size: 20),
+                const Icon(Icons.backpack_rounded, color: Color(0xFF38BDF8), size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  'profile.inventory_title'.trFallback('INVENTAR'),
+                  'profile.inventory_title'.trFallback('Inventar'),
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFF8FAFC),
+                    fontWeight: FontWeight.w700,
                     fontSize: 13,
-                    letterSpacing: 1.0,
+                    letterSpacing: 0.4,
                   ),
                 ),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
 
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 6),
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
-            'profile.main_metrics'.trFallback('ASOSIY METRIKALAR'),
+            'profile.main_metrics'.trFallback('Asosiy metrikalar'),
             style: const TextStyle(
-              color: Color(0xFF4AADDC),
-              fontSize: 9.5,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
+              color: Color(0xFF64748B),
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
             ),
           ),
         ),
@@ -809,26 +803,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               title: 'profile.streak'.trFallback('Streak'),
               value: '${profile.streak} ${'profile.days_unit'.trFallback('kun')} 🔥',
               icon: Icons.local_fire_department_rounded,
-              color: const Color(0xFFFF4500),
+              color: const Color(0xFFF59E0B),
             ),
             _statItem(
               title: 'profile.freezes'.trFallback('Muzlatgich'),
               value: '${profile.freezes} ❄️',
               icon: Icons.ac_unit_rounded,
-              color: const Color(0xFF4AADDC),
+              color: const Color(0xFF38BDF8),
               onTap: () => showInventoryModal(context),
             ),
             _statItem(
               title: 'Qat‘iy Intizom',
               value: '${(profile.totalFocusMinutes / 60).toStringAsFixed(1)} soat',
               icon: Icons.timer_rounded,
-              color: const Color(0xFF3A7FCC),
+              color: const Color(0xFF60A5FA),
             ),
             _statItem(
               title: '1v1 Winrate',
               value: '${profile.winratePercent}% (${profile.battleWins}W/${profile.battleLosses}L)',
               icon: Icons.sports_martial_arts_rounded,
-              color: const Color(0xFFFF0055),
+              color: const Color(0xFFF43F5E),
               onTap: () {
                 HapticFeedback.lightImpact();
                 context.push(AppRoutes.battle);
@@ -850,11 +844,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: const Color(0xFF090B18),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withValues(alpha: 0.35)),
+          color: const Color(0xFF121826),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF1E283D), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

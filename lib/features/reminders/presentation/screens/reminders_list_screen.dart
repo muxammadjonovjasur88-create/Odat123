@@ -1,4 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -171,7 +171,7 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
     final dayNames = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF04050D),
+      backgroundColor: const Color(0xFF0A0E17),
       appBar: FlowaAppBar(
         showBackButton: Navigator.canPop(context),
       ),
@@ -180,12 +180,12 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
         onSelected: (tab) => goToTab(context, tab),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: const Color(0xFF4AADDC),
+        backgroundColor: const Color(0xFF38BDF8),
         foregroundColor: Colors.black,
         icon: const Icon(Icons.add_rounded, size: 22),
         label: Text(
           'reminders.new_goal'.tr(),
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.3),
         ),
         onPressed: () => RemindersSheet.show(context),
       ),
@@ -196,13 +196,9 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
             margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF090B18), Color(0xFF090B18)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: const Color(0xFF121826),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0x334AADDC)),
+              border: Border.all(color: const Color(0xFF1E283D)),
             ),
             child: Column(
               children: [

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../utils/formatting.dart';
 
@@ -20,48 +20,41 @@ class TotalPointsBadge extends ConsumerWidget {
       onTap: () => showPtsExchangeModal(context),
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: const Color(0x224AADDC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xAA4AADDC), width: 1),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x224AADDC),
-              blurRadius: 6,
-              spreadRadius: 0.5,
-            ),
-          ],
+          color: const Color(0xFF1B2335),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFF222B40), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
               Icons.bolt_rounded,
-              color: Color(0xFF4AADDC),
+              color: Color(0xFF38BDF8),
               size: 15,
             ),
-            const SizedBox(width: 3),
+            const SizedBox(width: 4),
             Text(
               '$formattedPoints PTS',
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w900,
+                color: Color(0xFFF8FAFC),
+                fontWeight: FontWeight.w700,
                 fontSize: 11.5,
                 letterSpacing: 0.2,
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 5),
             Container(
-              padding: const EdgeInsets.all(1.5),
+              padding: const EdgeInsets.all(2),
               decoration: const BoxDecoration(
-                color: Color(0xFF4AADDC),
+                color: Color(0xFF38BDF8),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.add_rounded,
                 color: Colors.black,
-                size: 10,
+                size: 9,
               ),
             ),
           ],

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Odat app **brand** color system — extracted directly from the ODAT intro
 /// video and Phoenix logo artwork.
@@ -17,26 +17,26 @@ abstract final class AppColors {
 
   // ── ODAT Brand Palette ─────────────────────────────────────────────────────
 
-  /// Sky Cyan — phoenix wing tip highlight, logo ring top
-  static const Color odatCyan = Color(0xFF4AADDC);
+  /// Sky Cyan — logo clock top highlight
+  static const Color odatCyan = Color(0xFF38BDF8);
 
   /// Ocean Blue — ring gradient mid-stop
-  static const Color odatBlue = Color(0xFF3A7FCC);
+  static const Color odatBlue = Color(0xFF3B82F6);
 
-  /// Deep Violet — phoenix body core, gradient anchor
-  static const Color odatViolet = Color(0xFF6B25CC);
+  /// Deep Violet — gradient anchor
+  static const Color odatViolet = Color(0xFF6366F1);
 
-  /// Mystic Purple — dominant wing glow, brand primary
-  static const Color odatPurple = Color(0xFF9B4FE8);
+  /// Mystic Purple — logo clock violet glow
+  static const Color odatPurple = Color(0xFF8B5CF6);
 
   /// Magenta Glow — inner energy spark / accent
-  static const Color odatMagenta = Color(0xFFC44DE8);
+  static const Color odatMagenta = Color(0xFFA855F7);
 
   /// Silver — "ODAT" wordmark
-  static const Color odatSilver = Color(0xFFE2E8F0);
+  static const Color odatSilver = Color(0xFFF8FAFC);
 
-  /// Smoke Blue — "HAR KUNI YAXSHIROQ" subtitle
-  static const Color odatSubtitle = Color(0xFF6EA8C8);
+  /// Smoke Blue — subtitle / muted tone
+  static const Color odatSubtitle = Color(0xFF94A3B8);
 
   // ── Backwards-compatible aliases ───────────────────────────────────────────
   static const Color electricBlue     = odatCyan;
@@ -52,33 +52,32 @@ abstract final class AppColors {
 
   // ── Brand Gradients ────────────────────────────────────────────────────────
 
-  /// Main brand gradient: Cyan → Blue → Violet → Purple
-  /// Mirrors the phoenix wing sweep and logo ring colours.
+  /// Main brand gradient: Cyan → Indigo → Violet (matching Flowa logo)
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [odatCyan, odatBlue, odatViolet, odatPurple],
+    colors: [Color(0xFF38BDF8), Color(0xFF6366F1), Color(0xFF8B5CF6)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   /// Glow / AI gradient — two-stop signature
   static const LinearGradient glowGradient = LinearGradient(
-    colors: [odatCyan, odatMagenta],
+    colors: [Color(0xFF38BDF8), Color(0xFF8B5CF6)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   /// Subtle subtitle / accent gradient
   static const LinearGradient subtitleGradient = LinearGradient(
-    colors: [odatSubtitle, odatCyan],
+    colors: [Color(0xFF94A3B8), Color(0xFF38BDF8)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
   // ── Glassmorphism Surface Tokens ───────────────────────────────────────────
 
-  static const Color glassSurfaceDark  = Color(0xCC08091A);
-  static const Color glassBorderDark   = Color(0x1A4AADDC);
-  static const Color glassEdgeDark     = Color(0x296B25CC);
+  static const Color glassSurfaceDark  = Color(0xF0121826);
+  static const Color glassBorderDark   = Color(0xFF1E283D);
+  static const Color glassEdgeDark     = Color(0xFF222B40);
 
   static const Color glassSurfaceLight = Color(0xCCF1F5F9);
   static const Color glassBorderLight  = Color(0x1A3A7FCC);
@@ -90,38 +89,38 @@ abstract final class AppColors {
 
   // ── Category Accents ───────────────────────────────────────────────────────
 
-  static const Color studyFill    = Color(0x264AADDC);
-  static const Color studyText    = Color(0xFF4AADDC);
+  static const Color studyFill    = Color(0x2638BDF8);
+  static const Color studyText    = Color(0xFF38BDF8);
 
-  static const Color sportFill    = Color(0x266B25CC);
-  static const Color sportText    = Color(0xFF9B4FE8);
+  static const Color sportFill    = Color(0x268B5CF6);
+  static const Color sportText    = Color(0xFF8B5CF6);
 
-  static const Color workFill     = Color(0x26E2E8F0);
-  static const Color workText     = Color(0xFFD0D8E8);
+  static const Color workFill     = Color(0x26F8FAFC);
+  static const Color workText     = Color(0xFFE2E8F0);
 
-  static const Color personalFill = Color(0x263A7FCC);
-  static const Color personalText = Color(0xFF5A9AE0);
+  static const Color personalFill = Color(0x263B82F6);
+  static const Color personalText = Color(0xFF60A5FA);
 
-  static const Color wellnessFill = Color(0x26C44DE8);
-  static const Color wellnessText = Color(0xFFC44DE8);
+  static const Color wellnessFill = Color(0x26A855F7);
+  static const Color wellnessText = Color(0xFFA855F7);
 
   // ── Dark Scheme ───────────────────────────────────────────────────────────
-  // Deep cosmic background matching the intro video canvas.
+  // Deep obsidian slate background matching premium mobile design standards.
   static const AppColorScheme dark = AppColorScheme(
-    background:      Color(0xFF04050D),   // Deep cosmic black-blue (video bg)
-    surface:         Color(0xFF090B18),   // Card surface — slightly lifted
-    surfaceMuted:    Color(0xFF0E1020),   // Muted surface (inputs, rows)
-    primary:         odatPurple,          // Mystic purple — dominant brand tone
-    secondary:       odatCyan,            // Sky cyan — secondary highlight
-    primaryPressed:  Color(0xFF7A35C0),   // Pressed (darker purple)
-    onPrimary:       Color(0xFFFFFFFF),   // White text on purple
-    textPrimary:     Color(0xFFE8EDF5),   // Silver-white — logo wordmark tone
-    textSecondary:   odatSubtitle,        // Smoke blue — subtitle tone
-    textTertiary:    Color(0xFF4A5980),   // Muted slate
-    border:          Color(0xFF141830),   // Subtle border (dark blue tint)
-    shadow:          Color(0xCC000000),
-    tintSage:        Color(0x1A6B25CC),   // Violet tint overlay
-    tintBlue:        Color(0x1A4AADDC),   // Cyan tint overlay
+    background:      Color(0xFF0A0E17),   // Deep obsidian slate
+    surface:         Color(0xFF121826),   // Elevated card surface
+    surfaceMuted:    Color(0xFF1B2335),   // Muted surface (chips, inputs)
+    primary:         Color(0xFF38BDF8),   // Flowa Cyan — dominant brand tone
+    secondary:       Color(0xFF8B5CF6),   // Flowa Violet — secondary highlight
+    primaryPressed:  Color(0xFF0284C7),   // Pressed cyan
+    onPrimary:       Color(0xFF000000),   // Black on cyan
+    textPrimary:     Color(0xFFF8FAFC),   // Crisp off-white
+    textSecondary:   Color(0xFF94A3B8),   // Muted neutral slate
+    textTertiary:    Color(0xFF64748B),   // Dark slate caption
+    border:          Color(0xFF1E283D),   // Subtle modern border
+    shadow:          Color(0x33000000),   // Soft shadow
+    tintSage:        Color(0x1A8B5CF6),   // Violet tint overlay
+    tintBlue:        Color(0x1A38BDF8),   // Cyan tint overlay
     primaryGradient: primaryGradient,
   );
 

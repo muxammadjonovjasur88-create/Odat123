@@ -44,27 +44,19 @@ class AppBottomNav extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
         child: Container(
-          height: 72,
+          height: 70,
           decoration: BoxDecoration(
-            // Glassmorphism: semi-transparent deep navy base
-            color: const Color(0xF00D1220),
-            borderRadius: BorderRadius.circular(36),
+            color: const Color(0xF0121826),
+            borderRadius: BorderRadius.circular(35),
             border: Border.all(
-              color: const Color(0x2E4AADDC),
+              color: const Color(0xFF1E283D),
               width: 1,
             ),
-            boxShadow: [
-              // Cyan/Purple underglow — Phoenix atmospheric glow
+            boxShadow: const [
               BoxShadow(
-                color: AppColors.electricBlue.withValues(alpha: 0.15),
-                blurRadius: 30,
-                spreadRadius: 0,
-                offset: const Offset(0, 0),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.65),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: Color(0x4D000000),
+                blurRadius: 24,
+                offset: Offset(0, 8),
               ),
             ],
           ),
@@ -105,8 +97,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Phoenix: Electric Blue for active, muted cool gray for inactive
-    const activeColor = AppColors.electricBlue;
+    const activeColor = Color(0xFF38BDF8);
     const inactiveColor = Color(0xFF64748B);
 
     final color = active ? activeColor : inactiveColor;
@@ -114,24 +105,23 @@ class _NavItem extends StatelessWidget {
     return BouncyScale(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Icon with optional active glow
             AnimatedContainer(
               duration: AppMotion.subtle,
               padding: const EdgeInsets.all(6),
               decoration: active
                   ? BoxDecoration(
-                      color: AppColors.electricBlue.withValues(alpha: 0.14),
+                      color: const Color(0xFF38BDF8).withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     )
                   : null,
-              child: Icon(tab.icon, size: 22, color: color),
+              child: Icon(tab.icon, size: 21, color: color),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 2),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
@@ -139,8 +129,8 @@ class _NavItem extends StatelessWidget {
                 style: AppTextStyles.caption.copyWith(
                   color: color,
                   fontSize: 10,
-                  fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-                  letterSpacing: active ? 0.3 : 0,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                  letterSpacing: active ? 0.2 : 0,
                 ),
               ),
             ),
@@ -164,40 +154,32 @@ class _CenterAiNavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return BouncyScale(
       onTap: onTap,
-      scaleFactor: 0.88,
+      scaleFactor: 0.90,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 48,
-            height: 48,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [AppColors.brightCyan, AppColors.electricBlue, AppColors.neonPurple],
+                colors: [Color(0xFF38BDF8), Color(0xFF6366F1), Color(0xFF8B5CF6)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.neonPurple.withValues(alpha: active ? 0.7 : 0.35),
-                  blurRadius: active ? 22 : 12,
-                  spreadRadius: active ? 3 : 0,
-                ),
-                BoxShadow(
-                  color: AppColors.electricBlue.withValues(alpha: active ? 0.6 : 0.25),
-                  blurRadius: active ? 16 : 8,
-                  spreadRadius: active ? 2 : 0,
+                  color: const Color(0xFF38BDF8).withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
                 ),
               ],
-              border: active
-                  ? Border.all(color: Colors.white.withValues(alpha: 0.6), width: 2)
-                  : null,
             ),
             child: const Icon(
               Icons.auto_awesome,
-              size: 22,
+              size: 20,
               color: Colors.white,
             ),
           ),
@@ -205,7 +187,7 @@ class _CenterAiNavItem extends StatelessWidget {
           Text(
             'AI',
             style: AppTextStyles.caption.copyWith(
-              color: active ? AppColors.electricBlue : const Color(0xFF64748B),
+              color: active ? const Color(0xFF38BDF8) : const Color(0xFF64748B),
               fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               fontSize: 10,
             ),

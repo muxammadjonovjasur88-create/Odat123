@@ -128,20 +128,20 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0x334AADDC) : const Color(0xFF090B18),
-          borderRadius: BorderRadius.circular(14),
+          color: isSelected ? const Color(0xFF1E283D) : const Color(0xFF121826),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF4AADDC) : const Color(0x22FFFFFF),
-            width: isSelected ? 1.5 : 1,
+            color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF1E283D),
+            width: 1,
           ),
         ),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? const Color(0xFF4AADDC) : Colors.white70,
+              color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF94A3B8),
               fontSize: 11.5,
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ),
@@ -917,10 +917,11 @@ class _TabBar extends StatelessWidget {
         onTap: () => onSelectTab(tab),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 9),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF4AADDC) : Colors.transparent,
+            color: isSelected ? const Color(0xFF1B2335) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
+            border: isSelected ? Border.all(color: const Color(0xFF222B40)) : null,
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -928,7 +929,7 @@ class _TabBar extends StatelessWidget {
               Icon(
                 icon,
                 size: 15,
-                color: isSelected ? Colors.black : Colors.white70,
+                color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF64748B),
               ),
               const SizedBox(width: 4),
               Flexible(
@@ -937,8 +938,8 @@ class _TabBar extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isSelected ? Colors.black : Colors.white70,
-                    fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                    color: isSelected ? const Color(0xFFF8FAFC) : const Color(0xFF94A3B8),
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     fontSize: 11.5,
                   ),
                 ),
@@ -955,9 +956,9 @@ class _TabBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF090B18),
+        color: const Color(0xFF121826),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x22FFFFFF)),
+        border: Border.all(color: const Color(0xFF1E283D)),
       ),
       child: Row(
         children: [

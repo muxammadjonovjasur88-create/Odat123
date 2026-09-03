@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -66,20 +66,20 @@ class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
       );
     } else {
       leadingWidget = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
+            colors: [Color(0xFF38BDF8), Color(0xFF8B5CF6)],
           ),
           borderRadius: BorderRadius.circular(8),
         ),
         child: const Text(
-          'ODAT',
+          'FLOWA',
           style: TextStyle(
-            color: Colors.black,
-            fontSize: 13,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.5,
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
           ),
         ),
       );

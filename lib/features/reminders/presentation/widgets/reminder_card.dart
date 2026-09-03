@@ -1,4 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -155,31 +155,31 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF090B18),
+        backgroundColor: const Color(0xFF121826),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFFFF0055), width: 1.5),
+          side: const BorderSide(color: Color(0xFF1E283D), width: 1),
         ),
         title: const Text(
           'Maqsadni o‘chirish',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold),
         ),
         content: Text(
           '"${widget.reminder.title}" maqsadini o‘chirmoqchimisiz?',
-          style: const TextStyle(color: Colors.white70),
+          style: const TextStyle(color: Color(0xFF94A3B8)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('common.cancel'.tr(), style: TextStyle(color: Colors.white54)),
+            child: Text('common.cancel'.tr(), style: const TextStyle(color: Color(0xFF64748B))),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF0055),
+              backgroundColor: const Color(0xFFF43F5E),
               foregroundColor: Colors.white,
             ),
-            child: Text('common.delete'.tr()),
+            child: const Text('O‘chirish'),
           ),
         ],
       ),
@@ -215,38 +215,38 @@ class _GoalCardContent extends StatelessWidget {
     final isExercise = reminder.isExerciseGoal;
 
     final Color badgeColor = isFocus
-        ? const Color(0xFF4AADDC)
-        : (isExercise ? const Color(0xFF3A7FCC) : const Color(0xFFFFB703));
+        ? const Color(0xFF38BDF8)
+        : (isExercise ? const Color(0xFF8B5CF6) : const Color(0xFFF59E0B));
 
     final IconData badgeIcon = isFocus
         ? Icons.timer_outlined
         : (isExercise ? Icons.videocam_rounded : Icons.edit_note_rounded);
 
     final String badgeText = isFocus
-        ? '🎯 FOKUS (${reminder.durationMinutes} MIN)'
+        ? '🎯 Fokus (${reminder.durationMinutes} min)'
         : (isExercise
-            ? '🏋️ AI MASHQ (${reminder.targetReps ?? 20} TA ${reminder.exerciseType ?? "SQUAT"})'
-            : '📝 ZAMETKA');
+            ? '🏋️ Mashq (${reminder.targetReps ?? 20} ta ${reminder.exerciseType ?? "Squat"})'
+            : '📝 Eslatma');
 
     return InkWell(
       onTap: onEdit,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF090B18),
-          borderRadius: BorderRadius.circular(20),
+          color: const Color(0xFF121826),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(
             color: reminder.isCompleted
-                ? const Color(0x3300FF88)
-                : badgeColor.withValues(alpha: 0.35),
-            width: 1.2,
+                ? const Color(0xFF10B981).withValues(alpha: 0.4)
+                : const Color(0xFF1E283D),
+            width: 1,
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.4),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+              color: Color(0x22000000),
+              blurRadius: 10,
+              offset: Offset(0, 3),
             ),
           ],
         ),
@@ -257,11 +257,11 @@ class _GoalCardContent extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                   decoration: BoxDecoration(
-                    color: badgeColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: badgeColor, width: 1),
+                    color: const Color(0xFF1B2335),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF222B40), width: 1),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
