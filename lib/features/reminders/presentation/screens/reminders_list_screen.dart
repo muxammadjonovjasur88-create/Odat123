@@ -233,20 +233,20 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF090B18),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0x664AADDC)),
+                          color: const Color(0xFF182030),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF222C3E)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_month_rounded, color: Color(0xFF4AADDC), size: 18),
+                            const Icon(Icons.calendar_month_rounded, color: Color(0xFF38BDF8), size: 16),
                             const SizedBox(width: 6),
                             Text(
                               DateFormat('MMMM yyyy', context.locale.languageCode).format(_selectedDate).toUpperCase(),
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.8),
+                              style: const TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.w800, fontSize: 11.5, letterSpacing: 0.6),
                             ),
                             const SizedBox(width: 4),
-                            const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF4AADDC), size: 18),
+                            const Icon(Icons.arrow_drop_down_rounded, color: Color(0xFF64748B), size: 18),
                           ],
                         ),
                       ),
@@ -255,12 +255,12 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF4AADDC), size: 22),
+                          icon: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF38BDF8), size: 20),
                           tooltip: 'AI Uchrashuv & Rejalashtiruvchi',
                           onPressed: () => _showAiMeetingSchedulerModal(context),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.calendar_today_rounded, color: Color(0xFF4AADDC), size: 20),
+                          icon: const Icon(Icons.calendar_today_rounded, color: Color(0xFF94A3B8), size: 18),
                           tooltip: 'Sana tanlash',
                           onPressed: () async {
                             final picked = await showDatePicker(
@@ -272,9 +272,9 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
                                 return Theme(
                                   data: Theme.of(context).copyWith(
                                     colorScheme: const ColorScheme.dark(
-                                      primary: Color(0xFF4AADDC),
+                                      primary: Color(0xFF38BDF8),
                                       onPrimary: Colors.black,
-                                      surface: Color(0xFF090B18),
+                                      surface: Color(0xFF121826),
                                       onSurface: Colors.white,
                                     ),
                                   ),
@@ -305,18 +305,18 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
                         setState(() => _selectedDate = day);
                       },
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
+                        duration: const Duration(milliseconds: 180),
                         width: 42,
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFF4AADDC)
-                              : (isToday ? const Color(0x3300FF88) : Colors.transparent),
-                          borderRadius: BorderRadius.circular(14),
+                              ? const Color(0xFF38BDF8)
+                              : (isToday ? const Color(0x1A38BDF8) : Colors.transparent),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF4AADDC)
-                                : (isToday ? const Color(0xFF3A7FCC) : Colors.white12),
+                                ? const Color(0xFF38BDF8)
+                                : (isToday ? const Color(0xFF38BDF8).withValues(alpha: 0.5) : const Color(0xFF1E283D)),
                           ),
                         ),
                         child: Column(
@@ -324,8 +324,8 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
                             Text(
                               dayNames[index],
                               style: TextStyle(
-                                color: isSelected ? Colors.black : Colors.white60,
-                                fontSize: 11,
+                                color: isSelected ? Colors.black : const Color(0xFF94A3B8),
+                                fontSize: 10.5,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -333,9 +333,9 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
                             Text(
                               '${day.day}',
                               style: TextStyle(
-                                color: isSelected ? Colors.black : Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w900,
+                                color: isSelected ? Colors.black : const Color(0xFFF8FAFC),
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
@@ -352,24 +352,25 @@ class _RemindersListScreenState extends ConsumerState<RemindersListScreen>
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Container(
-              height: 44,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFF090B18),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0x224AADDC)),
+                color: const Color(0xFF121826),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF1E283D)),
               ),
               child: TabBar(
                 controller: _tabController,
                 indicator: BoxDecoration(
-                  color: const Color(0xFF4AADDC),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFF1E283D),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.5)),
                 ),
                 dividerColor: Colors.transparent,
                 indicatorSize: TabBarIndicatorSize.tab,
-                labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.white60,
+                labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11.5),
+                labelColor: const Color(0xFF38BDF8),
+                unselectedLabelColor: const Color(0xFF94A3B8),
                 tabs: [
                   Tab(text: 'reminders.tab_active'.tr()),
                   Tab(text: 'reminders.tab_past'.tr()),

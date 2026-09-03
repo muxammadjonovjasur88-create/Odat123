@@ -642,7 +642,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           onSelected: (tab) => goToTab(context, tab),
         ),
         appBar: AppBar(
-          backgroundColor: const Color(0xFF121826),
+          backgroundColor: const Color(0xFF0A0E17),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
@@ -652,14 +652,15 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
           title: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                width: 30,
+                height: 30,
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF38BDF8), Color(0xFF8B5CF6)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
+                  color: const Color(0xFF141A26),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFF1E283D)),
                 ),
-                child: const Icon(Icons.auto_awesome, color: Colors.white, size: 18),
+                child: Image.asset('assets/icon/flowa_icon.png', fit: BoxFit.contain),
               ),
               const SizedBox(width: 10),
               Column(
@@ -669,8 +670,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                     'ai_assistant.title'.tr(),
                     style: const TextStyle(
                       color: Color(0xFFF8FAFC),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
                   Text(
@@ -678,7 +679,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                     style: const TextStyle(
                       color: Color(0xFF94A3B8),
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],

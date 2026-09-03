@@ -65,23 +65,31 @@ class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
             },
       );
     } else {
-      leadingWidget = Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF38BDF8), Color(0xFF8B5CF6)],
+      leadingWidget = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: const Color(0xFF141A26),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFF1E283D)),
+            ),
+            child: Image.asset('assets/icon/flowa_icon.png', fit: BoxFit.contain),
           ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: const Text(
-          'FLOWA',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
+          const SizedBox(width: 8),
+          const Text(
+            'ODAT',
+            style: TextStyle(
+              color: Color(0xFFF8FAFC),
+              fontSize: 15,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.8,
+            ),
           ),
-        ),
+        ],
       );
     }
 

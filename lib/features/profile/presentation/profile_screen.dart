@@ -422,23 +422,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     return Row(
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 28,
+              height: 28,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: const Color(0xFF141A26),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF1E283D)),
+              ),
+              child: Image.asset('assets/icon/flowa_icon.png', fit: BoxFit.contain),
             ),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            'profile.header_title'.trFallback('ODAT PROFIL'),
-            style: const TextStyle(
-              color: Colors.black,
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-              letterSpacing: 1.2,
+            const SizedBox(width: 8),
+            const Text(
+              'PROFIL',
+              style: TextStyle(
+                color: Color(0xFFF8FAFC),
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.8,
+              ),
             ),
-          ),
+          ],
         ),
         const Spacer(),
         // Messages Inbox Button
@@ -446,7 +454,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           children: [
             IconButton(
               tooltip: 'profile.tooltip_messages'.trFallback('Xabarlar'),
-              icon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF4AADDC), size: 22),
+              icon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF94A3B8), size: 21),
               onPressed: () => showInboxModal(context),
             ),
             if (unreadCount > 0)
@@ -456,7 +464,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFF0055),
+                    color: Color(0xFFF43F5E),
                     shape: BoxShape.circle,
                   ),
                   child: Text(
@@ -473,12 +481,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ),
         IconButton(
           tooltip: 'profile.tooltip_language'.trFallback('Tilni o‘zgartirish'),
-          icon: const Icon(Icons.language_rounded, color: Color(0xFF4AADDC), size: 22),
+          icon: const Icon(Icons.language_rounded, color: Color(0xFF94A3B8), size: 21),
           onPressed: _showLanguageDialog,
         ),
         IconButton(
           tooltip: 'profile.tooltip_settings'.trFallback('Sozlamalar'),
-          icon: const Icon(Icons.settings_outlined, color: Colors.white70, size: 22),
+          icon: const Icon(Icons.settings_outlined, color: Color(0xFF94A3B8), size: 21),
           onPressed: () => _showSettingsModal(context, profile),
         ),
       ],
