@@ -48,38 +48,37 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.78,
+      bui        height: MediaQuery.of(context).size.height * 0.78,
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         decoration: const BoxDecoration(
-          color: Color(0xFF0B111E),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
+          color: Color(0xFF0E131F),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFF1E283D), width: 1)),
         ),
         child: Column(
           children: [
             Container(
-              width: 40,
+              width: 36,
               height: 4,
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: Color(0xFF334155), borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Text(emoji, style: const TextStyle(fontSize: 24)),
+                Text(emoji, style: const TextStyle(fontSize: 22)),
                 const SizedBox(width: 10),
                 Text(
-                  categoryTitle.toUpperCase(),
+                  categoryTitle,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.1,
+                    color: Color(0xFFF8FAFC),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3,
                   ),
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: Colors.white54),
+                  icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ],
@@ -111,32 +110,31 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
               child: BouncyScale(
                 onTap: () => showStreakCalendarModal(context),
                 child: Container(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  height: 56,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2E1700), Color(0xFF131722)],
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: const Color(0xFFFFB703), width: 1.1),
-                    boxShadow: [
+                    color: const Color(0xFF121826),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF1E283D), width: 1),
+                    boxShadow: const [
                       BoxShadow(
-                        color: const Color(0xFFFFB703).withValues(alpha: 0.12),
-                        blurRadius: 8,
+                        color: Color(0x33000000),
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFFFFB703).withValues(alpha: 0.2),
+                          color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
                         ),
-                        child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFFFB703), size: 18),
+                        child: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFF59E0B), size: 18),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,18 +143,21 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                             Text(
                               'banners.streak_title'.tr(),
                               style: const TextStyle(
-                                color: Color(0xFFFFB703),
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                                color: Color(0xFFF8FAFC),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 1),
+                            const SizedBox(height: 2),
                             Text(
                               'banners.streak_sub'.tr(),
-                              style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -168,37 +169,36 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Expanded(
               child: BouncyScale(
                 onTap: () => showLuckyWheelModal(context),
                 child: Container(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  height: 56,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF280036), Color(0xFF131722)],
-                    ),
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: const Color(0xFF6B25CC), width: 1.1),
-                    boxShadow: [
+                    color: const Color(0xFF121826),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF1E283D), width: 1),
+                    boxShadow: const [
                       BoxShadow(
-                        color: const Color(0xFF6B25CC).withValues(alpha: 0.12),
-                        blurRadius: 8,
+                        color: Color(0x33000000),
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       ),
                     ],
                   ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(6),
+                        padding: const EdgeInsets.all(7),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFF6B25CC).withValues(alpha: 0.2),
+                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
                         ),
-                        child: const Icon(Icons.casino_rounded, color: Color(0xFF6B25CC), size: 18),
+                        child: const Icon(Icons.casino_rounded, color: Color(0xFF8B5CF6), size: 18),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,18 +207,21 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                             Text(
                               'banners.wheel_title'.tr(),
                               style: const TextStyle(
-                                color: Color(0xFF6B25CC),
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                                color: Color(0xFFF8FAFC),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 1),
+                            const SizedBox(height: 2),
                             Text(
                               'banners.wheel_sub'.tr(),
-                              style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -232,14 +235,18 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
 
         // ── 2. 4 Katta Asosiy Bo'lim Kartalari ──────────────────────────
         Text(
           'categories.main_title'.tr(),
           style: const TextStyle(
-            color: Color(0xFF8899B0),
-            fontSize: 10.5,
+            color: Color(0xFF64748B),
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.6,
+          ),
+        ),.5,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.1,
           ),
@@ -537,17 +544,17 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
       builder: (ctx) => Container(
         height: MediaQuery.of(context).size.height * 0.88,
         decoration: const BoxDecoration(
-          color: Color(0xFF04050D),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(top: BorderSide(color: Color(0xFF6B25CC), width: 1.8)),
+          color: Color(0xFF0E131F),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFF1E283D), width: 1)),
         ),
         child: Column(
           children: [
             const SizedBox(height: 12),
             Container(
-              width: 40,
+              width: 36,
               height: 4,
-              decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+              decoration: BoxDecoration(color: Color(0xFF334155), borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 8),
             const Expanded(
@@ -563,8 +570,6 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
     );
   }
 }
-
-
 
 class _BigCategoryCard extends StatelessWidget {
   const _BigCategoryCard({
@@ -592,80 +597,65 @@ class _BigCategoryCard extends StatelessWidget {
     return BouncyScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor.withValues(alpha: 0.6), width: 1.2),
-          boxShadow: [
+          color: const Color(0xFF121826),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFF1E283D), width: 1),
+          boxShadow: const [
             BoxShadow(
-              color: borderColor.withValues(alpha: 0.12),
+              color: Color(0x33000000),
               blurRadius: 10,
-              offset: const Offset(0, 3),
+              offset: Offset(0, 3),
             ),
           ],
         ),
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: iconBgColor,
+                color: const Color(0xFF1A2234),
                 shape: BoxShape.circle,
-                border: Border.all(color: accentColor.withValues(alpha: 0.5), width: 1),
+                border: Border.all(color: const Color(0xFF222B40), width: 1),
               ),
               alignment: Alignment.center,
               child: Text(emoji, style: const TextStyle(fontSize: 20)),
             ),
-            const SizedBox(width: 11),
+            const SizedBox(width: 14),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 13,
-                            letterSpacing: 0.2,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: accentColor, width: 0.8),
-                        ),
-                        child: Text(
-                          badgeText,
-                          style: TextStyle(
-                            color: accentColor,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 9.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Color(0xFFF8FAFC),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14.5,
+                  letterSpacing: 0.1,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1B2335),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF222B40), width: 1),
+              ),
+              child: Text(
+                badgeText,
+                style: TextStyle(
+                  color: accentColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 10.5,
+                ),
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white30, size: 13),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF475569), size: 12),
           ],
         ),
       ),
@@ -699,21 +689,22 @@ class _QuestCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF090B18),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0x224AADDC), width: 1),
+          color: const Color(0xFF141A29),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFF1E283D), width: 1),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.15),
+                color: const Color(0xFF1B2335),
                 shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF222B40), width: 1),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -721,19 +712,19 @@ class _QuestCard extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      color: Color(0xFFF8FAFC),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 3),
+                  const SizedBox(height: 2),
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      color: Color(0xFF8899B0),
-                      fontSize: 11.5,
+                      color: Color(0xFF94A3B8),
+                      fontSize: 11,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -743,23 +734,23 @@ class _QuestCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: badgeColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: badgeColor.withValues(alpha: 0.8), width: 1),
+                color: const Color(0xFF1B2335),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF222B40), width: 1),
               ),
               child: Text(
                 badge,
                 style: TextStyle(
                   color: badgeColor,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 10,
                 ),
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white38, size: 18),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF475569), size: 16),
           ],
         ),
       ),

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -52,12 +52,11 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
       // Card 1: ODAT Pro / 7-Day Trial
       _buildPromoCard(
         badge: sub.isTrial ? '${sub.trialDaysRemaining} ${"sub.days_left".tr()}' : 'sub.badge_7_days_free'.tr(),
-        badgeColor: const Color(0xFFFFB703),
+        badgeColor: const Color(0xFFF59E0B),
         title: 'ODAT PRO',
         subtitle: 'sub.pro_carousel_sub'.tr(),
         ctaLabel: sub.isTrial ? 'sub.explore_pro'.tr() : 'sub.cta_try_free'.tr(),
-        gradientColors: [const Color(0xFF261D0F), const Color(0xFF13100B)],
-        borderColor: const Color(0xFFFFB703),
+        accentColor: const Color(0xFFF59E0B),
         icon: Icons.workspace_premium_rounded,
         onTap: () {
           HapticFeedback.lightImpact();
@@ -71,12 +70,11 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
       // Card 2: Qat'iy Intizom & Fokus
       _buildPromoCard(
         badge: 'INTIZOM',
-        badgeColor: const Color(0xFF6B25CC),
+        badgeColor: const Color(0xFF8B5CF6),
         title: 'QAT’IY INTIZOM',
         subtitle: 'Telefoningizni bloklang va chuqur diqqatga erishing.',
-        ctaLabel: 'Fokusni Boshlash 🚀',
-        gradientColors: [const Color(0xFF1F1135), const Color(0xFF0F081C)],
-        borderColor: const Color(0xFF6B25CC),
+        ctaLabel: 'Fokusni Boshlash',
+        accentColor: const Color(0xFF8B5CF6),
         icon: Icons.shield_rounded,
         onTap: () {
           HapticFeedback.lightImpact();
@@ -87,12 +85,11 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
       // Card 3: ODAT AI Yordamchi
       _buildPromoCard(
         badge: 'ODAT AI',
-        badgeColor: const Color(0xFF4AADDC),
+        badgeColor: const Color(0xFF38BDF8),
         title: 'ODAT AI YORDAMCHI',
         subtitle: 'Ovozli buyruqlar orqali kunni rejalashtiring va mashq bajaring.',
-        ctaLabel: 'AI bilan Boshlash ✦',
-        gradientColors: [const Color(0xFF0A2234), const Color(0xFF07111D)],
-        borderColor: const Color(0xFF4AADDC),
+        ctaLabel: 'AI bilan Boshlash',
+        accentColor: const Color(0xFF38BDF8),
         icon: Icons.auto_awesome_rounded,
         onTap: () {
           HapticFeedback.lightImpact();
@@ -111,7 +108,7 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
             children: cards,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(cards.length, (index) {
@@ -119,10 +116,10 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
             return AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               margin: const EdgeInsets.symmetric(horizontal: 3),
-              width: isCurrent ? 18 : 6,
-              height: 4.5,
+              width: isCurrent ? 20 : 6,
+              height: 4,
               decoration: BoxDecoration(
-                color: isCurrent ? const Color(0xFFFFB703) : Colors.white24,
+                color: isCurrent ? const Color(0xFF38BDF8) : const Color(0xFF1E283D),
                 borderRadius: BorderRadius.circular(3),
               ),
             );
@@ -138,8 +135,7 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
     required String title,
     required String subtitle,
     required String ctaLabel,
-    required List<Color> gradientColors,
-    required Color borderColor,
+    required Color accentColor,
     required IconData icon,
     required VoidCallback onTap,
   }) {
@@ -147,20 +143,19 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 4),
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradientColors,
-          ),
+          color: const Color(0xFF121826),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor.withValues(alpha: 0.45), width: 1.2),
-          boxShadow: [
+          border: Border.all(
+            color: const Color(0xFF1E283D),
+            width: 1,
+          ),
+          boxShadow: const [
             BoxShadow(
-              color: borderColor.withValues(alpha: 0.12),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
+              color: Color(0x33000000),
+              blurRadius: 16,
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -172,50 +167,73 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: badgeColor.withValues(alpha: 0.2),
+                      color: badgeColor.withValues(alpha: 0.14),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       badge,
-                      style: TextStyle(color: badgeColor, fontSize: 9.5, fontWeight: FontWeight.w900, letterSpacing: 0.8),
+                      style: TextStyle(
+                        color: badgeColor,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 6),
                   Text(
                     title,
-                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900),
+                    style: const TextStyle(
+                      color: Color(0xFFF8FAFC),
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.2,
+                    ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.white70, fontSize: 11),
+                    style: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 11.5,
+                      height: 1.3,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 7),
+                  const SizedBox(height: 8),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         ctaLabel,
-                        style: TextStyle(color: badgeColor, fontSize: 11, fontWeight: FontWeight.w900),
+                        style: TextStyle(
+                          color: accentColor,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_rounded, color: badgeColor, size: 12),
+                      Icon(Icons.arrow_forward_rounded, color: accentColor, size: 13),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: borderColor.withValues(alpha: 0.15),
+                color: const Color(0xFF1B2335),
+                border: Border.all(
+                  color: const Color(0xFF222B40),
+                  width: 1,
+                ),
               ),
-              child: Icon(icon, color: borderColor, size: 28),
+              child: Icon(icon, color: accentColor, size: 26),
             ),
           ],
         ),

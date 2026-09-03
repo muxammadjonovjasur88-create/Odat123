@@ -1,4 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/task.dart';
@@ -69,7 +69,7 @@ class _DailyPlanScreenState extends ConsumerState<DailyPlanScreen> {
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              backgroundColor: const Color(0xFF090B18),
+              backgroundColor: const Color(0xFF121826),
             ),
           );
         } else {
@@ -81,7 +81,7 @@ class _DailyPlanScreenState extends ConsumerState<DailyPlanScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF04050D),
+        backgroundColor: const Color(0xFF0A0E17),
         appBar: const FlowaAppBar(),
         bottomNavigationBar: AppBottomNav(
           current: AppNavTab.dashboard,
@@ -155,22 +155,17 @@ class DailyProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xB3122131),
+        color: const Color(0xFF121826),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
-          color: AppColors.glassEdge,
+          color: const Color(0xFF1E283D),
           width: 1,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: AppColors.neonLime.withValues(alpha: 0.08),
-            blurRadius: 20,
-            spreadRadius: 0,
-          ),
-          const BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
+            color: Color(0x33000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -178,20 +173,32 @@ class DailyProgressCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'home.daily_progress'.tr().toUpperCase(),
-            style: const TextStyle(
-              fontFamily: 'monospace',
-              color: AppColors.neonLime,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.2,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'home.daily_progress'.tr(),
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
+              Text(
+                '${(percent * 100).toInt()}%',
+                style: const TextStyle(
+                  color: Color(0xFF38BDF8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           _GradientProgressBar(
             percent: percent,
-            height: 10,
+            height: 8,
           ),
         ],
       ),
