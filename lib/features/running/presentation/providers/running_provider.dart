@@ -195,7 +195,15 @@ class RunningNotifier extends Notifier<RunningState> {
     });
 
     _subscribeToPersistentData();
-    Future.microtask(initGps);
+    Future.microtask(() async {
+      try {
+        final service = FlutterBackgroundService();
+        if (await service.isRunning()) {
+          service.invoke('stop_service');
+        }
+      } catch (_) {}
+      initGps();
+    });
     return const RunningState();
   }
 
@@ -314,10 +322,19 @@ class RunningNotifier extends Notifier<RunningState> {
   void _startGpsStream() {
     _positionSubscription?.cancel();
 
-    const locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.bestForNavigation,
-      distanceFilter: 3,
-    );
+    final LocationSettings locationSettings;
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      locationSettings = AndroidSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 1,
+        intervalDuration: const Duration(seconds: 1),
+      );
+    } else {
+      locationSettings = const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 1,
+      );
+    }
 
     _positionSubscription = Geolocator.getPositionStream(
       locationSettings: locationSettings,
@@ -466,8 +483,8 @@ class RunningNotifier extends Notifier<RunningState> {
   }
 
   void _onPositionUpdate(Position pos) {
-    // 1. Filter out very low-accuracy / heavy indoor GPS jitter (> 20.0m accuracy)
-    if (pos.accuracy > 20.0) {
+    // 1. Filter out excessively imprecise fixes (> 45m), but always allow initial fix
+    if (pos.accuracy > 45.0 && state.currentPos != null) {
       return;
     }
 
@@ -504,9 +521,9 @@ class RunningNotifier extends Notifier<RunningState> {
       deltaKm = HaversineCalculator.calculateDistanceBetweenPoints(lastPoint, newPoint);
       deltaMeters = deltaKm * 1000.0;
 
-      // 2. Anti-teleport glitch filter (> 12 m/s / 43 km/h jump)
+      // 2. Anti-teleport glitch filter (> 15 m/s jump)
       final speedMps = deltaMeters / timeDiffSec;
-      if (speedMps > 12.0 && deltaMeters > 30.0) {
+      if (speedMps > 15.0 && deltaMeters > 35.0) {
         _lastPosTime = now;
         _previousPos = newPoint;
         state = state.copyWith(currentPos: newPoint, heading: newHeading);
@@ -514,9 +531,9 @@ class RunningNotifier extends Notifier<RunningState> {
       }
     }
 
-    // 3. Stationary Deadband Filter: Ignore jitter movements (< 3.8 meters)
-    // This strictly prevents zig-zag lines and fake distance when standing still!
-    if (lastPoint != null && deltaMeters < 3.8) {
+    // 3. Stationary Deadband Filter: Ignore microscopic jitter (< 1.2 meters)
+    // 1.2 meters allows normal running/walking (1.4 - 3.0 m/s) to be counted accurately!
+    if (lastPoint != null && deltaMeters < 1.2) {
       state = state.copyWith(
         currentPos: newPoint,
         heading: newHeading,

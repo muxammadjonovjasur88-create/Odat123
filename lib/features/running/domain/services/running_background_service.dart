@@ -39,7 +39,7 @@ abstract final class RunningBackgroundService {
       androidConfiguration: AndroidConfiguration(
         onStart: onStart,
         autoStart: false,
-        isForegroundMode: true,
+        isForegroundMode: false,
         notificationChannelId: channelId,
         initialNotificationTitle: notificationTitle,
         initialNotificationContent: 'Masofa: 0.00 km | Vaqt: 00:00',

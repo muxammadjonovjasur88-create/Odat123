@@ -23,6 +23,7 @@ import 'features/deep_focus/data/focus_service.dart';
 import 'features/notifications/data/notification_service.dart';
 import 'features/reminders/domain/models/reminder.dart';
 import 'features/running/domain/services/running_background_service.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 import 'features/streak/data/streak_repository.dart';
 import 'firebase_options.dart';
 
@@ -113,6 +114,10 @@ Future<void> main() async {
   if (!kIsWeb) {
     try {
       await RunningBackgroundService.initialize();
+      final bgService = FlutterBackgroundService();
+      if (await bgService.isRunning()) {
+        bgService.invoke('stop_service');
+      }
     } catch (e) {
       debugPrint('RunningBackgroundService init error: $e');
     }
@@ -124,7 +129,7 @@ Future<void> main() async {
       path: 'assets/translations',
       fallbackLocale: kFallbackLocale,
       // Saved choice wins; when null, default to Uzbek.
-      startLocale: LocaleStore.savedLocale() ?? const Locale('uz'),
+      startLocale: LocaleStore.savedLocale(),
       // We persist the choice ourselves (Hive), not via SharedPreferences.
       saveLocale: false,
       child: const ProviderScope(child: FlowaApp()),

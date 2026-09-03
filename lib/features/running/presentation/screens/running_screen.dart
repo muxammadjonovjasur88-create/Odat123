@@ -274,17 +274,19 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
         }
 
         if (_autoFollow) {
-          final center = _mapController.camera.center;
-          final distMeters = Geolocator.distanceBetween(
-            center.latitude,
-            center.longitude,
-            pos.latitude,
-            pos.longitude,
-          );
-          if (distMeters > 8.0) {
-            final zoom = _mapController.camera.zoom < 14.0 ? 16.5 : _mapController.camera.zoom;
-            _mapController.move(pos, zoom);
-          }
+          try {
+            final center = _mapController.camera.center;
+            final distMeters = Geolocator.distanceBetween(
+              center.latitude,
+              center.longitude,
+              pos.latitude,
+              pos.longitude,
+            );
+            if (distMeters > 8.0) {
+              final zoom = _mapController.camera.zoom < 14.0 ? 16.5 : _mapController.camera.zoom;
+              _mapController.move(pos, zoom);
+            }
+          } catch (_) {}
         }
       }
       // Show battle dialog if battle occurred
