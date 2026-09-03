@@ -1008,7 +1008,9 @@
     "no_coupons_yet": "You have no coupons yet.",
     "buy_gifts_from_shop": "Buy gifts or discounts from the shop.",
     "go_to_shop": "Go to Shop",
-    "purchase_history_empty": "Purchase history is empty."
+    "purchase_history_empty": "Purchase history is empty.",
+    "buy_action": "Buy",
+    "insufficient_pts_btn": "Insufficient"
   },
   "signin": {
     "agree_and_accept": "I AGREE AND ACCEPT ✅",

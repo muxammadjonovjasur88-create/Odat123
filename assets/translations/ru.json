@@ -1037,7 +1037,9 @@
     "no_coupons_yet": "У вас пока нет купонов.",
     "buy_gifts_from_shop": "Покупайте подарки или скидки в магазине.",
     "go_to_shop": "Перейти в магазин",
-    "purchase_history_empty": "История покупок пуста."
+    "purchase_history_empty": "История покупок пуста.",
+    "buy_action": "Купить",
+    "insufficient_pts_btn": "Недостаточно"
   },
   "signin": {
     "agree_and_accept": "СОГЛАСЕН И ПРИНИМАЮ ✅",

@@ -1037,7 +1037,9 @@
     "no_coupons_yet": "Hali hech qanday kuponingiz yo'q.",
     "buy_gifts_from_shop": "Do'kondan sovg'alar yoki chegirmalar xarid qiling.",
     "go_to_shop": "Do'konga o'tish",
-    "purchase_history_empty": "Xaridlar tarixi bo'sh."
+    "purchase_history_empty": "Xaridlar tarixi bo'sh.",
+    "buy_action": "Sotib olish",
+    "insufficient_pts_btn": "Yetarli emas"
   },
   "signin": {
     "agree_and_accept": "ROZIMAN VA QABUL QILAMAN ✅",

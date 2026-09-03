@@ -1,4 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,8 +11,6 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/widgets.dart';
 import '../../domain/models/shop_item.dart';
 import '../providers/shop_provider.dart';
-import '../widgets/fenix_coin_topup_modal.dart';
-import '../widgets/pts_exchange_modal.dart';
 import '../widgets/shop_item_card.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
@@ -30,11 +28,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final colors = context.colors;
     final user = ref.watch(userProfileProvider).asData?.value;
     final userPoints = user?.totalPoints ?? 0;
-    final userCoins = user?.fenixCoins ?? 0;
     final shopItemsAsync = ref.watch(shopItemsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF04050D),
+      backgroundColor: const Color(0xFF0A0E17),
       appBar: FlowaAppBar(
         showBackButton: true,
         showShopButton: false,
@@ -92,15 +89,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     // My Purchases button
                     ElevatedButton.icon(
                       onPressed: () => context.push(AppRoutes.shopPurchases),
-                      icon: const Icon(Icons.shopping_bag_outlined, size: 16),
-                      label: const Text('Xaridlarim', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.shopping_bag_outlined, size: 15),
+                      label: const Text('Xaridlarim', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF090B18),
-                        foregroundColor: const Color(0xFF4AADDC),
+                        backgroundColor: const Color(0xFF121826),
+                        foregroundColor: const Color(0xFF38BDF8),
+                        elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: const BorderSide(color: Color(0x334AADDC)),
+                          borderRadius: BorderRadius.circular(12),
+                          side: const BorderSide(color: Color(0xFF1E283D)),
                         ),
                       ),
                     ),
@@ -162,29 +160,29 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         HapticFeedback.selectionClick();
         setState(() => _selectedTab = id);
       },
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7.5),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4AADDC) : const Color(0xFF090B18),
-          borderRadius: BorderRadius.circular(14),
+          color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF121826),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF4AADDC) : Colors.white12,
+            color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF1E283D),
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 15, color: isSelected ? Colors.black : Colors.white70),
-              const SizedBox(width: 6),
+              Icon(icon, size: 14, color: isSelected ? Colors.black : const Color(0xFF94A3B8)),
+              const SizedBox(width: 5),
             ],
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.black : Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12.5,
+                color: isSelected ? Colors.black : const Color(0xFF94A3B8),
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                fontSize: 12,
               ),
             ),
           ],
@@ -262,70 +260,128 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         final canAfford = userPoints >= ptsCost;
         final color = b['color'] as Color;
 
+        final buyText = canAfford
+            ? ('shop.buy_action'.tr().isNotEmpty && !'shop.buy_action'.tr().contains('shop.')
+                ? 'shop.buy_action'.tr()
+                : 'Sotib olish')
+            : ('shop.insufficient_pts_btn'.tr().isNotEmpty && !'shop.insufficient_pts_btn'.tr().contains('shop.')
+                ? 'shop.insufficient_pts_btn'.tr()
+                : 'Yetarli emas');
+
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF0E1626),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withValues(alpha: canAfford ? 0.35 : 0.1)),
+            color: const Color(0xFF121826),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF1E283D), width: 1),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(_boosterIcon(b['id'] as String), color: color, size: 28),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              // Top Row: Icon + Title + Price Pill
+              Row(
+                children: [
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: color.withValues(alpha: 0.25), width: 1),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(_boosterIcon(b['id'] as String), color: color, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
                       b['title'] as String,
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: const TextStyle(
+                        color: Color(0xFFF8FAFC),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      b['desc'] as String,
-                      style: const TextStyle(color: Colors.white54, fontSize: 11),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF182030),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFF222B40), width: 1),
                     ),
-                    const SizedBox(height: 6),
-                    Row(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.flash_on_rounded, color: Color(0xFF3A7FCC), size: 14),
-                        const SizedBox(width: 4),
+                        const Icon(Icons.bolt_rounded, color: Color(0xFF38BDF8), size: 14),
+                        const SizedBox(width: 3),
                         Text(
                           '$ptsCost PTS',
-                          style: TextStyle(
-                            color: canAfford ? const Color(0xFF3A7FCC) : Colors.white38,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 12,
+                          style: const TextStyle(
+                            color: Color(0xFF38BDF8),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 11,
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+
+              // Description (Clean, full width, easy to read)
+              Text(
+                b['desc'] as String,
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 12,
+                  height: 1.35,
                 ),
               ),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: canAfford ? () => (b['action'] as VoidCallback)() : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
-                  foregroundColor: Colors.black,
-                  disabledBackgroundColor: Colors.white10,
-                  disabledForegroundColor: Colors.white38,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text(
-                  canAfford ? 'shop.buy_action'.tr() : 'shop.insufficient_pts_btn'.tr(),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                ),
+              const SizedBox(height: 14),
+
+              // Bottom Row: Status / Action Button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    canAfford ? 'Hisobingizda mavjud' : 'Ballar yetarli emas',
+                    style: TextStyle(
+                      color: canAfford ? const Color(0xFF10B981) : const Color(0xFF64748B),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(
+                    height: 34,
+                    child: ElevatedButton(
+                      onPressed: canAfford ? () => (b['action'] as VoidCallback)() : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: canAfford ? const Color(0xFF38BDF8) : const Color(0xFF182030),
+                        foregroundColor: canAfford ? Colors.black : const Color(0xFF64748B),
+                        disabledBackgroundColor: const Color(0xFF182030),
+                        disabledForegroundColor: const Color(0xFF64748B),
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          side: BorderSide(
+                            color: canAfford ? const Color(0xFF38BDF8) : const Color(0xFF222B40),
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Text(
+                        buyText,
+                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11.5),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
