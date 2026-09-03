@@ -798,27 +798,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         ),
         GridView.count(
-          crossAxisCount: 3,
+          crossAxisCount: 2,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childAspectRatio: 1.26,
+          childAspectRatio: 1.8,
           children: [
-            _statItem(
-              title: 'PTS',
-              value: '${profile.totalPoints}',
-              icon: Icons.bolt_rounded,
-              color: const Color(0xFF4AADDC),
-              onTap: () => showPtsHistoryModal(context),
-            ),
-            _statItem(
-              title: 'profile.fenix_coins'.trFallback('Fenix Coins'),
-              value: '${profile.fenixCoins}',
-              icon: Icons.local_fire_department_rounded,
-              color: const Color(0xFFFFB703),
-              onTap: () => showCoinsHistoryModal(context),
-            ),
             _statItem(
               title: 'profile.streak'.trFallback('Streak'),
               value: '${profile.streak} ${'profile.days_unit'.trFallback('kun')} 🔥',
