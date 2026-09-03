@@ -112,6 +112,13 @@ class _Content extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
+    final user = ref.watch(userProfileProvider).asData?.value;
+    final now = DateTime.now();
+    final months = [
+      '', 'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
+      'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'
+    ];
+    final dateStr = '${now.day}-${months[now.month].toUpperCase()}';
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -122,7 +129,69 @@ class _Content extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 8),
+                // ── Notion-style Minimal Workspace Header ──────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 6, 20, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.calendar_today_rounded, size: 12, color: Color(0xFF64748B)),
+                              const SizedBox(width: 6),
+                              Text(
+                                'BUGUN, $dateStr',
+                                style: const TextStyle(
+                                  color: Color(0xFF64748B),
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            user?.name != null ? 'Salom, ${user!.name}' : 'Bugungi Reja & Intizom',
+                            style: const TextStyle(
+                              color: Color(0xFFF8FAFC),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Streak Tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF121826),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF1E283D)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('🔥', style: TextStyle(fontSize: 12)),
+                            const SizedBox(width: 5),
+                            Text(
+                              '${user?.streak ?? 0} kun',
+                              style: const TextStyle(
+                                color: Color(0xFFF59E0B),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
                   child: HomePromoCarousel(),

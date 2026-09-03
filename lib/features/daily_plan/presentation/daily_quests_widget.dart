@@ -48,7 +48,8 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      bui        height: MediaQuery.of(context).size.height * 0.78,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.78,
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
         decoration: const BoxDecoration(
           color: Color(0xFF0E131F),
@@ -244,14 +245,10 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
             color: Color(0xFF64748B),
             fontSize: 11,
             fontWeight: FontWeight.w700,
-            letterSpacing: 0.6,
-          ),
-        ),.5,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
+            letterSpacing: 0.8,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
 
         // 1. MASHG'ULOTLAR
         _BigCategoryCard(
@@ -597,31 +594,24 @@ class _BigCategoryCard extends StatelessWidget {
     return BouncyScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
         decoration: BoxDecoration(
-          color: const Color(0xFF121826),
-          borderRadius: BorderRadius.circular(18),
+          color: const Color(0xFF111723),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFF1E283D), width: 1),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 10,
-              offset: Offset(0, 3),
-            ),
-          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: const Color(0xFF1A2234),
+                color: const Color(0xFF182030),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF222B40), width: 1),
+                border: Border.all(color: const Color(0xFF222C3E), width: 1),
               ),
               alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 20)),
+              child: Text(emoji, style: const TextStyle(fontSize: 19)),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -631,7 +621,7 @@ class _BigCategoryCard extends StatelessWidget {
                   color: Color(0xFFF8FAFC),
                   fontWeight: FontWeight.w700,
                   fontSize: 14.5,
-                  letterSpacing: 0.1,
+                  letterSpacing: -0.1,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -641,9 +631,9 @@ class _BigCategoryCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
               decoration: BoxDecoration(
-                color: const Color(0xFF1B2335),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF222B40), width: 1),
+                color: accentColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: accentColor.withValues(alpha: 0.25), width: 1),
               ),
               child: Text(
                 badgeText,
@@ -655,7 +645,7 @@ class _BigCategoryCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF475569), size: 12),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF64748B), size: 18),
           ],
         ),
       ),
@@ -689,20 +679,22 @@ class _QuestCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF141A29),
+          color: const Color(0xFF131A28),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: const Color(0xFF1E283D), width: 1),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
-                color: const Color(0xFF1B2335),
+                color: const Color(0xFF182030),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF222B40), width: 1),
+                border: Border.all(color: const Color(0xFF222C3E), width: 1),
               ),
-              child: Icon(icon, color: iconColor, size: 20),
+              alignment: Alignment.center,
+              child: Icon(icon, color: iconColor, size: 18),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -719,13 +711,13 @@ class _QuestCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   Text(
                     subtitle,
                     style: const TextStyle(
                       color: Color(0xFF94A3B8),
                       fontSize: 11,
-                      height: 1.25,
+                      height: 1.3,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -735,11 +727,11 @@ class _QuestCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF1B2335),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF222B40), width: 1),
+                color: badgeColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: badgeColor.withValues(alpha: 0.25), width: 1),
               ),
               child: Text(
                 badge,
@@ -751,7 +743,7 @@ class _QuestCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.chevron_right_rounded, color: Color(0xFF475569), size: 16),
+            const Icon(Icons.chevron_right_rounded, color: Color(0xFF64748B), size: 18),
           ],
         ),
       ),
