@@ -725,8 +725,9 @@ class _QuestCard extends StatelessWidget {
                     style: const TextStyle(
                       color: Color(0xFF94A3B8),
                       fontSize: 11,
+                      height: 1.25,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],

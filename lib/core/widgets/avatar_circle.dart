@@ -59,6 +59,24 @@ class AvatarCircle extends StatelessWidget {
   }
 
   Widget _fallbackAvatar() {
+    if (avatarKey == 'leaf' || avatarKey.isEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: const BoxDecoration(
+          color: Color(0xFF0C101A),
+          shape: BoxShape.circle,
+        ),
+        padding: EdgeInsets.all(size * 0.12),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/icon/flowa_icon.png',
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Icon(Icons.bolt_rounded, size: size * 0.5, color: const Color(0xFF38BDF8)),
+          ),
+        ),
+      );
+    }
     final avatar = avatarForKey(avatarKey);
     return Container(
       width: size,

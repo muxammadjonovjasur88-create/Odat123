@@ -381,7 +381,7 @@ class NotificationService {
     } else if (payload == 'mission_alarm') {
       Future.microtask(() {
         try {
-          _ref.read(routerProvider).push('/mission-alarm');
+          _ref.read(routerProvider).push('/mission-alarm?active=true');
         } catch (_) {}
       });
     }

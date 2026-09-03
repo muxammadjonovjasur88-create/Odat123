@@ -1,12 +1,15 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/models/user_profile.dart';
 import '../../../../core/services/auth_repository.dart';
 import '../../../../core/services/user_repository.dart';
 import '../../data/clan_repository.dart';
+import 'clan_emblem_view.dart';
 
 /// Shows the Create Clan Modal Bottom Sheet
 Future<void> showCreateClanModal(BuildContext context) {
@@ -42,6 +45,30 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
     'Navoiy', 'Toshkent', 'Samarqand', 'Buxoro', 'Andijon', 'Farg‘ona',
     'Namangan', 'Qashqadaryo', 'Surxondaryo', 'Xorazm', 'Jizzax', 'Sirdaryo', 'Qoraqalpog‘iston'
   ];
+
+  Future<void> _pickCustomEmblem() async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 256,
+        maxHeight: 256,
+        imageQuality: 80,
+      );
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        final b64 = base64Encode(bytes);
+        setState(() {
+          _selectedEmblem = b64;
+          if (!_emblems.contains(b64)) {
+            _emblems.insert(0, b64);
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Emblem pick error: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -218,23 +245,61 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
               const SizedBox(height: 18),
 
               // Emblem Selector
-              Text(
-                'clan.emblem_label'.tr(),
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'clan.emblem_label'.tr(),
+                    style: const TextStyle(
+                      color: Color(0xFFF8FAFC),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: _pickCustomEmblem,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.add_photo_alternate_rounded, color: Color(0xFF38BDF8), size: 16),
+                          SizedBox(width: 4),
+                          Text(
+                            'Rasm yuklash',
+                            style: TextStyle(color: Color(0xFF38BDF8), fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               SizedBox(
                 height: 52,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
-                  itemCount: _emblems.length,
+                  itemCount: _emblems.length + 1,
                   separatorBuilder: (context, index) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
-                    final e = _emblems[index];
+                    if (index == 0) {
+                      return GestureDetector(
+                        onTap: _pickCustomEmblem,
+                        child: Container(
+                          width: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1B2335),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.5)),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.add_a_photo_rounded, color: Color(0xFF38BDF8), size: 20),
+                          ),
+                        ),
+                      );
+                    }
+                    final e = _emblems[index - 1];
                     final isSelected = _selectedEmblem == e;
                     return GestureDetector(
                       onTap: () {
@@ -246,18 +311,18 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                         width: 48,
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0x334AADDC)
-                              : const Color(0xFF090B18),
+                              ? const Color(0x3338BDF8)
+                              : const Color(0xFF121826),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF4AADDC)
-                                : const Color(0x22FFFFFF),
+                                ? const Color(0xFF38BDF8)
+                                : const Color(0xFF1E283D),
                             width: isSelected ? 2 : 1,
                           ),
                         ),
                         child: Center(
-                          child: Text(e, style: const TextStyle(fontSize: 22)),
+                          child: ClanEmblemView(emblem: e, size: 26),
                         ),
                       ),
                     );

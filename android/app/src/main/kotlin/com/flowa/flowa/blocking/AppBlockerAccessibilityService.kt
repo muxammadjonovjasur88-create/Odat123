@@ -153,16 +153,20 @@ class AppBlockerAccessibilityService : AccessibilityService() {
                     if (currentPkg != null && currentPkg != packageName && currentPkg != "com.miui.home" && currentPkg != "com.android.systemui") {
                         if (BlockerState.shouldBlock(currentPkg)) {
                             Log.d(TAG, "⚡ HIGH-FREQ WATCHDOG BLOCKED: $currentPkg (strict=${BlockerState.strict})")
-                            performGlobalAction(GLOBAL_ACTION_HOME)
-                            try {
-                                val appIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
-                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                                }
-                                if (appIntent != null) {
-                                    startActivity(appIntent)
-                                }
-                            } catch (_: Throwable) {}
-                            showHardwareOverlay(currentPkg)
+                            if (BlockerState.strict) {
+                                performGlobalAction(GLOBAL_ACTION_HOME)
+                                try {
+                                    val appIntent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                                    }
+                                    if (appIntent != null) {
+                                        startActivity(appIntent)
+                                    }
+                                } catch (_: Throwable) {}
+                                hideOverlay()
+                            } else {
+                                showHardwareOverlay(currentPkg)
+                            }
                         }
                     }
                 }
@@ -192,11 +196,11 @@ class AppBlockerAccessibilityService : AccessibilityService() {
             return
         }
 
-        // 2. If the foreground package is blocked, raise the full-screen modal overlay immediately.
+        // 2. If the foreground package is blocked, enforce strict mode or raise overlay.
         if (BlockerState.shouldBlock(eventPkg)) {
             Log.d(TAG, "Foreground app blocked: $eventPkg (strict=${BlockerState.strict})")
             
-            // In strict mode, immediately execute HOME action and bring ODAT back to front
+            // In strict mode, immediately execute HOME action and bring ODAT back to front with single timer
             if (BlockerState.strict) {
                 performGlobalAction(GLOBAL_ACTION_HOME)
                 try {
@@ -207,10 +211,11 @@ class AppBlockerAccessibilityService : AccessibilityService() {
                         startActivity(appIntent)
                     }
                 } catch (_: Throwable) {}
-            }
-
-            mainHandler.post {
-                showHardwareOverlay(eventPkg)
+                hideOverlay()
+            } else {
+                mainHandler.post {
+                    showHardwareOverlay(eventPkg)
+                }
             }
         }
     }

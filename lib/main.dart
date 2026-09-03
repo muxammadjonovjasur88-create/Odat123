@@ -237,6 +237,16 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
     }
   }
 
+  Timer? _heartbeatTimer;
+  Timer? _offlineDebounceTimer;
+
+  void _startHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 45), (_) {
+      _updateOnlineStatus(true);
+    });
+  }
+
   Future<void> _updateOnlineStatus(bool isOnline) async {
     try {
       final uid = ref.read(authStateProvider).asData?.value?.uid;
@@ -251,6 +261,8 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
 
   @override
   void dispose() {
+    _heartbeatTimer?.cancel();
+    _offlineDebounceTimer?.cancel();
     _updateOnlineStatus(false);
     _focusSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -260,9 +272,20 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _offlineDebounceTimer?.cancel();
       _updateOnlineStatus(true);
+      _startHeartbeat();
       _onAuthReady();
-    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    } else if (state == AppLifecycleState.paused) {
+      _heartbeatTimer?.cancel();
+      _offlineDebounceTimer?.cancel();
+      // Debounce offline for 30s to prevent rapid flickering on quick background/lock
+      _offlineDebounceTimer = Timer(const Duration(seconds: 30), () {
+        _updateOnlineStatus(false);
+      });
+    } else if (state == AppLifecycleState.detached) {
+      _heartbeatTimer?.cancel();
+      _offlineDebounceTimer?.cancel();
       _updateOnlineStatus(false);
     }
   }
@@ -273,6 +296,7 @@ class _FlowaAppState extends ConsumerState<FlowaApp>
       final uid = ref.read(authStateProvider).asData?.value?.uid;
       if (uid != null) {
         _updateOnlineStatus(true);
+        _startHeartbeat();
         if (!kIsWeb) {
           await ref.read(notificationServiceProvider).setupFcm(uid);
         }

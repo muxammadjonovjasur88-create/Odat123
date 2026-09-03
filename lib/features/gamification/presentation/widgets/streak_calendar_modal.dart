@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -344,8 +343,11 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
               itemBuilder: (context, index) {
                 final r = rewards[index];
                 final isClaimed = _claimedDays.contains(r.day);
-                final effectiveStreak = (currentStreak <= 0) ? 1 : currentStreak;
-                final isAvailable = !isClaimed && r.day <= effectiveStreak;
+                final nextDayToClaim = _claimedDays.isEmpty
+                    ? 1
+                    : (_claimedDays.reduce((a, b) => a > b ? a : b) + 1);
+                final isNext = r.day == nextDayToClaim;
+                final isAvailable = !isClaimed && isNext;
                 final isLocked = !isClaimed && !isAvailable;
 
                 return GestureDetector(
@@ -360,9 +362,26 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                           content: Text('${r.day}-kunlik sovg‘a allaqachon olingan! ✅', style: const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       );
-                    } else {
-                      _claimReward(r, currentStreak);
+                      return;
                     }
+                    if (isLocked) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          backgroundColor: const Color(0xFF090B18),
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          content: Text(
+                            r.day > nextDayToClaim
+                                ? 'Avval $nextDayToClaim-kun sovg‘asini oling! 🎁'
+                                : 'Ushbu kunga yetib kelish uchun yana ${r.day - currentStreak} kun streak kerak! 🔥',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+                    _claimReward(r, currentStreak);
                   },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),

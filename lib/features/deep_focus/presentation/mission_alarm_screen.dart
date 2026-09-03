@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +20,8 @@ import '../../exercise_vision/presentation/widgets/skeleton_painter.dart';
 import '../../notifications/data/notification_service.dart';
 
 class MissionAlarmScreen extends ConsumerStatefulWidget {
-  const MissionAlarmScreen({super.key});
+  final bool autoStart;
+  const MissionAlarmScreen({super.key, this.autoStart = false});
 
   @override
   ConsumerState<MissionAlarmScreen> createState() => _MissionAlarmScreenState();
@@ -69,6 +70,12 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
     _squatStrategy = SquatStrategy();
     _pushupStrategy = PushUpStrategy();
     _loadSavedAlarmSettings();
+
+    if (widget.autoStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _startActiveMission();
+      });
+    }
   }
 
   Future<void> _loadSavedAlarmSettings() async {

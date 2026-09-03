@@ -149,7 +149,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         (state) => StrictDisciplineScreen(reminderId: state.extra as String?),
       ),
       route(AppRoutes.disciplineHub, (_) => const DisciplineHubScreen()),
-      route(AppRoutes.missionAlarm, (_) => const MissionAlarmScreen()),
+      route(AppRoutes.missionAlarm, (state) {
+        final active = state.uri.queryParameters['active'] == 'true' || state.extra == true;
+        return MissionAlarmScreen(autoStart: active);
+      }),
       GoRoute(
         path: AppRoutes.activeFocus,
         pageBuilder: (context, state) {

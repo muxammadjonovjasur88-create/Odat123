@@ -25,7 +25,7 @@ class AiAssistantService {
   final FirebaseFirestore _db;
 
   static const _defaultOpenAiApiKey = String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
-  static const _defaultOpenAiModel = 'gpt-4o-mini';
+  static const _defaultOpenAiModel = 'gpt-4o';
 
   static const _memoryBoxName = 'odat_ai_memory';
 
@@ -443,6 +443,13 @@ $memoryContext
 Joriy sana: $todayStr (Ertangi sana: $tomorrowStr). Hozirgi vaqt: $currentTimeStr.
 Bugungi vazifalar:
 $tasksContext
+
+🧠 CHUQUR FIKRLASH VA STRATEGIK TAHLIL QOBILIYATI (REASONING & THINKING ENGINE):
+- Har qanday savol yoki muammoni tahlil qilganda, shunchaki yuzaki javob bermasdan, chuqur tahliliy fikrlash qobiliyatingni ishga sol:
+  1. Vaziyatning asl sababini (ildizini) mantiqiy va ilmiy tahlil qil.
+  2. Foydalanuvchining psixologiyasi, odatlari va vaqt imkoniyatlarini hisobga ol.
+  3. Eng samarali, strategik va isbotlangan yechimni qadamma-qadam (Step-by-Step) tushuntir.
+  4. Fikrlaringni lo'nda, dono va darhol amalda qo'llash mumkin bo'lgan shaklda taqdim et.
 
 SENING 4 TA ASOSIY VAZIFANG VA QOIDALAR:
 

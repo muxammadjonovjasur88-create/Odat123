@@ -17,6 +17,7 @@ import '../../../core/widgets/widgets.dart';
 import '../../clan/data/clan_repository.dart';
 import '../../clan/domain/models/clan.dart';
 import '../../clan/presentation/screens/clan_detail_screen.dart';
+import '../../clan/presentation/widgets/clan_emblem_view.dart';
 import '../../clan/presentation/widgets/create_clan_modal.dart';
 import '../../friends/data/friends_repository.dart';
 import '../../friends/presentation/widgets/add_friend_modal.dart';
@@ -798,7 +799,7 @@ class _ClanCard extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: Text(clan.emblem, style: const TextStyle(fontSize: 24)),
+              child: ClanEmblemView(emblem: clan.emblem, size: 28),
             ),
           ),
           const SizedBox(width: 12),

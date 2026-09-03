@@ -30,9 +30,7 @@ import '../../inbox/data/inbox_repository.dart';
 import '../../inbox/presentation/widgets/inbox_modal.dart';
 import 'widgets/badges_modal.dart';
 import 'widgets/bug_bounty_modal.dart';
-import 'widgets/coins_history_modal.dart';
 import 'widgets/inventory_modal.dart';
-import 'widgets/pts_history_modal.dart';
 import 'widgets/rank_roadmap_modal.dart';
 
 extension _ProfileTr on String {
@@ -159,7 +157,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     if (confirm == true && mounted) {
       await ref.read(authRepositoryProvider).signOut();
-      if (mounted) context.go(AppRoutes.welcome);
+      if (mounted) context.go(AppRoutes.signIn);
     }
   }
 
@@ -206,14 +204,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             const SizedBox(height: 16),
 
             // Qo'shimcha Menyu (Settings style list)
-            _buildUnifiedSettingsMenu(friends.length),
+            _buildUnifiedSettingsMenu(friends.length, profile),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildUnifiedSettingsMenu(int friendsCount) {
+  Widget _buildUnifiedSettingsMenu(int friendsCount, UserProfile profile) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF121826),
@@ -222,14 +220,28 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       child: Column(
         children: [
-          // Wallet & Premium
+          // Wallet & Balance
           ListTile(
             onTap: () {
               HapticFeedback.lightImpact();
               context.push(AppRoutes.wallet);
             },
             leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFF59E0B)),
-            title: Text('profile.premium_title'.trFallback('ODAT Premium'), style: const TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 13)),
+            title: const Text('Mening Hamyonim', style: TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 13)),
+            subtitle: const Text('Fenix Coin, PTS va Premium obuna', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF64748B), size: 13),
+          ),
+          const Divider(color: Color(0xFF1E283D), height: 1),
+
+          // Rejimni almashtirish (ODAT Personal / ODAT Family)
+          ListTile(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              _showRoleSwitchModal(context, profile);
+            },
+            leading: const Icon(Icons.swap_horiz_rounded, color: Color(0xFF38BDF8)),
+            title: const Text('Rejimni Almashtirish', style: TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 13)),
+            subtitle: Text(profile.isParent ? 'Joriy: ODAT Family (Ota-ona)' : 'Joriy: ODAT Personal (Shaxsiy)', style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
             trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF64748B), size: 13),
           ),
           const Divider(color: Color(0xFF1E283D), height: 1),
@@ -244,32 +256,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
           ),
 
-          const Divider(color: Colors.white10, height: 1),
-          // Friends
-          ListTile(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('${AppRoutes.leaderboard}?tab=friends');
-            },
-            leading: const Icon(Icons.people_alt_rounded, color: Color(0xFF3A7FCC)),
-            title: Text('profile.friends_title'.trFallback('Do‘stlar: $friendsCount ta'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: () => _showFriendsChatModal(context),
-                  icon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF3A7FCC), size: 18),
-                  tooltip: 'Chat',
-                ),
-                IconButton(
-                  onPressed: () => showAddFriendModal(context),
-                  icon: const Icon(Icons.person_add_rounded, color: Color(0xFF3A7FCC), size: 18),
-                  tooltip: 'Qo‘shish',
-                ),
-              ],
-            ),
-          ),
-          const Divider(color: Colors.white10, height: 1),
+          const Divider(color: Color(0xFF1E283D), height: 1),
           // Bug Bounty
           ListTile(
             onTap: () => showBugBountyModal(context),
@@ -300,6 +287,133 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         ],
       ),
+    );
+  }
+
+  void _showRoleSwitchModal(BuildContext context, UserProfile profile) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetCtx) {
+        final isParent = profile.isParent;
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+          decoration: const BoxDecoration(
+            color: Color(0xFF121826),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(top: BorderSide(color: Color(0xFF1E283D))),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Text(
+                'REJIMNI ALMASHTIRISH',
+                style: TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Qaysi rejimda davom etmoqchisiz?',
+                style: TextStyle(color: Color(0xFFF8FAFC), fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              // Option 1: ODAT Personal
+              InkWell(
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  Navigator.pop(sheetCtx);
+                  if (isParent) {
+                    await ref.read(userRepositoryProvider).updateRole(profile.uid, appRole: 'personal');
+                    if (context.mounted) context.go(AppRoutes.dailyPlan);
+                  }
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1B2335),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: !isParent ? const Color(0xFF38BDF8) : const Color(0xFF222B40), width: 1.2),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('👤', style: TextStyle(fontSize: 24)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text('ODAT Personal (Shaxsiy rejim)', style: TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 13.5)),
+                            SizedBox(height: 2),
+                            Text('Diqqat, odatlar, reyting va AI murabbiy', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                      if (!isParent)
+                        const Icon(Icons.check_circle_rounded, color: Color(0xFF38BDF8), size: 20),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Option 2: ODAT Family
+              InkWell(
+                onTap: () async {
+                  HapticFeedback.lightImpact();
+                  Navigator.pop(sheetCtx);
+                  if (!isParent) {
+                    await ref.read(userRepositoryProvider).updateRole(profile.uid, appRole: 'family', familyRole: 'parent');
+                    if (context.mounted) context.go(AppRoutes.parentHome);
+                  }
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1B2335),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isParent ? const Color(0xFF38BDF8) : const Color(0xFF222B40), width: 1.2),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('👨‍👩‍👧‍👦', style: TextStyle(fontSize: 24)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text('ODAT Family (Ota-ona rejimi)', style: TextStyle(color: Color(0xFFF8FAFC), fontWeight: FontWeight.bold, fontSize: 13.5)),
+                            SizedBox(height: 2),
+                            Text('Bolalar nazorati, ekran vaqti va oila kelishuvi', style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11)),
+                          ],
+                        ),
+                      ),
+                      if (isParent)
+                        const Icon(Icons.check_circle_rounded, color: Color(0xFF38BDF8), size: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

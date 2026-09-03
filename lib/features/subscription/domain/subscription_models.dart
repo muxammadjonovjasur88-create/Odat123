@@ -95,17 +95,17 @@ class PlanPricing {
 
   static const pro = PlanPricing(
     tier: SubscriptionPlanTier.pro,
-    monthlyPriceUzs: 59900,
-    yearlyPriceUzs: 499000,
-    yearlyEquivalentMonthlyUzs: 41583,
+    monthlyPriceUzs: 40000,
+    yearlyPriceUzs: 390000,
+    yearlyEquivalentMonthlyUzs: 32500,
     has7DayTrial: true,
   );
 
   static const family = PlanPricing(
     tier: SubscriptionPlanTier.family,
-    monthlyPriceUzs: 99900,
-    yearlyPriceUzs: 799000,
-    yearlyEquivalentMonthlyUzs: 66583,
+    monthlyPriceUzs: 79000,
+    yearlyPriceUzs: 690000,
+    yearlyEquivalentMonthlyUzs: 57500,
     has7DayTrial: true,
   );
 }

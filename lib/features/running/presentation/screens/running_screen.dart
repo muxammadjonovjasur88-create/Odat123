@@ -1,4 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -967,15 +967,33 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 onPressed: () => Navigator.pop(context),
                 icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
               ),
-              Column(
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    widget.isWalking ? 'ODAT GPS WALKING' : 'ODAT TERRITORY RUN',
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B2335),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                    ),
+                    child: Image.asset('assets/icon/flowa_icon.png', fit: BoxFit.contain),
                   ),
-                  Text(
-                    '⚡ ${user?.totalPoints ?? 0} PTS | 🔥 ${user?.streak ?? 0} kun',
-                    style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11, fontWeight: FontWeight.bold),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.isWalking ? 'ODAT GPS WALKING' : 'ODAT TERRITORY RUN',
+                        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900, letterSpacing: 1),
+                      ),
+                      Text(
+                        '⚡ ${user?.totalPoints ?? 0} PTS | 🔥 ${user?.streak ?? 0} kun',
+                        style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ],
                   ),
                 ],
               ),

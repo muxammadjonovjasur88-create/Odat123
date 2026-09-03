@@ -1,5 +1,5 @@
-﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,11 +26,40 @@ class _SocialSubscriptionSheet extends ConsumerStatefulWidget {
 }
 
 class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionSheet> {
-  bool _isClaimingTg = false;
-  bool _isClaimingIg = false;
+  final Set<String> _loadingKeys = {};
+
+  String _tgChannelUrl = 'https://t.me/odat_fenix';
+  String _tgBotUrl = 'https://t.me/odat_fenix_bot';
+  String _igUrl = 'https://instagram.com/odat_fenix';
+  String _ytUrl = 'https://youtube.com/@odat_app';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRemoteLinks();
+  }
+
+  Future<void> _fetchRemoteLinks() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('system_config')
+          .doc('social_links')
+          .get()
+          .timeout(const Duration(seconds: 3));
+      if (doc.exists && mounted) {
+        final data = doc.data();
+        setState(() {
+          _tgChannelUrl = (data?['telegram_channel'] as String?) ?? _tgChannelUrl;
+          _tgBotUrl = (data?['telegram_bot'] as String?) ?? _tgBotUrl;
+          _igUrl = (data?['instagram'] as String?) ?? _igUrl;
+          _ytUrl = (data?['youtube'] as String?) ?? _ytUrl;
+        });
+      }
+    } catch (_) {}
+  }
 
   Future<void> _handleSubscription({
-    required String channelType, // 'tg' or 'ig'
+    required String channelKey,
     required String url,
     required String badgeKey,
     required String title,
@@ -42,20 +71,19 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('profile.social_reward_claimed'.tr()),
-          backgroundColor: Color(0xFF090B18),
+          backgroundColor: const Color(0xFF090B18),
         ),
       );
       return;
     }
 
-    setState(() {
-      if (channelType == 'tg') _isClaimingTg = true;
-      if (channelType == 'ig') _isClaimingIg = true;
-    });
+    setState(() => _loadingKeys.add(channelKey));
 
     try {
       final uri = Uri.parse(url);
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
 
       // Award 1500 PTS
       final userRepo = ref.read(userRepositoryProvider);
@@ -65,6 +93,9 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
         'claimedBadges': FieldValue.arrayUnion([badgeKey]),
       }, SetOptions(merge: true));
+
+      // Refresh user profile so PTS badge updates instantly
+      ref.invalidate(userProfileProvider);
 
       // Log PTS History
       await FirebaseFirestore.instance
@@ -83,7 +114,7 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
         HapticFeedback.heavyImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3A7FCC),
+            backgroundColor: const Color(0xFF10B981),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             content: Row(
@@ -93,15 +124,15 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
                   height: 28,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: [Color(0xFF3A7FCC), Color(0xFF4AADDC)]),
+                    gradient: LinearGradient(colors: [Color(0xFF38BDF8), Color(0xFF10B981)]),
                   ),
-                  child: const Icon(Icons.check_rounded, color: Color(0xFF090B18), size: 18),
+                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 18),
                 ),
                 const SizedBox(width: 10),
                 const Expanded(
                   child: Text(
-                    'Tabriklaymiz! +1,500 PTS balansingizga qo‘shildi!',
-                    style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900),
+                    'Tabriklaymiz! +1,500 PTS balansingizga qo‘shildi! ⚡',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
                   ),
                 ),
               ],
@@ -117,10 +148,7 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
       }
     } finally {
       if (mounted) {
-        setState(() {
-          _isClaimingTg = false;
-          _isClaimingIg = false;
-        });
+        setState(() => _loadingKeys.remove(channelKey));
       }
     }
   }
@@ -128,24 +156,33 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userProfileProvider).asData?.value;
-    final claimedBadges = user?.claimedBadges ?? [];
-    final hasClaimedTg = claimedBadges.contains('social_sub_tg');
-    final hasClaimedIg = claimedBadges.contains('social_sub_ig');
+    final claimed = user?.claimedBadges ?? [];
+
+    final hasClaimedTg = claimed.contains('social_sub_tg');
+    final hasClaimedTgBot = claimed.contains('social_sub_tg_bot');
+    final hasClaimedIg = claimed.contains('social_sub_ig');
+    final hasClaimedYt = claimed.contains('social_sub_yt');
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       decoration: const BoxDecoration(
-        color: Color(0xFF04050D),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
+        color: Color(0xFF0F1420),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border(top: BorderSide(color: Color(0xFF1E283D), width: 1.5)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        24,
+        16,
+        24,
+        MediaQuery.of(context).viewInsets.bottom + 32,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Drag handle
           Center(
             child: Container(
-              width: 44,
+              width: 40,
               height: 4,
               decoration: BoxDecoration(
                 color: Colors.white24,
@@ -153,7 +190,7 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Header
           Row(
@@ -161,30 +198,32 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0x224AADDC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF4AADDC)),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF38BDF8), Color(0xFF8B5CF6)],
+                  ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.stars_rounded, color: Color(0xFF4AADDC), size: 24),
+                child: const Icon(Icons.stars_rounded, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 14),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: const [
                     Text(
-                      'BEPUL PTS MUKOFOTI 🎁',
+                      'IJTIMOIY TARMOQLAR',
                       style: TextStyle(
-                        color: Color(0xFF4AADDC),
+                        color: Color(0xFF64748B),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
                       ),
                     ),
+                    SizedBox(height: 2),
                     Text(
-                      'Ijtimoiy Tarmoqlarga Obuna',
+                      'Obuna bo‘ling & PTS yuting',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: Color(0xFFF8FAFC),
                         fontSize: 17,
                         fontWeight: FontWeight.w900,
                       ),
@@ -192,51 +231,83 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close_rounded, color: Colors.white60),
-                onPressed: () => Navigator.pop(context),
-              ),
             ],
           ),
           const SizedBox(height: 14),
           const Text(
-            'Rasmiy sahifalarimizga obuna bo‘ling va har bir tarmoq uchun +1,500 PTS dan jami 3,000 PTS oling:',
-            style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+            'Rasmiy sahifalarimizga obuna bo‘ling va har bir tarmoq uchun +1,500 PTS dan bonuslarga ega bo‘ling:',
+            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.4),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 1. Telegram Card
+          // 1. Telegram Channel Card
           _buildSocialCard(
-            title: 'Telegram Guruh',
+            title: 'Telegram Kanal',
             handle: '@odat_fenix',
             reward: '+1,500 PTS',
             icon: Icons.send_rounded,
             color: const Color(0xFF0088CC),
             isClaimed: hasClaimedTg,
-            isLoading: _isClaimingTg,
+            isLoading: _loadingKeys.contains('tg'),
             onTap: () => _handleSubscription(
-              channelType: 'tg',
-              url: 'https://t.me/odat_fenix',
+              channelKey: 'tg',
+              url: _tgChannelUrl,
               badgeKey: 'social_sub_tg',
               title: 'Telegram (@odat_fenix) obunasi',
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
-          // 2. Instagram Card
+          // 2. Telegram Bot Card
+          _buildSocialCard(
+            title: 'Telegram Bot & Hamjamiyat',
+            handle: '@odat_fenix_bot',
+            reward: '+1,500 PTS',
+            icon: Icons.smart_toy_rounded,
+            color: const Color(0xFF29B6F6),
+            isClaimed: hasClaimedTgBot,
+            isLoading: _loadingKeys.contains('tg_bot'),
+            onTap: () => _handleSubscription(
+              channelKey: 'tg_bot',
+              url: _tgBotUrl,
+              badgeKey: 'social_sub_tg_bot',
+              title: 'Telegram Bot (@odat_fenix_bot) ulanishi',
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 3. Instagram Card
           _buildSocialCard(
             title: 'Instagram Sahifa',
-            handle: '@fenix_it_group',
+            handle: '@odat_fenix',
             reward: '+1,500 PTS',
             icon: Icons.camera_alt_rounded,
             color: const Color(0xFFE1306C),
             isClaimed: hasClaimedIg,
-            isLoading: _isClaimingIg,
+            isLoading: _loadingKeys.contains('ig'),
             onTap: () => _handleSubscription(
-              channelType: 'ig',
-              url: 'https://instagram.com/fenix_it_group',
+              channelKey: 'ig',
+              url: _igUrl,
               badgeKey: 'social_sub_ig',
-              title: 'Instagram (@fenix_it_group) obunasi',
+              title: 'Instagram (@odat_fenix) obunasi',
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 4. YouTube Card
+          _buildSocialCard(
+            title: 'YouTube Kanal',
+            handle: '@odat_app',
+            reward: '+1,500 PTS',
+            icon: Icons.play_circle_fill_rounded,
+            color: const Color(0xFFFF0000),
+            isClaimed: hasClaimedYt,
+            isLoading: _loadingKeys.contains('yt'),
+            onTap: () => _handleSubscription(
+              channelKey: 'yt',
+              url: _ytUrl,
+              badgeKey: 'social_sub_yt',
+              title: 'YouTube (@odat_app) obunasi',
             ),
           ),
         ],
@@ -255,24 +326,24 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
     required VoidCallback onTap,
   }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF090B18),
-        borderRadius: BorderRadius.circular(20),
+        color: const Color(0xFF121826),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isClaimed ? const Color(0x3300FF88) : color.withValues(alpha: 0.5),
+          color: isClaimed ? const Color(0x3310B981) : const Color(0xFF1E283D),
           width: 1.2,
         ),
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 22),
+            child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -281,35 +352,69 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
               children: [
                 Text(
                   title,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                  style: const TextStyle(
+                    color: Color(0xFFF8FAFC),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   handle,
-                  style: TextStyle(color: color, fontSize: 11.5, fontWeight: FontWeight.w600),
+                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
                 ),
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: isClaimed || isLoading ? null : onTap,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: isClaimed ? const Color(0x224AADDC) : color,
-              foregroundColor: isClaimed ? const Color(0xFF3A7FCC) : Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: isLoading
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : Text(
-                    isClaimed ? 'Olingan ✅' : '$reward 🚀',
-                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 11.5),
+          if (isClaimed)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 14),
+                  SizedBox(width: 4),
+                  Text(
+                    'OLINGAN',
+                    style: TextStyle(
+                      color: Color(0xFF10B981),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
-          ),
+                ],
+              ),
+            )
+          else
+            ElevatedButton(
+              onPressed: isLoading ? null : onTap,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      reward,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+            ),
         ],
       ),
     );

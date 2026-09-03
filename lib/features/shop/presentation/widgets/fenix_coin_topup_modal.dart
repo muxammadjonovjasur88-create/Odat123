@@ -1,11 +1,9 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/services/in_app_purchase_service.dart';
 import '../../../../core/services/user_repository.dart';
-import '../../domain/fenix_coin_package.dart';
 
 import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,24 +76,29 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
   }
 
   Future<void> _claimDailyBonus() async {
-    final nowEpoch = DateTime.now().millisecondsSinceEpoch;
-    final diffMs = nowEpoch - _lastDailyBonusEpoch;
-    final oneDayMs = 24 * 60 * 60 * 1000;
+    final now = DateTime.now();
+    final nowEpoch = now.millisecondsSinceEpoch;
+    final lastClaim = DateTime.fromMillisecondsSinceEpoch(_lastDailyBonusEpoch);
+    final isAlreadyClaimedToday = _lastDailyBonusEpoch > 0 &&
+        lastClaim.year == now.year &&
+        lastClaim.month == now.month &&
+        lastClaim.day == now.day;
 
-    if (diffMs < oneDayMs && _lastDailyBonusEpoch > 0) {
-      final remainingMs = oneDayMs - diffMs;
-      final hours = remainingMs ~/ (60 * 60 * 1000);
-      final minutes = (remainingMs % (60 * 60 * 1000)) ~/ (60 * 1000);
-      final seconds = (remainingMs % (60 * 1000)) ~/ 1000;
+    if (isAlreadyClaimedToday) {
+      final midnight = DateTime(now.year, now.month, now.day + 1);
+      final remaining = midnight.difference(now);
+      final hours = remaining.inHours;
+      final minutes = remaining.inMinutes % 60;
+      final seconds = remaining.inSeconds % 60;
 
       HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF090B18),
+          backgroundColor: const Color(0xFF121826),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Text(
-            'Ertaga keling! Qolgan vaqt: $hours soat $minutes daqiqa $seconds soniya ⏳',
+            'Bugungi bonus olingan! Keyingi bonusga: $hours soat $minutes daqiqa $seconds soniya qoldi ⏳',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ),
@@ -108,15 +111,15 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
 
     HapticFeedback.heavyImpact();
     await ref.read(userRepositoryProvider).addFenixCoins(user.uid, 10);
+    ref.invalidate(userProfileProvider);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('fc_last_daily_bonus_epoch', nowEpoch);
-    setState(() => _lastDailyBonusEpoch = nowEpoch);
-
     if (mounted) {
+      setState(() => _lastDailyBonusEpoch = nowEpoch);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF3A7FCC),
+          backgroundColor: const Color(0xFF10B981),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Row(
@@ -133,8 +136,8 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
               const SizedBox(width: 10),
               const Expanded(
                 child: Text(
-                  'Tabriklaymiz! +10 Fenix Coin hisobingizga qo‘shildi!',
-                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900),
+                  'Tabriklaymiz! +10 Fenix Coin hisobingizga qo‘shildi! 🪙',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900),
                 ),
               ),
             ],
@@ -145,17 +148,21 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
   }
 
   Widget _buildDailyBonusBanner() {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    const cooldownMs = 24 * 60 * 60 * 1000;
-    final elapsed = now - _lastDailyBonusEpoch;
-    final isAvailable = _lastDailyBonusEpoch == 0 || elapsed >= cooldownMs;
+    final now = DateTime.now();
+    final lastClaim = DateTime.fromMillisecondsSinceEpoch(_lastDailyBonusEpoch);
+    final isAlreadyClaimedToday = _lastDailyBonusEpoch > 0 &&
+        lastClaim.year == now.year &&
+        lastClaim.month == now.month &&
+        lastClaim.day == now.day;
+    final isAvailable = !isAlreadyClaimedToday;
 
     String countdownText = 'OLISH';
     if (!isAvailable) {
-      final remainingMs = cooldownMs - elapsed;
-      final hours = remainingMs ~/ (3600 * 1000);
-      final minutes = (remainingMs % (3600 * 1000)) ~/ (60 * 1000);
-      final seconds = (remainingMs % (60 * 1000)) ~/ 1000;
+      final midnight = DateTime(now.year, now.month, now.day + 1);
+      final remaining = midnight.difference(now);
+      final hours = remaining.inHours;
+      final minutes = remaining.inMinutes % 60;
+      final seconds = remaining.inSeconds % 60;
       countdownText = '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
 
