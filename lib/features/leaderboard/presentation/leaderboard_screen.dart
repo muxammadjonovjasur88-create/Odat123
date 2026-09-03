@@ -457,7 +457,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       icon: const Icon(Icons.people_outline_rounded, size: 18),
-                      label: Text('community.card_title'.trFallback('Hamfikrlar'), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                      label: Text('community.card_title'.tr(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
                     ),
                   ),
                 ],
