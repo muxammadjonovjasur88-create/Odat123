@@ -106,7 +106,7 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => Dialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -118,9 +118,9 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
                 height: 64,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [Color(0xFF3B9BFF), Color(0xFF5BC8FA)]),
+                  gradient: LinearGradient(colors: [Color(0xFF3A7FCC), Color(0xFF4AADDC)]),
                 ),
-                child: const Icon(Icons.emoji_events_rounded, color: Color(0xFF080B14), size: 32),
+                child: const Icon(Icons.emoji_events_rounded, color: Color(0xFF04050D), size: 32),
               ),
               const SizedBox(height: 16),
               Text(
@@ -130,17 +130,17 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
               const SizedBox(height: 6),
               Text(
                 'play.accuracy'.tr() + ': $accuracy% • ' + 'play.score'.tr() + ': $_score',
-                style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 13.5, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 13.5, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _rewardPill('+25 XP', const Color(0xFF5BC8FA)),
+                  _rewardPill('+25 XP', const Color(0xFF4AADDC)),
                   const SizedBox(width: 8),
                   _rewardPill('+5 FC', const Color(0xFFFFB703)),
                   const SizedBox(width: 8),
-                  _rewardPill('+1 Index', const Color(0xFF3B9BFF)),
+                  _rewardPill('+1 Index', const Color(0xFF3A7FCC)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -150,13 +150,13 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B9BFF),
+                  backgroundColor: const Color(0xFF3A7FCC),
                   padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
                   'play.continue_btn'.tr(),
-                  style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900),
                 ),
               ),
             ],
@@ -183,15 +183,15 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
     final questions = ref.watch(activeGameQuestionsProvider((gameId: widget.gameId, category: widget.category)));
     if (questions.isEmpty) {
       return const Scaffold(
-        backgroundColor: Color(0xFF080B14),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFF3B9BFF))),
+        backgroundColor: Color(0xFF04050D),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFF3A7FCC))),
       );
     }
 
     final q = questions[_currentIndex];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -229,12 +229,12 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D1220),
+                    color: const Color(0xFF090B18),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.timer_outlined, color: Color(0xFF5BC8FA), size: 16),
+                      const Icon(Icons.timer_outlined, color: Color(0xFF4AADDC), size: 16),
                       const SizedBox(width: 6),
                       Text(
                         '0:$_secondsLeft',
@@ -257,7 +257,7 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
               child: LinearProgressIndicator(
                 value: (_currentIndex + 1) / questions.length,
                 backgroundColor: Colors.white10,
-                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B9BFF)),
+                valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3A7FCC)),
                 minHeight: 6,
               ),
             ),
@@ -272,19 +272,19 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
                   colors: [Color(0xFF132034), Color(0xFF0C1422)],
                 ),
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.3)),
+                border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.3)),
               ),
               child: Column(
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color(0x225BC8FA),
+                      color: const Color(0x224AADDC),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       '${q.topic} (${_currentIndex + 1}/${questions.length})',
-                      style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -333,11 +333,11 @@ class _ActiveGameScreenState extends ConsumerState<ActiveGameScreen> {
 
   Widget _buildOptionTile(int index, String optionText, GameQuestion q) {
     Color cardBorder = Colors.white10;
-    Color cardBg = const Color(0xFF0D1220);
+    Color cardBg = const Color(0xFF090B18);
 
     if (_isAnswerChecked) {
       if (index == q.correctIndex) {
-        cardBorder = const Color(0xFF3B9BFF);
+        cardBorder = const Color(0xFF3A7FCC);
         cardBg = const Color(0x3300FF88);
       } else if (_selectedOption == index) {
         cardBorder = const Color(0xFFFF5252);

@@ -57,7 +57,7 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
     if (_isFinished) {
       final passed = _correctAnswers >= 4;
       return Dialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -69,9 +69,9 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: passed ? const Color(0x2200FF88) : const Color(0x22FF5252),
+                  color: passed ? const Color(0x224AADDC) : const Color(0x22FF5252),
                 ),
-                child: Icon(passed ? Icons.verified_rounded : Icons.replay_rounded, color: passed ? const Color(0xFF3B9BFF) : const Color(0xFFFF5252), size: 32),
+                child: Icon(passed ? Icons.verified_rounded : Icons.replay_rounded, color: passed ? const Color(0xFF3A7FCC) : const Color(0xFFFF5252), size: 32),
               ),
               const SizedBox(height: 16),
               Text(
@@ -81,7 +81,7 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
               const SizedBox(height: 6),
               Text(
                 '$_correctAnswers / 5 to‘g‘ri javob (${(_correctAnswers / 5 * 100).round()}%)',
-                style: TextStyle(color: passed ? const Color(0xFF3B9BFF) : Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
+                style: TextStyle(color: passed ? const Color(0xFF3A7FCC) : Colors.white70, fontSize: 14, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
@@ -98,13 +98,13 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: passed ? const Color(0xFF3B9BFF) : const Color(0xFF1B2844),
+                  backgroundColor: passed ? const Color(0xFF3A7FCC) : const Color(0xFF1B2844),
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 child: Text(
                   'Yopish',
-                  style: TextStyle(color: passed ? const Color(0xFF080B14) : Colors.white, fontWeight: FontWeight.w900),
+                  style: TextStyle(color: passed ? const Color(0xFF04050D) : Colors.white, fontWeight: FontWeight.w900),
                 ),
               ),
             ],
@@ -116,7 +116,7 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
     final q = _questions[_currentIndex];
 
     return Dialog(
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -133,7 +133,7 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
                 ),
                 Text(
                   '+${widget.rewardCoins} FC',
-                  style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 12, fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 12, fontWeight: FontWeight.w900),
                 ),
               ],
             ),
@@ -169,7 +169,7 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
                       }
                     },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B9BFF),
+                backgroundColor: const Color(0xFF3A7FCC),
                 disabledBackgroundColor: Colors.white10,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -177,7 +177,7 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
               child: Center(
                 child: Text(
                   _currentIndex < _questions.length - 1 ? 'Keyingi Savol' : 'Yakunlash',
-                  style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 13),
+                  style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 13),
                 ),
               ),
             ),
@@ -195,9 +195,9 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: isSel ? const Color(0x2200FF88) : const Color(0xFF131929),
+          color: isSel ? const Color(0x224AADDC) : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSel ? const Color(0xFF3B9BFF) : Colors.transparent),
+          border: Border.all(color: isSel ? const Color(0xFF3A7FCC) : Colors.transparent),
         ),
         child: Row(
           children: [
@@ -206,12 +206,12 @@ class _AiKnowledgeCheckDialogState extends State<_AiKnowledgeCheckDialog> {
               height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSel ? const Color(0xFF3B9BFF) : Colors.white12,
+                color: isSel ? const Color(0xFF3A7FCC) : Colors.white12,
               ),
               child: Center(
                 child: Text(
                   String.fromCharCode(65 + index),
-                  style: TextStyle(color: isSel ? const Color(0xFF080B14) : Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: isSel ? const Color(0xFF04050D) : Colors.white70, fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

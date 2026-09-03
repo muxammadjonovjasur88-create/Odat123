@@ -22,12 +22,12 @@ class TotalPointsBadge extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
         decoration: BoxDecoration(
-          color: const Color(0x225BC8FA),
+          color: const Color(0x224AADDC),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xAA5BC8FA), width: 1),
+          border: Border.all(color: const Color(0xAA4AADDC), width: 1),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x225BC8FA),
+              color: Color(0x224AADDC),
               blurRadius: 6,
               spreadRadius: 0.5,
             ),
@@ -38,7 +38,7 @@ class TotalPointsBadge extends ConsumerWidget {
           children: [
             const Icon(
               Icons.bolt_rounded,
-              color: Color(0xFF5BC8FA),
+              color: Color(0xFF4AADDC),
               size: 15,
             ),
             const SizedBox(width: 3),
@@ -55,7 +55,7 @@ class TotalPointsBadge extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(1.5),
               decoration: const BoxDecoration(
-                color: Color(0xFF5BC8FA),
+                color: Color(0xFF4AADDC),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

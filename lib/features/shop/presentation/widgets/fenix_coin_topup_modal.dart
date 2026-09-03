@@ -91,7 +91,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
       HapticFeedback.lightImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF131929),
+          backgroundColor: const Color(0xFF090B18),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Text(
@@ -116,7 +116,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF3B9BFF),
+          backgroundColor: const Color(0xFF3A7FCC),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Row(
@@ -128,7 +128,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                   shape: BoxShape.circle,
                   gradient: LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFF8C00)]),
                 ),
-                child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF0D1220), size: 18),
+                child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF090B18), size: 18),
               ),
               const SizedBox(width: 10),
               const Expanded(
@@ -190,11 +190,11 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                 decoration: BoxDecoration(
                   color: isAvailable ? const Color(0x2200BFFF) : Colors.white10,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: isAvailable ? const Color(0xFF5BC8FA) : Colors.white24),
+                  border: Border.all(color: isAvailable ? const Color(0xFF4AADDC) : Colors.white24),
                 ),
                 child: Icon(
                   isAvailable ? Icons.card_giftcard_rounded : Icons.hourglass_top_rounded,
-                  color: isAvailable ? const Color(0xFF5BC8FA) : Colors.white60,
+                  color: isAvailable ? const Color(0xFF4AADDC) : Colors.white60,
                   size: 20,
                 ),
               ),
@@ -206,7 +206,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                     Text(
                       'KUNLIK BEPUL BONUS',
                       style: TextStyle(
-                        color: isAvailable ? const Color(0xFF5BC8FA) : Colors.white38,
+                        color: isAvailable ? const Color(0xFF4AADDC) : Colors.white38,
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
@@ -226,7 +226,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: isAvailable ? const Color(0xFF5BC8FA) : Colors.white12,
+                  color: isAvailable ? const Color(0xFF4AADDC) : Colors.white12,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -309,7 +309,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             content: Row(
@@ -319,9 +319,9 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                   height: 32,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)]),
+                    gradient: LinearGradient(colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)]),
                   ),
-                  child: const Icon(Icons.check_rounded, color: Color(0xFF0D1220), size: 20),
+                  child: const Icon(Icons.check_rounded, color: Color(0xFF090B18), size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -351,7 +351,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
         maxHeight: MediaQuery.of(context).size.height * 0.92,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF080B14),
+        color: Color(0xFF04050D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(color: Color(0x88FFB703), width: 1.5),
@@ -398,7 +398,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131929),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: Colors.white12),
                 ),
@@ -412,7 +412,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                         shape: BoxShape.circle,
                         gradient: LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFF8C00)]),
                       ),
-                      child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF0D1220), size: 28),
+                      child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF090B18), size: 28),
                     ),
                     const SizedBox(height: 12),
                     Text(
@@ -458,7 +458,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                     shape: BoxShape.circle,
                     gradient: LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFF8C00)]),
                   ),
-                  child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF0D1220), size: 22),
+                  child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF090B18), size: 22),
                 ),
               ),
               const SizedBox(width: 10),
@@ -536,7 +536,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0x44FFB703)),
       ),
@@ -565,7 +565,7 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF080B14),
+                    color: const Color(0xFF04050D),
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(color: Colors.white24),
                   ),
@@ -629,13 +629,13 @@ class _FenixCoinTopUpSheetState extends ConsumerState<_FenixCoinTopUpSheet>
       ),
       child: const Row(
         children: [
-          Icon(Icons.security_rounded, color: Color(0xFF3B9BFF), size: 15),
+          Icon(Icons.security_rounded, color: Color(0xFF3A7FCC), size: 15),
           SizedBox(width: 8),
           Expanded(
             child: Text(
               'Google Play xavfsiz to\'lov · 1 USD = 12 800 so\'m',
               style: TextStyle(
-                color: Color(0xFF3B9BFF),
+                color: Color(0xFF3A7FCC),
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),

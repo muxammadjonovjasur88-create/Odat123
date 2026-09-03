@@ -47,10 +47,10 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
         decoration: BoxDecoration(
           color: const Color(0xFF0D1420),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4), width: 1.5),
+          border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3B9BFF).withValues(alpha: 0.12),
+              color: const Color(0xFF3A7FCC).withValues(alpha: 0.12),
               blurRadius: 28,
             ),
           ],
@@ -65,10 +65,10 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B9BFF).withValues(alpha: 0.15),
+                      color: const Color(0xFF3A7FCC).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.add_location_alt_rounded, color: Color(0xFF3B9BFF), size: 22),
+                    child: const Icon(Icons.add_location_alt_rounded, color: Color(0xFF3A7FCC), size: 22),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -93,7 +93,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: ChoiceChip(
-                        avatar: Icon(preset['iconData'] as IconData, size: 16, color: isSelected ? const Color(0xFF080B14) : const Color(0xFF3B9BFF)),
+                        avatar: Icon(preset['iconData'] as IconData, size: 16, color: isSelected ? const Color(0xFF04050D) : const Color(0xFF3A7FCC)),
                         label: Text(preset['name'] as String),
                         selected: isSelected,
                         onSelected: (val) {
@@ -108,10 +108,10 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                             });
                           }
                         },
-                        selectedColor: const Color(0xFF3B9BFF),
+                        selectedColor: const Color(0xFF3A7FCC),
                         backgroundColor: const Color(0xFF162032),
                         labelStyle: TextStyle(
-                          color: isSelected ? const Color(0xFF080B14) : Colors.white70,
+                          color: isSelected ? const Color(0xFF04050D) : Colors.white70,
                           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                           fontSize: 12,
                         ),
@@ -135,7 +135,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                   hintText: 'Masalan: 178-Maktab yoki Robototexnika',
                   hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
                   filled: true,
-                  fillColor: const Color(0xFF131929),
+                  fillColor: const Color(0xFF090B18),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
@@ -155,7 +155,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                   hintText: 'Manzil (ko\'cha, tuman)',
                   hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
                   filled: true,
-                  fillColor: const Color(0xFF131929),
+                  fillColor: const Color(0xFF090B18),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
@@ -172,7 +172,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                   ),
                   Text(
                     '${_radiusMeters.round()} metr',
-                    style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 13, fontWeight: FontWeight.w800),
+                    style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 13, fontWeight: FontWeight.w800),
                   ),
                 ],
               ),
@@ -181,7 +181,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                 min: 50,
                 max: 1000,
                 divisions: 19,
-                activeColor: const Color(0xFF3B9BFF),
+                activeColor: const Color(0xFF3A7FCC),
                 inactiveColor: Colors.white12,
                 onChanged: (val) => setState(() => _radiusMeters = val),
               ),
@@ -191,7 +191,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131929),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white10),
                 ),
@@ -203,7 +203,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                       title: Text('family.notify_arrival'.tr(), style: const TextStyle(color: Colors.white, fontSize: 13)),
                       subtitle: Text('family.notify_arrival_sub'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
                       value: _notifyArrival,
-                      activeThumbColor: const Color(0xFF3B9BFF),
+                      activeThumbColor: const Color(0xFF3A7FCC),
                       onChanged: (val) => setState(() => _notifyArrival = val),
                     ),
                     const Divider(color: Colors.white10, height: 8),
@@ -213,7 +213,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                       title: Text('family.notify_departure'.tr(), style: const TextStyle(color: Colors.white, fontSize: 13)),
                       subtitle: Text('family.notify_departure_sub'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
                       value: _notifyDeparture,
-                      activeThumbColor: const Color(0xFF3B9BFF),
+                      activeThumbColor: const Color(0xFF3A7FCC),
                       onChanged: (val) => setState(() => _notifyDeparture = val),
                     ),
                   ],
@@ -252,12 +252,12 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF3B9BFF), Color(0xFF00C853)],
+                      colors: [Color(0xFF3A7FCC), Color(0xFF00C853)],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF3B9BFF).withValues(alpha: 0.3),
+                        color: const Color(0xFF3A7FCC).withValues(alpha: 0.3),
                         blurRadius: 14,
                         offset: const Offset(0, 4),
                       ),
@@ -266,7 +266,7 @@ class _AddFamilyPlaceDialogState extends ConsumerState<AddFamilyPlaceDialog> {
                   child: Center(
                     child: Text(
                       'family.save_place'.tr(),
-                      style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 15),
+                      style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 15),
                     ),
                   ),
                 ),

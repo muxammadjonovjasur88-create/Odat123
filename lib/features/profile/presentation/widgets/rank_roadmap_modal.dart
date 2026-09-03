@@ -68,9 +68,9 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
         maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF080B14),
+        color: Color(0xFF04050D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+        border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
       child: Column(
@@ -106,7 +106,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                     Text(
                       'roadmap.title'.tr(),
                       style: const TextStyle(
-                        color: Color(0xFF5BC8FA),
+                        color: Color(0xFF4AADDC),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
@@ -134,9 +134,9 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
           // Tabs
           TabBar(
             controller: _tabController,
-            indicatorColor: const Color(0xFF5BC8FA),
+            indicatorColor: const Color(0xFF4AADDC),
             indicatorWeight: 3,
-            labelColor: const Color(0xFF5BC8FA),
+            labelColor: const Color(0xFF4AADDC),
             unselectedLabelColor: Colors.white54,
             labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
             tabs: [
@@ -176,7 +176,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                                     ? step.color
                                     : isReached
                                         ? step.color.withValues(alpha: 0.3)
-                                        : const Color(0xFF131929),
+                                        : const Color(0xFF090B18),
                                 border: Border.all(
                                   color: isReached ? step.color : Colors.white24,
                                   width: isCurrent ? 2.5 : 1.5,
@@ -217,7 +217,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                             decoration: BoxDecoration(
                               color: isCurrent
                                   ? step.color.withValues(alpha: 0.15)
-                                  : const Color(0xFF0D1220),
+                                  : const Color(0xFF090B18),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isCurrent
@@ -288,7 +288,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                                   Text(
                                     'Keyingi unvonga: $winsNeededForNext ta g‘alaba qoldi ⚔️',
                                     style: const TextStyle(
-                                      color: Color(0xFF3B9BFF),
+                                      color: Color(0xFF3A7FCC),
                                       fontWeight: FontWeight.w900,
                                       fontSize: 11,
                                     ),
@@ -349,7 +349,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
         setState(() => _locallyClaimedLevels.add(badgeKey));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             content: Text('$levelNum-Daraja mukofoti olindi: +${levelInfo.rewardCoins} Fenix Coin! 🎉',
                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
           ),
@@ -383,7 +383,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              backgroundColor: const Color(0xFF131929),
+              backgroundColor: const Color(0xFF090B18),
               content: Text('profile.all_rank_rewards_claimed'.tr()),
             ),
           );
@@ -415,7 +415,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
         setState(() => _locallyClaimedLevels.addAll(newlyClaimed));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             content: Text('${newlyClaimed.length} ta daraja mukofoti olindi: +$totalCoins Fenix Coin! 🚀',
                 style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900)),
           ),
@@ -450,7 +450,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+                    colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: const [
@@ -499,14 +499,14 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
                 decoration: BoxDecoration(
                   color: isCurrent
-                      ? const Color(0x225BC8FA)
-                      : const Color(0xFF0D1220),
+                      ? const Color(0x224AADDC)
+                      : const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isCurrent
-                        ? const Color(0xFF5BC8FA)
+                        ? const Color(0xFF4AADDC)
                         : isReached
-                            ? const Color(0x4400FF88)
+                            ? const Color(0x444AADDC)
                             : Colors.white10,
                     width: isCurrent ? 1.5 : 1,
                   ),
@@ -556,7 +556,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF5BC8FA),
+                                    color: const Color(0xFF4AADDC),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text(
@@ -585,18 +585,18 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                           decoration: BoxDecoration(
-                            color: const Color(0x2200FF88),
+                            color: const Color(0x224AADDC),
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 13),
+                              Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 13),
                               SizedBox(width: 4),
                               Text(
                                 'Olingan',
                                 style: TextStyle(
-                                  color: Color(0xFF3B9BFF),
+                                  color: Color(0xFF3A7FCC),
                                   fontWeight: FontWeight.w900,
                                   fontSize: 11,
                                 ),
@@ -608,7 +608,7 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                         ElevatedButton(
                           onPressed: () => _claimLevelReward(levelNum, levelInfo, user),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B9BFF),
+                            backgroundColor: const Color(0xFF3A7FCC),
                             foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             minimumSize: Size.zero,
@@ -626,11 +626,11 @@ class _RankRoadmapSheetState extends ConsumerState<_RankRoadmapSheet>
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.bolt_rounded, color: Color(0xFF5BC8FA), size: 13),
+                              const Icon(Icons.bolt_rounded, color: Color(0xFF4AADDC), size: 13),
                               Text(
                                 '+${levelInfo.rewardPts} PTS',
                                 style: const TextStyle(
-                                  color: Color(0xFF5BC8FA),
+                                  color: Color(0xFF4AADDC),
                                   fontWeight: FontWeight.w900,
                                   fontSize: 11,
                                 ),

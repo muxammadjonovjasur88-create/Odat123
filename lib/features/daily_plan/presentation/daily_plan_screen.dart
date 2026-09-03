@@ -69,7 +69,7 @@ class _DailyPlanScreenState extends ConsumerState<DailyPlanScreen> {
               duration: const Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              backgroundColor: const Color(0xFF131929),
+              backgroundColor: const Color(0xFF090B18),
             ),
           );
         } else {
@@ -81,7 +81,7 @@ class _DailyPlanScreenState extends ConsumerState<DailyPlanScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         appBar: const FlowaAppBar(),
         bottomNavigationBar: AppBottomNav(
           current: AppNavTab.dashboard,
@@ -215,7 +215,7 @@ class _GradientProgressBar extends StatelessWidget {
       height: height,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(height / 2),
       ),
       child: LayoutBuilder(

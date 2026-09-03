@@ -74,7 +74,8 @@ class PullUpStrategy implements ExerciseStrategy {
     final wrist = leftWrist ?? rightWrist;
     final shoulder = leftShoulder ?? rightShoulder;
     if (wrist != null && shoulder != null && wrist.likelihood > 0.4 && shoulder.likelihood > 0.4) {
-      if (wrist.y > shoulder.y - 15.0) {
+      // Allow 60px tolerance so people farther from camera still pass
+      if (wrist.y > shoulder.y + 60.0) {
         return ExerciseEvaluationResult(
           validRepAdded: false,
           currentCount: _repCount,
@@ -143,7 +144,8 @@ class PullUpStrategy implements ExerciseStrategy {
         break;
 
       case PullUpPhase.topHold:
-        if (angle >= (hangingAngleThreshold - 15)) {
+        // Rep counted when angle opens back to at least 110° (coming down from top)
+        if (angle >= (hangingAngleThreshold - 40)) {
           final repDuration = timestampMs - _phaseStartTimeMs;
           if (repDuration >= minRepDurationMs && (timestampMs - _lastRepTimestampMs) >= minRepDurationMs) {
             _repCount++;

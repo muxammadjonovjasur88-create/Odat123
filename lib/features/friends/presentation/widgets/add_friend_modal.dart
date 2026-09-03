@@ -70,7 +70,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             content: Text(
@@ -114,10 +114,10 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
           maxHeight: MediaQuery.of(context).size.height * 0.85,
         ),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(
-            top: BorderSide(color: Color(0x6639FF14), width: 1.5),
+            top: BorderSide(color: Color(0x664AADDC), width: 1.5),
           ),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -144,13 +144,13 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0x2239FF14),
+                    color: const Color(0x224AADDC),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0x4439FF14)),
+                    border: Border.all(color: const Color(0x444AADDC)),
                   ),
                   child: const Icon(
                     Icons.person_add_alt_1_rounded,
-                    color: Color(0xFF3B9BFF),
+                    color: Color(0xFF3A7FCC),
                     size: 22,
                   ),
                 ),
@@ -161,7 +161,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                     Text(
                       'friends.add_title'.tr(),
                       style: const TextStyle(
-                        color: Color(0xFF3B9BFF),
+                        color: Color(0xFF3A7FCC),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
@@ -185,13 +185,13 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D1220),
+                color: const Color(0xFF090B18),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0x445BC8FA)),
+                border: Border.all(color: const Color(0x444AADDC)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.fingerprint_rounded, color: Color(0xFF5BC8FA), size: 26),
+                  const Icon(Icons.fingerprint_rounded, color: Color(0xFF4AADDC), size: 26),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -200,7 +200,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                         const Text(
                           'ODAT ID',
                           style: TextStyle(
-                            color: Color(0xFF5BC8FA),
+                            color: Color(0xFF4AADDC),
                             fontSize: 9.5,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1,
@@ -228,13 +228,13 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                         SnackBar(
                           content: Text('profile.id_copied'.tr(namedArgs: {'id': numId})),
                           behavior: SnackBarBehavior.floating,
-                          backgroundColor: const Color(0xFF5BC8FA),
+                          backgroundColor: const Color(0xFF4AADDC),
                         ),
                       );
                     },
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0x335BC8FA),
-                      foregroundColor: const Color(0xFF5BC8FA),
+                      backgroundColor: const Color(0x334AADDC),
+                      foregroundColor: const Color(0xFF4AADDC),
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       minimumSize: Size.zero,
@@ -255,10 +255,10 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0x2239FF14), Color(0x225BC8FA)],
+                    colors: [Color(0x224AADDC), Color(0x224AADDC)],
                   ),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0x4439FF14)),
+                  border: Border.all(color: const Color(0x444AADDC)),
                 ),
                 child: Row(
                   children: [
@@ -271,7 +271,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                           Text(
                             'friends.invite_share_title'.tr(),
                             style: const TextStyle(
-                              color: Color(0xFF3B9BFF),
+                              color: Color(0xFF3A7FCC),
                               fontSize: 10,
                               fontWeight: FontWeight.w900,
                             ),
@@ -283,7 +283,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                         ],
                       ),
                     ),
-                    const Icon(Icons.share_rounded, color: Color(0xFF3B9BFF), size: 18),
+                    const Icon(Icons.share_rounded, color: Color(0xFF3A7FCC), size: 18),
                   ],
                 ),
               ),
@@ -328,15 +328,15 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                           margin: const EdgeInsets.only(top: 6),
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0D1220),
+                            color: const Color(0xFF090B18),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
                               const CircleAvatar(
                                 radius: 16,
-                                backgroundColor: Color(0x335BC8FA),
-                                child: Icon(Icons.person, color: Color(0xFF5BC8FA), size: 18),
+                                backgroundColor: Color(0x334AADDC),
+                                child: Icon(Icons.person, color: Color(0xFF4AADDC), size: 18),
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -354,7 +354,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF3B9BFF),
+                                  backgroundColor: const Color(0xFF3A7FCC),
                                   foregroundColor: Colors.black,
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   minimumSize: Size.zero,
@@ -398,19 +398,19 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
               decoration: InputDecoration(
                 hintText: 'friends.search_hint'.tr(),
                 hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF3B9BFF), size: 20),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF3A7FCC), size: 20),
                 suffixIcon: _isSearching
                     ? const Padding(
                         padding: EdgeInsets.all(12),
                         child: SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF3B9BFF)),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF3A7FCC)),
                         ),
                       )
                     : null,
                 filled: true,
-                fillColor: const Color(0xFF131929),
+                fillColor: const Color(0xFF090B18),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -418,7 +418,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: Color(0xFF3B9BFF)),
+                  borderSide: const BorderSide(color: Color(0xFF3A7FCC)),
                 ),
               ),
             ),
@@ -438,9 +438,9 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                               height: 54,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0x1A5BC8FA),
+                                color: Color(0x1A4AADDC),
                               ),
-                              child: const Icon(Icons.person_search_rounded, color: Color(0xFF5BC8FA), size: 28),
+                              child: const Icon(Icons.person_search_rounded, color: Color(0xFF4AADDC), size: 28),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -464,7 +464,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                         return Container(
                           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF131929),
+                            color: const Color(0xFF090B18),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: const Color(0x22FFFFFF)),
                           ),
@@ -472,13 +472,13 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                             children: [
                               CircleAvatar(
                                 radius: 18,
-                                backgroundColor: const Color(0x2239FF14),
+                                backgroundColor: const Color(0x224AADDC),
                                 child: Text(
                                   (friend.displayName ?? friend.name).isNotEmpty
                                       ? (friend.displayName ?? friend.name)[0].toUpperCase()
                                       : '?',
                                   style: const TextStyle(
-                                    color: Color(0xFF3B9BFF),
+                                    color: Color(0xFF3A7FCC),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -511,7 +511,7 @@ class _AddFriendSheetState extends ConsumerState<_AddFriendSheet> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: isAdded
                                       ? Colors.white12
-                                      : const Color(0xFF3B9BFF),
+                                      : const Color(0xFF3A7FCC),
                                   foregroundColor: Colors.black,
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                   minimumSize: Size.zero,

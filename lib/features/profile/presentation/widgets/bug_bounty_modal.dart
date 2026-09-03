@@ -131,12 +131,12 @@ class _BugBountyModalState extends ConsumerState<BugBountyModal> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             content: const Row(
               children: [
-                Icon(Icons.check_circle_rounded, color: Color(0xFF0D1220), size: 22),
+                Icon(Icons.check_circle_rounded, color: Color(0xFF090B18), size: 22),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -167,7 +167,7 @@ class _BugBountyModalState extends ConsumerState<BugBountyModal> {
       constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
       padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1220),
+        color: Color(0xFF090B18),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(top: BorderSide(color: Color(0xFFFFB703), width: 1.5)),
       ),
@@ -215,7 +215,7 @@ class _BugBountyModalState extends ConsumerState<BugBountyModal> {
                 onPressed: () => setState(() => _showMyReports = !_showMyReports),
                 child: Text(
                   _showMyReports ? 'Yangi yozish' : 'Tarix',
-                  style: const TextStyle(color: Color(0xFF5BC8FA), fontWeight: FontWeight.bold, fontSize: 12),
+                  style: const TextStyle(color: Color(0xFF4AADDC), fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
             ],
@@ -248,7 +248,7 @@ class _BugBountyModalState extends ConsumerState<BugBountyModal> {
                               shape: BoxShape.circle,
                               gradient: LinearGradient(colors: [Color(0xFFFFB703), Color(0xFFFF8C00)]),
                             ),
-                            child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF0D1220), size: 20),
+                            child: const Icon(Icons.monetization_on_rounded, color: Color(0xFF090B18), size: 20),
                           ),
                           const SizedBox(width: 10),
                           const Expanded(
@@ -271,9 +271,9 @@ class _BugBountyModalState extends ConsumerState<BugBountyModal> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF131929),
+                        color: const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0x335BC8FA)),
+                        border: Border.all(color: const Color(0x334AADDC)),
                       ),
                       child: TextField(
                         controller: _descController,
@@ -353,7 +353,7 @@ class _BugBountyModalState extends ConsumerState<BugBountyModal> {
             Color statusColor = const Color(0xFFFFB703);
             String statusText = 'Kutilmoqda (Tekshiruvda)';
             if (status == 'approved') {
-              statusColor = const Color(0xFF3B9BFF);
+              statusColor = const Color(0xFF3A7FCC);
               statusText = 'Tasdiqlandi (+$points PTS berildi! ✅)';
             } else if (status == 'rejected') {
               statusColor = const Color(0xFFFF0055);
@@ -364,7 +364,7 @@ class _BugBountyModalState extends ConsumerState<BugBountyModal> {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF131929),
+                color: const Color(0xFF090B18),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: statusColor.withValues(alpha: 0.4)),
               ),

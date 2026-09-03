@@ -124,9 +124,9 @@ class _BossRaidScreenState extends ConsumerState<BossRaidScreen>
     final boss = bossAsync.asData?.value ?? fallbackBoss;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -233,7 +233,7 @@ class _BossRaidScreenState extends ConsumerState<BossRaidScreen>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D1220),
+                      color: const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: const Color(0x33FF0055)),
                     ),
@@ -255,7 +255,7 @@ class _BossRaidScreenState extends ConsumerState<BossRaidScreen>
                           child: LinearProgressIndicator(
                             value: boss.hpPercent,
                             minHeight: 14,
-                            backgroundColor: const Color(0xFF080B14),
+                            backgroundColor: const Color(0xFF04050D),
                             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFFF0055)),
                           ),
                         ),
@@ -269,9 +269,9 @@ class _BossRaidScreenState extends ConsumerState<BossRaidScreen>
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0D1220),
+                      color: const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0x335BC8FA)),
+                      border: Border.all(color: const Color(0x334AADDC)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -281,11 +281,11 @@ class _BossRaidScreenState extends ConsumerState<BossRaidScreen>
                           style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900),
                         ),
                         const SizedBox(height: 12),
-                        _buildObjectiveRow('boss_raid.pushup_label'.tr(), '${boss.currentPushUps} / ${boss.targetPushUps} ta', boss.currentPushUps / boss.targetPushUps, const Color(0xFF5BC8FA)),
+                        _buildObjectiveRow('boss_raid.pushup_label'.tr(), '${boss.currentPushUps} / ${boss.targetPushUps} ta', boss.currentPushUps / boss.targetPushUps, const Color(0xFF4AADDC)),
                         const SizedBox(height: 10),
                         _buildObjectiveRow('boss_raid.running_label'.tr(), '${boss.currentRunningKm.toStringAsFixed(1)} / ${boss.targetRunningKm.toStringAsFixed(1)} km', (boss.currentRunningKm / boss.targetRunningKm).clamp(0.0, 1.0), const Color(0xFFFF5500)),
                         const SizedBox(height: 10),
-                        _buildObjectiveRow('boss_raid.focus_label'.tr(), '${boss.currentFocusMinutes} / ${boss.targetFocusMinutes} daq', (boss.currentFocusMinutes / boss.targetFocusMinutes).clamp(0.0, 1.0), const Color(0xFF3B9BFF)),
+                        _buildObjectiveRow('boss_raid.focus_label'.tr(), '${boss.currentFocusMinutes} / ${boss.targetFocusMinutes} daq', (boss.currentFocusMinutes / boss.targetFocusMinutes).clamp(0.0, 1.0), const Color(0xFF3A7FCC)),
                       ],
                     ),
                   ),
@@ -301,18 +301,18 @@ class _BossRaidScreenState extends ConsumerState<BossRaidScreen>
                     decoration: BoxDecoration(
                       color: const Color(0xFF0F1829),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0x445BC8FA)),
+                      border: Border.all(color: const Color(0x444AADDC)),
                     ),
                     child: const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.info_outline_rounded, color: Color(0xFF5BC8FA), size: 18),
+                            Icon(Icons.info_outline_rounded, color: Color(0xFF4AADDC), size: 18),
                             SizedBox(width: 8),
                             Text(
                               'Hujum Qanday Qilinadi?',
-                              style: TextStyle(color: Color(0xFF5BC8FA), fontWeight: FontWeight.w900, fontSize: 12),
+                              style: TextStyle(color: Color(0xFF4AADDC), fontWeight: FontWeight.w900, fontSize: 12),
                             ),
                           ],
                         ),
@@ -388,7 +388,7 @@ class _BossRaidScreenState extends ConsumerState<BossRaidScreen>
           child: LinearProgressIndicator(
             value: percent.clamp(0.0, 1.0),
             minHeight: 6,
-            backgroundColor: const Color(0xFF080B14),
+            backgroundColor: const Color(0xFF04050D),
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),

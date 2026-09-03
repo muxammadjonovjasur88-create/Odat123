@@ -50,10 +50,10 @@ class _InboxSheetState extends ConsumerState<_InboxSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1220),
+        color: Color(0xFF090B18),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
-          top: BorderSide(color: Color(0x665BC8FA), width: 1.5),
+          top: BorderSide(color: Color(0x664AADDC), width: 1.5),
         ),
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
@@ -80,13 +80,13 @@ class _InboxSheetState extends ConsumerState<_InboxSheet> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0x225BC8FA),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0x445BC8FA)),
+                  border: Border.all(color: const Color(0x444AADDC)),
                 ),
                 child: const Icon(
                   Icons.notifications_active_rounded,
-                  color: Color(0xFF5BC8FA),
+                  color: Color(0xFF4AADDC),
                   size: 22,
                 ),
               ),
@@ -98,7 +98,7 @@ class _InboxSheetState extends ConsumerState<_InboxSheet> {
                     Text(
                       'XABARLAR & BILDIRISHNOMALAR',
                       style: TextStyle(
-                        color: Color(0xFF5BC8FA),
+                        color: Color(0xFF4AADDC),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
@@ -124,7 +124,7 @@ class _InboxSheetState extends ConsumerState<_InboxSheet> {
                   child: const Text(
                     'Barchasi o‘qildi',
                     style: TextStyle(
-                      color: Color(0xFF5BC8FA),
+                      color: Color(0xFF4AADDC),
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
@@ -189,10 +189,10 @@ class _InboxSheetState extends ConsumerState<_InboxSheet> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5BC8FA) : const Color(0xFF131929),
+          color: isSelected ? const Color(0xFF4AADDC) : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFF5BC8FA) : Colors.white12,
+            color: isSelected ? const Color(0xFF4AADDC) : Colors.white12,
           ),
         ),
         child: Row(
@@ -256,7 +256,7 @@ class _MessageCard extends ConsumerWidget {
         ref.read(inboxRepositoryProvider.notifier).deleteMessage(message.id);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF0D1220),
+            backgroundColor: const Color(0xFF090B18),
             duration: const Duration(seconds: 2),
             content: Text('inbox.message_deleted'.tr()),
           ),
@@ -271,7 +271,7 @@ class _MessageCard extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: message.isRead ? const Color(0xFF0D1220) : const Color(0xFF142036),
+            color: message.isRead ? const Color(0xFF090B18) : const Color(0xFF142036),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: message.isRead ? const Color(0x15FFFFFF) : message.accentColor.withValues(alpha: 0.5),
@@ -352,7 +352,7 @@ class _MessageCard extends ConsumerWidget {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                        backgroundColor: Color(0xFF3B9BFF),
+                                        backgroundColor: Color(0xFF3A7FCC),
                                         behavior: SnackBarBehavior.floating,
                                         content: Text(
                                           "Do'stlik taklifi qabul qilindi! 🎉",
@@ -370,7 +370,7 @@ class _MessageCard extends ConsumerWidget {
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF3B9BFF),
+                                backgroundColor: const Color(0xFF3A7FCC),
                                 foregroundColor: Colors.black,
                                 padding: const EdgeInsets.symmetric(vertical: 8),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -478,7 +478,7 @@ class _MessageCard extends ConsumerWidget {
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              backgroundColor: const Color(0xFF3B9BFF),
+                              backgroundColor: const Color(0xFF3A7FCC),
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                               content: Text(

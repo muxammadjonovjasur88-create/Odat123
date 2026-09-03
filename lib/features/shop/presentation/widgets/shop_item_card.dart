@@ -149,7 +149,7 @@ class ShopItemCard extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0D1220).withValues(alpha: 0.85),
+                            color: const Color(0xFF090B18).withValues(alpha: 0.85),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: AppColors.cyanAccent.withValues(alpha: 0.4),
@@ -198,13 +198,13 @@ class ShopItemCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            const Color(0xFF5BC8FA).withValues(alpha: 0.15),
+                            const Color(0xFF4AADDC).withValues(alpha: 0.15),
                             AppColors.purpleAccent.withValues(alpha: 0.15),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFF5BC8FA).withValues(alpha: 0.4),
+                          color: const Color(0xFF4AADDC).withValues(alpha: 0.4),
                           width: 1,
                         ),
                       ),
@@ -213,14 +213,14 @@ class ShopItemCard extends StatelessWidget {
                         children: [
                           const Icon(
                             Icons.bolt_rounded,
-                            color: Color(0xFF5BC8FA),
+                            color: Color(0xFF4AADDC),
                             size: 17,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             '${item.pointsCost} PTS',
                             style: const TextStyle(
-                              color: Color(0xFF5BC8FA),
+                              color: Color(0xFF4AADDC),
                               fontWeight: FontWeight.w900,
                               fontSize: 14,
                               letterSpacing: 0.3,
@@ -264,7 +264,7 @@ class ShopItemCard extends StatelessWidget {
       loadingBuilder: (ctx, child, progress) {
         if (progress == null) return child;
         return Container(
-          color: const Color(0xFF131929),
+          color: const Color(0xFF090B18),
           child: const Center(
             child: SizedBox(
               width: 24,
@@ -288,7 +288,7 @@ class ShopItemCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             Color(0xFF1C2540),
-            Color(0xFF0D1220),
+            Color(0xFF090B18),
           ],
         ),
       ),

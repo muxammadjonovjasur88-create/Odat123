@@ -56,6 +56,7 @@ abstract final class AppRoutes {
   static const settings = '/settings'; // 19
   static const progress = '/progress'; // 20
   static const leaderboard = '/leaderboard';
+  static const wallet = '/wallet';
 
   // Private competition lobbies
   static const lobbies = '/lobbies';

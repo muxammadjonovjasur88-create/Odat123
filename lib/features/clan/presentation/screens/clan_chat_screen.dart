@@ -128,9 +128,9 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
     final myAvatar = user?.avatar ?? 'cat';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
@@ -143,9 +143,9 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: const Color(0x225BC8FA),
+                color: const Color(0x224AADDC),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF5BC8FA)),
+                border: Border.all(color: const Color(0xFF4AADDC)),
               ),
               alignment: Alignment.center,
               child: Text(widget.clan.emblem,
@@ -169,7 +169,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                   Text(
                     '${widget.clan.membersCount} a‘zolar guruhi',
                     style: const TextStyle(
-                        color: Color(0xFF5BC8FA), fontSize: 11),
+                        color: Color(0xFF4AADDC), fontSize: 11),
                   ),
                 ],
               ),
@@ -185,7 +185,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
             color: const Color(0x155BC8FA),
             child: const Row(
               children: [
-                Icon(Icons.shield_rounded, size: 14, color: Color(0xFF5BC8FA)),
+                Icon(Icons.shield_rounded, size: 14, color: Color(0xFF4AADDC)),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -211,7 +211,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting &&
                     !snapshot.hasData) {
                   return const Center(
-                    child: CircularProgressIndicator(color: Color(0xFF5BC8FA)),
+                    child: CircularProgressIndicator(color: Color(0xFF4AADDC)),
                   );
                 }
 
@@ -279,7 +279,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                               decoration: BoxDecoration(
                                 color: isMe
                                     ? const Color(0xFF005577)
-                                    : const Color(0xFF131929),
+                                    : const Color(0xFF090B18),
                                 borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(16),
                                   topRight: const Radius.circular(16),
@@ -288,7 +288,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                                 ),
                                 border: Border.all(
                                   color: isMe
-                                      ? const Color(0xFF5BC8FA)
+                                      ? const Color(0xFF4AADDC)
                                       : (isLeader
                                           ? const Color(0xFFFFB703)
                                           : Colors.white12),
@@ -311,7 +311,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                                             style: TextStyle(
                                               color: isLeader
                                                   ? const Color(0xFFFFB703)
-                                                  : const Color(0xFF5BC8FA),
+                                                  : const Color(0xFF4AADDC),
                                               fontWeight: FontWeight.bold,
                                               fontSize: 11,
                                             ),
@@ -363,13 +363,13 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
           // Text Input Bar with Camera/Photo support
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             child: SafeArea(
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.add_photo_alternate_rounded,
-                        color: Color(0xFF5BC8FA), size: 24),
+                        color: Color(0xFF4AADDC), size: 24),
                     onPressed: () {
                       showModalBottomSheet(
                         context: context,
@@ -381,7 +381,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                           child: Wrap(
                             children: [
                               ListTile(
-                                leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFF5BC8FA)),
+                                leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFF4AADDC)),
                                 title: Text('clan.take_photo'.tr(), style: TextStyle(color: Colors.white)),
                                 onTap: () {
                                   Navigator.pop(ctx);
@@ -411,7 +411,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                         hintText: 'Xabaringizni yozing...',
                         hintStyle: const TextStyle(color: Colors.white38),
                         filled: true,
-                        fillColor: const Color(0xFF131929),
+                        fillColor: const Color(0xFF090B18),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 10),
                         border: OutlineInputBorder(
@@ -426,7 +426,7 @@ class _ClanChatScreenState extends ConsumerState<ClanChatScreen> {
                   const SizedBox(width: 8),
                   Container(
                     decoration: const BoxDecoration(
-                      color: Color(0xFF5BC8FA),
+                      color: Color(0xFF4AADDC),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(

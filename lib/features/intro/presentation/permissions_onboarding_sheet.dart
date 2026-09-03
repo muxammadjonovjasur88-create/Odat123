@@ -95,14 +95,14 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(22, 20, 22, 32),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           border: Border(
-            top: BorderSide(color: Color(0xFF5BC8FA), width: 2),
+            top: BorderSide(color: Color(0xFF4AADDC), width: 2),
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0x335BC8FA),
+              color: Color(0x334AADDC),
               blurRadius: 30,
               offset: Offset(0, -6),
             ),
@@ -128,7 +128,7 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+                      colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
                     ),
                     borderRadius: BorderRadius.circular(14),
                   ),
@@ -142,7 +142,7 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
                       Text(
                         'RUXSATNOMALAR',
                         style: TextStyle(
-                          color: Color(0xFF5BC8FA),
+                          color: Color(0xFF4AADDC),
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.5,
@@ -172,7 +172,7 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
             // Permission Items
             _permissionTile(
               icon: Icons.camera_alt_rounded,
-              color: const Color(0xFF5BC8FA),
+              color: const Color(0xFF4AADDC),
               title: 'Kamera & Vision AI',
               subtitle: 'Mashqlarni sanash va sport harakatlarini kuzatish',
               isGranted: _status['camera'] ?? false,
@@ -190,7 +190,7 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
 
             _permissionTile(
               icon: Icons.location_on_rounded,
-              color: const Color(0xFF3B9BFF),
+              color: const Color(0xFF3A7FCC),
               title: 'GPS & Hududlar (Viloyat)',
               subtitle: 'Yugurish masofasini o‘lchash va hudud zabt etish',
               isGranted: _status['location'] ?? false,
@@ -213,7 +213,7 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
               child: ElevatedButton(
                 onPressed: _isRequesting ? null : _requestAllPermissions,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   foregroundColor: Colors.black,
                   elevation: 8,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -253,7 +253,7 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFF131929),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: isGranted ? color.withValues(alpha: 0.6) : Colors.white10),
       ),
@@ -285,7 +285,7 @@ class _PermissionsSheetContentState extends State<_PermissionsSheetContent> {
           ),
           Icon(
             isGranted ? Icons.check_circle_rounded : Icons.radio_button_unchecked_rounded,
-            color: isGranted ? const Color(0xFF3B9BFF) : Colors.white24,
+            color: isGranted ? const Color(0xFF3A7FCC) : Colors.white24,
             size: 20,
           ),
         ],

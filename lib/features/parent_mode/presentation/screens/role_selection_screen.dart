@@ -59,7 +59,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -72,9 +72,9 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                 height: 48,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [Color(0xFF3B9BFF), Color(0xFF5BC8FA)]),
+                  gradient: LinearGradient(colors: [Color(0xFF3A7FCC), Color(0xFF4AADDC)]),
                 ),
-                child: const Icon(Icons.hub_rounded, color: Color(0xFF080B14), size: 24),
+                child: const Icon(Icons.hub_rounded, color: Color(0xFF04050D), size: 24),
               ),
               const SizedBox(height: 24),
               Text(
@@ -93,9 +93,9 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
               // OPTION 1: Personal Mode
               _RoleCard(
                 icon: Icons.person_rounded,
-                iconColor: const Color(0xFF5BC8FA),
+                iconColor: const Color(0xFF4AADDC),
                 gradient: const [Color(0xFF0D2533), Color(0xFF091520)],
-                borderColor: const Color(0xFF5BC8FA),
+                borderColor: const Color(0xFF4AADDC),
                 tag: 'family.personal_tag'.tr(),
                 title: 'family.personal_title'.tr(),
                 desc: 'family.personal_desc'.tr(),
@@ -111,9 +111,9 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
               // OPTION 2: Parent Mode (Ota-ona rejimi)
               _RoleCard(
                 icon: Icons.supervisor_account_rounded,
-                iconColor: const Color(0xFF3B9BFF),
+                iconColor: const Color(0xFF3A7FCC),
                 gradient: const [Color(0xFF0B291A), Color(0xFF081910)],
-                borderColor: const Color(0xFF3B9BFF),
+                borderColor: const Color(0xFF3A7FCC),
                 tag: 'family.parent_tag'.tr(),
                 title: 'family.parent_title'.tr(),
                 desc: 'family.parent_desc'.tr(),
@@ -128,7 +128,7 @@ class _RoleSelectionScreenState extends ConsumerState<RoleSelectionScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.verified_user_rounded, color: Color(0xFF3B9BFF), size: 16),
+                    const Icon(Icons.verified_user_rounded, color: Color(0xFF3A7FCC), size: 16),
                     const SizedBox(width: 8),
                     Text(
                       'family.trust_footer'.tr(),

@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// screen (and later, Settings) can flip it explicitly.
 class ThemeModeController extends Notifier<ThemeMode> {
   @override
-  ThemeMode build() => ThemeMode.system;
+  ThemeMode build() => ThemeMode.dark;
 
   void set(ThemeMode mode) => state = mode;
 

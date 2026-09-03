@@ -15,7 +15,7 @@ class ParentStudyScreen extends ConsumerWidget {
     final verificationsAsync = ref.watch(recentStudyVerificationsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -65,9 +65,9 @@ class ParentStudyScreen extends ConsumerWidget {
                   children: [
                     _statPill('Matematika: 45m', const Color(0xFFFFB703)),
                     const SizedBox(width: 8),
-                    _statPill('Ingliz tili: 40m', const Color(0xFF5BC8FA)),
+                    _statPill('Ingliz tili: 40m', const Color(0xFF4AADDC)),
                     const SizedBox(width: 8),
-                    _statPill('IT: 23m', const Color(0xFF3B9BFF)),
+                    _statPill('IT: 23m', const Color(0xFF3A7FCC)),
                   ],
                 ),
               ],
@@ -117,7 +117,7 @@ class ParentStudyScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -134,12 +134,12 @@ class ParentStudyScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0x2200FF88),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   '${v.score}/${v.totalQuestions} (${v.percentage}%)',
-                  style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11, fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11, fontWeight: FontWeight.w900),
                 ),
               ),
             ],
@@ -147,7 +147,7 @@ class ParentStudyScreen extends ConsumerWidget {
           const SizedBox(height: 6),
           Text(v.topic, style: const TextStyle(color: Colors.white70, fontSize: 12)),
           const SizedBox(height: 4),
-          Text('“${v.verdict}”', style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11.5, fontStyle: FontStyle.italic)),
+          Text('“${v.verdict}”', style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11.5, fontStyle: FontStyle.italic)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -158,15 +158,15 @@ class ParentStudyScreen extends ConsumerWidget {
                   HapticFeedback.lightImpact();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      backgroundColor: const Color(0xFF3B9BFF),
-                      content: Text('family.reward_sent'.tr(), style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.bold)),
+                      backgroundColor: const Color(0xFF3A7FCC),
+                      content: Text('family.reward_sent'.tr(), style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.bold)),
                     ),
                   );
                 },
-                icon: const Icon(Icons.stars_rounded, color: Color(0xFF080B14), size: 16),
-                label: Text('family.send_coins_btn'.tr(), style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 12)),
+                icon: const Icon(Icons.stars_rounded, color: Color(0xFF04050D), size: 16),
+                label: Text('family.send_coins_btn'.tr(), style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 12)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B9BFF),
+                  backgroundColor: const Color(0xFF3A7FCC),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),

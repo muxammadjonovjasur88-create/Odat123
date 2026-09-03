@@ -38,7 +38,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             content: Text('clan.joined_success'.tr(args: [clan.tag, clan.name])),
           ),
         );
@@ -65,7 +65,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
       await showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF0D1220),
+          backgroundColor: const Color(0xFF090B18),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Text('clan.attention'.tr(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           content: const Text(
@@ -75,7 +75,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
           actions: [
             ElevatedButton(
               onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF5BC8FA), foregroundColor: Colors.black),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF4AADDC), foregroundColor: Colors.black),
               child: Text('clan.understood'.tr(), style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
@@ -87,7 +87,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text(
           'Klandan chiqish',
@@ -152,9 +152,9 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
             (user.clanId == clan.id || clan.memberUids.contains(user.uid) || clan.leaderId == user.uid);
 
         return Scaffold(
-          backgroundColor: const Color(0xFF080B14),
+          backgroundColor: const Color(0xFF04050D),
           appBar: AppBar(
-            backgroundColor: const Color(0xFF080B14),
+            backgroundColor: const Color(0xFF04050D),
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
@@ -167,7 +167,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
             actions: [
               if (isMember) ...[
                 IconButton(
-                  icon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF5BC8FA)),
+                  icon: const Icon(Icons.chat_bubble_outline_rounded, color: Color(0xFF4AADDC)),
                   tooltip: 'Klan Chati',
                   onPressed: () {
                     Navigator.push(
@@ -189,7 +189,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
           bottomNavigationBar: !isMember
               ? Container(
                   padding: const EdgeInsets.all(16),
-                  color: const Color(0xFF0D1220),
+                  color: const Color(0xFF090B18),
                   child: SafeArea(
                     child: SizedBox(
                       width: double.infinity,
@@ -197,7 +197,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _isJoining ? null : () => _handleJoin(clan),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5BC8FA),
+                          backgroundColor: const Color(0xFF4AADDC),
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
@@ -284,13 +284,13 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                     gradient: const LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [Color(0xFF131929), Color(0xFF0A0F1A)],
+                      colors: [Color(0xFF090B18), Color(0xFF0A0F1A)],
                     ),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.3), width: 1.5),
+                    border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.3), width: 1.5),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x225BC8FA),
+                        color: Color(0x224AADDC),
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
@@ -304,9 +304,9 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                             width: 64,
                             height: 64,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF5BC8FA).withValues(alpha: 0.15),
+                              color: const Color(0xFF4AADDC).withValues(alpha: 0.15),
                               shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFF5BC8FA), width: 2),
+                              border: Border.all(color: const Color(0xFF4AADDC), width: 2),
                             ),
                             alignment: Alignment.center,
                             child: Text(clan.emblem, style: const TextStyle(fontSize: 32)),
@@ -321,14 +321,14 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFF5BC8FA).withValues(alpha: 0.2),
+                                        color: const Color(0xFF4AADDC).withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: const Color(0xFF5BC8FA)),
+                                        border: Border.all(color: const Color(0xFF4AADDC)),
                                       ),
                                       child: Text(
                                         clan.tag,
                                         style: const TextStyle(
-                                          color: Color(0xFF5BC8FA),
+                                          color: Color(0xFF4AADDC),
                                           fontSize: 11,
                                           fontWeight: FontWeight.w900,
                                         ),
@@ -340,12 +340,12 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                                       decoration: BoxDecoration(
                                         color: clan.isPublic ? const Color(0x3300FF88) : const Color(0x33FF0055),
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: clan.isPublic ? const Color(0xFF3B9BFF) : const Color(0xFFFF0055)),
+                                        border: Border.all(color: clan.isPublic ? const Color(0xFF3A7FCC) : const Color(0xFFFF0055)),
                                       ),
                                       child: Text(
                                         clan.isPublic ? 'clan.status_open'.tr() : 'clan.status_closed'.tr(),
                                         style: TextStyle(
-                                          color: clan.isPublic ? const Color(0xFF3B9BFF) : const Color(0xFFFF0055),
+                                          color: clan.isPublic ? const Color(0xFF3A7FCC) : const Color(0xFFFF0055),
                                           fontSize: 10,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -381,7 +381,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                               showClanSettingsModal(context, clan);
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF5BC8FA),
+                              backgroundColor: const Color(0xFF4AADDC),
                               foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -407,13 +407,13 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                             _StatItem(
                               label: 'clan.stats_total_points'.tr(),
                               value: '${formatCompactNumber(sumTotalPoints)} PTS',
-                              color: const Color(0xFF5BC8FA),
+                              color: const Color(0xFF4AADDC),
                             ),
                             Container(width: 1, height: 28, color: Colors.white12),
                             _StatItem(
                               label: 'clan.stats_weekly'.tr(),
                               value: '+${formatCompactNumber(sumWeeklyPoints)} PTS',
-                              color: const Color(0xFF3B9BFF),
+                              color: const Color(0xFF3A7FCC),
                             ),
                             Container(width: 1, height: 28, color: Colors.white12),
                             _StatItem(
@@ -452,7 +452,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                         color: clan.isFull ? const Color(0x33FF0055) : const Color(0x3300FF88),
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(
-                          color: clan.isFull ? const Color(0xFFFF0055) : const Color(0xFF3B9BFF),
+                          color: clan.isFull ? const Color(0xFFFF0055) : const Color(0xFF3A7FCC),
                         ),
                       ),
                       child: Text(
@@ -460,7 +460,7 @@ class _ClanDetailScreenState extends ConsumerState<ClanDetailScreen> {
                             ? 'clan.clan_full'.tr()
                             : 'clan.clan_open_slots'.tr(namedArgs: {'count': '${clan.maxMembers - clan.membersCount}'}),
                         style: TextStyle(
-                          color: clan.isFull ? const Color(0xFFFF0055) : const Color(0xFF3B9BFF),
+                          color: clan.isFull ? const Color(0xFFFF0055) : const Color(0xFF3A7FCC),
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -539,11 +539,11 @@ class _MemberCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: isMe ? const Color(0xFF132238) : const Color(0xFF0D1220),
+        color: isMe ? const Color(0xFF132238) : const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isMe
-              ? const Color(0xFF5BC8FA)
+              ? const Color(0xFF4AADDC)
               : (isLeader ? const Color(0xFFFFB703).withValues(alpha: 0.5) : Colors.white10),
         ),
       ),
@@ -577,10 +577,10 @@ class _MemberCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF5BC8FA).withValues(alpha: 0.2),
+                          color: const Color(0xFF4AADDC).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: Text('common.you'.tr(), style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 9, fontWeight: FontWeight.bold)),
+                        child: Text('common.you'.tr(), style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 9, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ],
@@ -592,7 +592,7 @@ class _MemberCard extends StatelessWidget {
           ),
           Text(
             '$points PTS',
-            style: const TextStyle(color: Color(0xFF5BC8FA), fontWeight: FontWeight.w900, fontSize: 13),
+            style: const TextStyle(color: Color(0xFF4AADDC), fontWeight: FontWeight.w900, fontSize: 13),
           ),
         ],
       ),

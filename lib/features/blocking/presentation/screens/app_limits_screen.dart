@@ -66,7 +66,7 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
     final limitMap = {for (final l in limits) l.packageName: l};
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -90,9 +90,9 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
               decoration: InputDecoration(
                 hintText: 'wellbeing.search_apps'.tr(),
                 hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF5BC8FA), size: 20),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF4AADDC), size: 20),
                 filled: true,
-                fillColor: const Color(0xFF131929),
+                fillColor: const Color(0xFF090B18),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -105,7 +105,7 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
           // Apps List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: Color(0xFF5BC8FA)))
+                ? const Center(child: CircularProgressIndicator(color: Color(0xFF4AADDC)))
                 : _filteredApps.isEmpty
                     ? Center(
                         child: Text(
@@ -125,10 +125,10 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
 
                           return Container(
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0D1220),
+                              color: const Color(0xFF090B18),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: hasLimit ? const Color(0xFF5BC8FA).withValues(alpha: 0.4) : Colors.white10,
+                                color: hasLimit ? const Color(0xFF4AADDC).withValues(alpha: 0.4) : Colors.white10,
                               ),
                             ),
                             child: ListTile(
@@ -159,14 +159,14 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
                                     ? '${rule.limitMinutes} daqiqa/kun • ${rule.disciplineLevel.name.toUpperCase()}'
                                     : 'wellbeing.no_limit'.tr(),
                                 style: TextStyle(
-                                  color: hasLimit ? const Color(0xFF5BC8FA) : Colors.white38,
+                                  color: hasLimit ? const Color(0xFF4AADDC) : Colors.white38,
                                   fontSize: 11,
                                 ),
                               ),
                               trailing: IconButton(
                                 icon: Icon(
                                   hasLimit ? Icons.edit_calendar_rounded : Icons.add_circle_outline_rounded,
-                                  color: hasLimit ? const Color(0xFF3B9BFF) : Colors.white54,
+                                  color: hasLimit ? const Color(0xFF3A7FCC) : Colors.white54,
                                 ),
                                 onPressed: () => _showLimitDialog(context, app, rule),
                               ),
@@ -186,7 +186,7 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
@@ -215,7 +215,7 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
                     Expanded(
                       child: Text(
                         app.name,
-                        style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 15, fontWeight: FontWeight.w900),
+                        style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 15, fontWeight: FontWeight.w900),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -235,10 +235,10 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
                       selected: isSel,
                       onSelected: (_) => setModalState(() => selectedMinutes = mins),
                       label: Text('$mins daq'),
-                      selectedColor: const Color(0xFF5BC8FA),
-                      backgroundColor: const Color(0xFF131929),
+                      selectedColor: const Color(0xFF4AADDC),
+                      backgroundColor: const Color(0xFF090B18),
                       labelStyle: TextStyle(
-                        color: isSel ? const Color(0xFF080B14) : Colors.white70,
+                        color: isSel ? const Color(0xFF04050D) : Colors.white70,
                         fontWeight: FontWeight.w900,
                         fontSize: 12,
                       ),
@@ -295,13 +295,13 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
                           Navigator.pop(ctx);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3B9BFF),
+                          backgroundColor: const Color(0xFF3A7FCC),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                         ),
                         child: Text(
                           'save'.tr(),
-                          style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 14),
+                          style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 14),
                         ),
                       ),
                     ),
@@ -323,16 +323,16 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSel ? const Color(0x225BC8FA) : const Color(0xFF131929),
+            color: isSel ? const Color(0x224AADDC) : const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: isSel ? const Color(0xFF5BC8FA) : Colors.white10),
+            border: Border.all(color: isSel ? const Color(0xFF4AADDC) : Colors.white10),
           ),
           child: Column(
             children: [
               Text(
                 title,
                 style: TextStyle(
-                  color: isSel ? const Color(0xFF5BC8FA) : Colors.white,
+                  color: isSel ? const Color(0xFF4AADDC) : Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 12,
                 ),

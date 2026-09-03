@@ -209,6 +209,7 @@ class GamificationRepository {
           'totalPoints': nextTotalPoints,
           'totalFocusMinutes': nextTotalFocus,
           'totalDeepSessions': nextDeep,
+          'fenixCoins': FieldValue.increment(1), // 1 Fenix coin per task
           if (milestone != null)
             'earnedBadges': FieldValue.arrayUnion([milestone]),
         }, SetOptions(merge: true));

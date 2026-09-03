@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 void showChildFamilySheet(BuildContext context) {
   showModalBottomSheet(
     context: context,
-    backgroundColor: const Color(0xFF080B14),
+    backgroundColor: const Color(0xFF04050D),
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     builder: (ctx) => Padding(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -25,8 +25,8 @@ void showChildFamilySheet(BuildContext context) {
               Container(
                 width: 44,
                 height: 44,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x2200FF88)),
-                child: const Icon(Icons.family_restroom_rounded, color: Color(0xFF3B9BFF), size: 24),
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x224AADDC)),
+                child: const Icon(Icons.family_restroom_rounded, color: Color(0xFF3A7FCC), size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -40,7 +40,7 @@ void showChildFamilySheet(BuildContext context) {
                     const SizedBox(height: 2),
                     Text(
                       'family.child_sheet_sub'.tr(),
-                      style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11.5, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11.5, fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -50,13 +50,13 @@ void showChildFamilySheet(BuildContext context) {
           const SizedBox(height: 20),
 
           // Shared items list
-          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3B9BFF), 'family.shared_battery'.tr()),
+          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3A7FCC), 'family.shared_battery'.tr()),
           const SizedBox(height: 8),
-          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3B9BFF), 'family.shared_screentime'.tr()),
+          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3A7FCC), 'family.shared_screentime'.tr()),
           const SizedBox(height: 8),
-          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3B9BFF), 'family.shared_study'.tr()),
+          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3A7FCC), 'family.shared_study'.tr()),
           const SizedBox(height: 8),
-          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3B9BFF), 'family.shared_location'.tr()),
+          _sheetItem(Icons.check_circle_rounded, const Color(0xFF3A7FCC), 'family.shared_location'.tr()),
           const SizedBox(height: 12),
 
           // Strictly Protected items

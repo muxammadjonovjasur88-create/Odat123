@@ -106,7 +106,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
       ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF3B9BFF),
+          backgroundColor: const Color(0xFF3A7FCC),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           duration: const Duration(seconds: 2),
@@ -124,7 +124,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text('profile.change_name'.tr(), style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: TextField(
@@ -135,7 +135,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
             hintText: 'Yangi ismingizni kiriting...',
             hintStyle: const TextStyle(color: Colors.white38),
             filled: true,
-            fillColor: const Color(0xFF131929),
+            fillColor: const Color(0xFF090B18),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
           ),
         ),
@@ -151,7 +151,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B9BFF),
+              backgroundColor: const Color(0xFF3A7FCC),
               foregroundColor: Colors.black,
             ),
             child: Text('profile.change'.tr(), style: TextStyle(fontWeight: FontWeight.bold)),
@@ -174,7 +174,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
         ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             duration: const Duration(seconds: 2),
             content: Text('Ismingiz muvaffaqiyatli "$newName" ga o‘zgartirildi! ✨', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
@@ -212,9 +212,9 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
             maxHeight: MediaQuery.of(context).size.height * 0.85,
           ),
           decoration: const BoxDecoration(
-            color: Color(0xFF080B14),
+            color: Color(0xFF04050D),
             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-            border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+            border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
           child: Column(
@@ -238,11 +238,11 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0x225BC8FA),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF5BC8FA)),
+                  border: Border.all(color: const Color(0xFF4AADDC)),
                 ),
-                child: const Icon(Icons.backpack_rounded, color: Color(0xFF5BC8FA), size: 24),
+                child: const Icon(Icons.backpack_rounded, color: Color(0xFF4AADDC), size: 24),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -252,7 +252,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
                     Text(
                       'SHAXSIY ANJOM VA BUSTERLAR',
                       style: TextStyle(
-                        color: Color(0xFF5BC8FA),
+                        color: Color(0xFF4AADDC),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
@@ -287,11 +287,11 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
                   colors: [Color(0xFF004D40), Color(0xFF002228)],
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF3B9BFF)),
+                border: Border.all(color: const Color(0xFF3A7FCC)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.bolt_rounded, color: Color(0xFF3B9BFF), size: 28),
+                  const Icon(Icons.bolt_rounded, color: Color(0xFF3A7FCC), size: 28),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -300,7 +300,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
                         Text(
                           '⚡ $_activeMultiplier.0x PTS BUSTER FAOLLASHTIRILGAN',
                           style: const TextStyle(
-                            color: Color(0xFF3B9BFF),
+                            color: Color(0xFF3A7FCC),
                             fontSize: 11,
                             fontWeight: FontWeight.w900,
                           ),
@@ -329,7 +329,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
                     subtitle: 'Streakingizni uzilishdan avtomatik himoyalaydi',
                     count: freezes,
                     icon: Icons.ac_unit_rounded,
-                    color: const Color(0xFF5BC8FA),
+                    color: const Color(0xFF4AADDC),
                     actionText: 'Himoyada 🛡️',
                     isUsable: false,
                     onUse: () {},
@@ -354,8 +354,8 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
 
                 // 3. Dynamic Boosters from inventory
                 final boosterConfigs = {
-                  'booster_125': {'title': '1.25x Kichik Buster (30 daqiqa)', 'sub': '30 daqiqa +25% PTS beradi', 'mul': 1.25, 'min': 30, 'col': const Color(0xFF3B9BFF), 'icon': Icons.bolt_rounded},
-                  'booster_15': {'title': '1.5x Standart Buster (30 daqiqa)', 'sub': '30 daqiqa +50% PTS beradi', 'mul': 1.5, 'min': 30, 'col': const Color(0xFF5BC8FA), 'icon': Icons.bolt_rounded},
+                  'booster_125': {'title': '1.25x Kichik Buster (30 daqiqa)', 'sub': '30 daqiqa +25% PTS beradi', 'mul': 1.25, 'min': 30, 'col': const Color(0xFF3A7FCC), 'icon': Icons.bolt_rounded},
+                  'booster_15': {'title': '1.5x Standart Buster (30 daqiqa)', 'sub': '30 daqiqa +50% PTS beradi', 'mul': 1.5, 'min': 30, 'col': const Color(0xFF4AADDC), 'icon': Icons.bolt_rounded},
                   'booster_2x': {'title': '2.0x Oltin Buster (1 soat)', 'sub': '1 soat davomida +100% PTS beradi', 'mul': 2.0, 'min': 60, 'col': const Color(0xFFFFB703), 'icon': Icons.electric_bolt_rounded},
                   'booster_25': {'title': '2.5x Mega Buster (45 daqiqa)', 'sub': '45 daqiqa davomida +150% PTS beradi', 'mul': 2.5, 'min': 45, 'col': const Color(0xFFFF7700), 'icon': Icons.flash_on_rounded},
                   'booster_3x': {'title': '3.0x Titan Buster (1 soat)', 'sub': '1 soat davomida 3 barobar maksimal PTS!', 'mul': 3.0, 'min': 60, 'col': const Color(0xFFFF0055), 'icon': Icons.military_tech_rounded},
@@ -398,7 +398,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
                       subtitle: 'Do‘kondan xarid qilingan buyum / kupon',
                       count: count,
                       icon: Icons.card_giftcard_rounded,
-                      color: const Color(0xFF3B9BFF),
+                      color: const Color(0xFF3A7FCC),
                       actionText: 'Mavjud ✅',
                       isUsable: false,
                       onUse: () {},
@@ -420,9 +420,9 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
                             decoration: BoxDecoration(
                               color: const Color(0x155BC8FA),
                               shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0x335BC8FA)),
+                              border: Border.all(color: const Color(0x334AADDC)),
                             ),
-                            child: const Icon(Icons.backpack_outlined, color: Color(0xFF5BC8FA), size: 42),
+                            child: const Icon(Icons.backpack_outlined, color: Color(0xFF4AADDC), size: 42),
                           ),
                           const SizedBox(height: 16),
                           const Text(
@@ -468,7 +468,7 @@ class _InventoryModalSheetState extends ConsumerState<_InventoryModalSheet> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF131929),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),

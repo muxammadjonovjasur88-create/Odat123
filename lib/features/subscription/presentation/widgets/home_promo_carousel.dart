@@ -71,12 +71,12 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
       // Card 2: Qat'iy Intizom & Fokus
       _buildPromoCard(
         badge: 'INTIZOM',
-        badgeColor: const Color(0xFF7B2FFF),
+        badgeColor: const Color(0xFF6B25CC),
         title: 'QAT’IY INTIZOM',
         subtitle: 'Telefoningizni bloklang va chuqur diqqatga erishing.',
         ctaLabel: 'Fokusni Boshlash 🚀',
         gradientColors: [const Color(0xFF1F1135), const Color(0xFF0F081C)],
-        borderColor: const Color(0xFF7B2FFF),
+        borderColor: const Color(0xFF6B25CC),
         icon: Icons.shield_rounded,
         onTap: () {
           HapticFeedback.lightImpact();
@@ -87,12 +87,12 @@ class _HomePromoCarouselState extends ConsumerState<HomePromoCarousel> {
       // Card 3: ODAT AI Yordamchi
       _buildPromoCard(
         badge: 'ODAT AI',
-        badgeColor: const Color(0xFF5BC8FA),
+        badgeColor: const Color(0xFF4AADDC),
         title: 'ODAT AI YORDAMCHI',
         subtitle: 'Ovozli buyruqlar orqali kunni rejalashtiring va mashq bajaring.',
         ctaLabel: 'AI bilan Boshlash ✦',
         gradientColors: [const Color(0xFF0A2234), const Color(0xFF07111D)],
-        borderColor: const Color(0xFF5BC8FA),
+        borderColor: const Color(0xFF4AADDC),
         icon: Icons.auto_awesome_rounded,
         onTap: () {
           HapticFeedback.lightImpact();

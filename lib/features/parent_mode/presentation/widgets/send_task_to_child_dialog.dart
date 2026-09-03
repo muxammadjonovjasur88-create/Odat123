@@ -46,7 +46,7 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF3B9BFF),
+        backgroundColor: const Color(0xFF3A7FCC),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         content: Row(
@@ -68,7 +68,7 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
       child: Padding(
         padding: const EdgeInsets.all(22),
@@ -84,8 +84,8 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
                     children: [
                       Container(
                         padding: const EdgeInsets.all(8),
-                        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x225BC8FA)),
-                        child: const Icon(Icons.add_task_rounded, color: Color(0xFF5BC8FA), size: 20),
+                        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x224AADDC)),
+                        child: const Icon(Icons.add_task_rounded, color: Color(0xFF4AADDC), size: 20),
                       ),
                       const SizedBox(width: 10),
                       const Text(
@@ -112,9 +112,9 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  _buildTypeOption('focus', '🎯 Fokus', const Color(0xFF7B2FFF)),
+                  _buildTypeOption('focus', '🎯 Fokus', const Color(0xFF6B25CC)),
                   const SizedBox(width: 8),
-                  _buildTypeOption('exercise', '🏃 Mashq', const Color(0xFF3B9BFF)),
+                  _buildTypeOption('exercise', '🏃 Mashq', const Color(0xFF3A7FCC)),
                   const SizedBox(width: 8),
                   _buildTypeOption('note', '📝 Zametka', const Color(0xFFFFB703)),
                 ],
@@ -129,7 +129,7 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141E33),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0x335BC8FA)),
+                  border: Border.all(color: const Color(0x334AADDC)),
                 ),
                 child: TextField(
                   controller: _titleController,
@@ -155,7 +155,7 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isSel ? const Color(0xFF5BC8FA) : const Color(0xFF141E33),
+                        color: isSel ? const Color(0xFF4AADDC) : const Color(0xFF141E33),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -185,7 +185,7 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
                         margin: const EdgeInsets.symmetric(horizontal: 3),
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         decoration: BoxDecoration(
-                          color: isSel ? const Color(0xFF3B9BFF) : const Color(0xFF141E33),
+                          color: isSel ? const Color(0xFF3A7FCC) : const Color(0xFF141E33),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Center(
@@ -212,7 +212,7 @@ class _SendTaskToChildDialogState extends State<_SendTaskToChildDialog> {
                 child: ElevatedButton.icon(
                   onPressed: _isSending ? null : _sendTask,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BC8FA),
+                    backgroundColor: const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),

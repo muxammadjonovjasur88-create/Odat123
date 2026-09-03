@@ -136,9 +136,9 @@ class _BlockingPermissionDialog extends StatelessWidget {
     };
 
     return AlertDialog(
-      backgroundColor: const Color(0xFF0D1220),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Color(0xFF5BC8FA), width: 1.2)),
-      icon: Icon(icon, color: const Color(0xFF5BC8FA), size: 40),
+      backgroundColor: const Color(0xFF090B18),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Color(0xFF4AADDC), width: 1.2)),
+      icon: Icon(icon, color: const Color(0xFF4AADDC), size: 40),
       title: Text(
         title,
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
@@ -159,7 +159,7 @@ class _BlockingPermissionDialog extends StatelessWidget {
               child: FilledButton(
                 onPressed: onPressed,
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),

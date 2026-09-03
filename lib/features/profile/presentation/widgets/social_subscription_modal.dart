@@ -42,7 +42,7 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('profile.social_reward_claimed'.tr()),
-          backgroundColor: Color(0xFF131929),
+          backgroundColor: Color(0xFF090B18),
         ),
       );
       return;
@@ -83,7 +83,7 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
         HapticFeedback.heavyImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             content: Row(
@@ -93,9 +93,9 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
                   height: 28,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: [Color(0xFF3B9BFF), Color(0xFF5BC8FA)]),
+                    gradient: LinearGradient(colors: [Color(0xFF3A7FCC), Color(0xFF4AADDC)]),
                   ),
-                  child: const Icon(Icons.check_rounded, color: Color(0xFF0D1220), size: 18),
+                  child: const Icon(Icons.check_rounded, color: Color(0xFF090B18), size: 18),
                 ),
                 const SizedBox(width: 10),
                 const Expanded(
@@ -135,9 +135,9 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
       decoration: const BoxDecoration(
-        color: Color(0xFF080B14),
+        color: Color(0xFF04050D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+        border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -161,11 +161,11 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0x225BC8FA),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF5BC8FA)),
+                  border: Border.all(color: const Color(0xFF4AADDC)),
                 ),
-                child: const Icon(Icons.stars_rounded, color: Color(0xFF5BC8FA), size: 24),
+                child: const Icon(Icons.stars_rounded, color: Color(0xFF4AADDC), size: 24),
               ),
               const SizedBox(width: 14),
               const Expanded(
@@ -175,7 +175,7 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
                     Text(
                       'BEPUL PTS MUKOFOTI 🎁',
                       style: TextStyle(
-                        color: Color(0xFF5BC8FA),
+                        color: Color(0xFF4AADDC),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
@@ -257,7 +257,7 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF131929),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isClaimed ? const Color(0x3300FF88) : color.withValues(alpha: 0.5),
@@ -294,8 +294,8 @@ class _SocialSubscriptionSheetState extends ConsumerState<_SocialSubscriptionShe
           ElevatedButton(
             onPressed: isClaimed || isLoading ? null : onTap,
             style: ElevatedButton.styleFrom(
-              backgroundColor: isClaimed ? const Color(0x2200FF88) : color,
-              foregroundColor: isClaimed ? const Color(0xFF3B9BFF) : Colors.white,
+              backgroundColor: isClaimed ? const Color(0x224AADDC) : color,
+              foregroundColor: isClaimed ? const Color(0xFF3A7FCC) : Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),

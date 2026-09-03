@@ -409,8 +409,8 @@ class _RestControls extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: controller.skipRest,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0x335BC8FA),
-                foregroundColor: const Color(0xFF5BC8FA),
+                backgroundColor: const Color(0x334AADDC),
+                foregroundColor: const Color(0xFF4AADDC),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               ),

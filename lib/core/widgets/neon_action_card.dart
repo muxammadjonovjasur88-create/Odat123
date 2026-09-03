@@ -59,7 +59,7 @@ class _NeonActionCardState extends State<NeonActionCard>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF0D1220),
+                  const Color(0xFF090B18),
                   const Color(0xFF0A0F1A),
                 ],
                 begin: Alignment.topLeft,

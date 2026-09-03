@@ -82,7 +82,7 @@ class _PtsExchangeModalContentState
         final ptsReceived = _selectedCoins * 10;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             content: Row(
               children: [
                 const Icon(Icons.check_circle_rounded, color: Colors.black),
@@ -131,7 +131,7 @@ class _PtsExchangeModalContentState
       decoration: const BoxDecoration(
         color: Color(0xFF0B0F19),
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+        border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -184,14 +184,14 @@ class _PtsExchangeModalContentState
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0x225BC8FA),
+                    color: const Color(0x224AADDC),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xAA5BC8FA)),
+                    border: Border.all(color: const Color(0xAA4AADDC)),
                   ),
                   child: const Text(
                     '1 Coin = 10 PTS',
                     style: TextStyle(
-                      color: Color(0xFF5BC8FA),
+                      color: Color(0xFF4AADDC),
                       fontSize: 11,
                       fontWeight: FontWeight.w900,
                     ),
@@ -205,7 +205,7 @@ class _PtsExchangeModalContentState
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF131929),
+                color: const Color(0xFF090B18),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: Colors.white10),
               ),
@@ -246,11 +246,11 @@ class _PtsExchangeModalContentState
                       Row(
                         children: [
                           const Icon(Icons.bolt_rounded,
-                              color: Color(0xFF5BC8FA), size: 16),
+                              color: Color(0xFF4AADDC), size: 16),
                           Text(
                             '$totalPts PTS',
                             style: const TextStyle(
-                              color: Color(0xFF5BC8FA),
+                              color: Color(0xFF4AADDC),
                               fontWeight: FontWeight.w900,
                               fontSize: 14,
                             ),
@@ -287,7 +287,7 @@ class _PtsExchangeModalContentState
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFFFFB703)
-                            : const Color(0xFF131929),
+                            : const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isSelected
@@ -308,7 +308,7 @@ class _PtsExchangeModalContentState
                           Text(
                             '+${coins * 10} PTS',
                             style: TextStyle(
-                              color: isSelected ? Colors.black87 : const Color(0xFF5BC8FA),
+                              color: isSelected ? Colors.black87 : const Color(0xFF4AADDC),
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -333,12 +333,12 @@ class _PtsExchangeModalContentState
               ),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: const Color(0xFF131929),
+                fillColor: const Color(0xFF090B18),
                 labelText: 'Fenix Coin miqdorini kiriting',
                 labelStyle: const TextStyle(color: Colors.white54, fontSize: 12),
                 suffixText: '= $ptsToReceive PTS',
                 suffixStyle: const TextStyle(
-                  color: Color(0xFF5BC8FA),
+                  color: Color(0xFF4AADDC),
                   fontWeight: FontWeight.bold,
                 ),
                 prefixIcon: const Icon(Icons.local_fire_department_rounded, color: Color(0xFFFFB703)),

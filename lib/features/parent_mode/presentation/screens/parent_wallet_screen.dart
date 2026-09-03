@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,7 +21,7 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
     final walletAsync = ref.watch(fenixWalletProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -141,7 +141,7 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
                 ),
                 child: Text(
                   '+${wallet.todayEarnedCoins} FC ${'family.today'.tr()}',
-                  style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11, fontWeight: FontWeight.bold),
+                  style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -166,7 +166,7 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF080B14),
+                    color: const Color(0xFF04050D),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: Colors.white10),
                   ),
@@ -175,7 +175,7 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
                     children: [
                       Text('family.available_coins'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 10.5)),
                       SizedBox(height: 4),
-                      Text('${wallet.availableCoins} FC', style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 16, fontWeight: FontWeight.w900)),
+                      Text('${wallet.availableCoins} FC', style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 16, fontWeight: FontWeight.w900)),
                     ],
                   ),
                 ),
@@ -185,7 +185,7 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF080B14),
+                    color: const Color(0xFF04050D),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: Colors.white10),
                   ),
@@ -210,7 +210,7 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -256,18 +256,18 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
           colors: [Color(0xFF142034), Color(0xFF0C1422)],
         ),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.4)),
+        border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.science_rounded, color: Color(0xFF5BC8FA), size: 20),
+              const Icon(Icons.science_rounded, color: Color(0xFF4AADDC), size: 20),
               SizedBox(width: 10),
               Text(
                 'family.savings_lab_title'.tr(),
-                style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 14, fontWeight: FontWeight.w900),
+                style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 14, fontWeight: FontWeight.w900),
               ),
             ],
           ),
@@ -288,9 +288,9 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
                   label: Text('$y ${'family.year'.tr()}'),
                   selected: isSel,
                   onSelected: (_) => setState(() => _simulationYears = y),
-                  selectedColor: const Color(0xFF5BC8FA),
-                  backgroundColor: const Color(0xFF080B14),
-                  labelStyle: TextStyle(color: isSel ? const Color(0xFF080B14) : Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                  selectedColor: const Color(0xFF4AADDC),
+                  backgroundColor: const Color(0xFF04050D),
+                  labelStyle: TextStyle(color: isSel ? const Color(0xFF04050D) : Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                 ),
               );
             }).toList(),
@@ -300,14 +300,14 @@ class _ParentWalletScreenState extends ConsumerState<ParentWalletScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF080B14),
+              color: const Color(0xFF04050D),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('$_simulationYears yildan so‘ng taxminiy:', style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                Text('~$projectedCoins FC (+25%/yil)', style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 13.5, fontWeight: FontWeight.w900)),
+                Text('~$projectedCoins FC (+25%/yil)', style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 13.5, fontWeight: FontWeight.w900)),
               ],
             ),
           ),

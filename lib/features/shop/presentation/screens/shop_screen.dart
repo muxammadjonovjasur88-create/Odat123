@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -34,7 +34,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final shopItemsAsync = ref.watch(shopItemsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: FlowaAppBar(
         showBackButton: true,
         showShopButton: false,
@@ -52,8 +52,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          color: const Color(0xFF5BC8FA),
-          backgroundColor: const Color(0xFF0D1220),
+          color: const Color(0xFF4AADDC),
+          backgroundColor: const Color(0xFF090B18),
           onRefresh: () async {
             ref.invalidate(shopItemsProvider);
             ref.invalidate(userProfileProvider);
@@ -95,12 +95,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                       icon: const Icon(Icons.shopping_bag_outlined, size: 16),
                       label: const Text('Xaridlarim', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF131929),
-                        foregroundColor: const Color(0xFF5BC8FA),
+                        backgroundColor: const Color(0xFF090B18),
+                        foregroundColor: const Color(0xFF4AADDC),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: const BorderSide(color: Color(0x335BC8FA)),
+                          side: const BorderSide(color: Color(0x334AADDC)),
                         ),
                       ),
                     ),
@@ -166,10 +166,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF5BC8FA) : const Color(0xFF131929),
+          color: isSelected ? const Color(0xFF4AADDC) : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? const Color(0xFF5BC8FA) : Colors.white12,
+            color: isSelected ? const Color(0xFF4AADDC) : Colors.white12,
           ),
         ),
         child: Row(
@@ -246,7 +246,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
         'title': 'shop.booster_1_5x_title'.tr(),
         'desc': 'shop.booster_1_5x_desc'.tr(),
         'ptsCost': 250,
-        'color': const Color(0xFF3B9BFF),
+        'color': const Color(0xFF3A7FCC),
         'action': () => _buyBooster(context, uid, 1.5, 360, 250, 'shop.booster_1_5x_title'.tr(), userPoints),
       },
     ];
@@ -296,12 +296,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     const SizedBox(height: 6),
                     Row(
                       children: [
-                        const Icon(Icons.flash_on_rounded, color: Color(0xFF3B9BFF), size: 14),
+                        const Icon(Icons.flash_on_rounded, color: Color(0xFF3A7FCC), size: 14),
                         const SizedBox(width: 4),
                         Text(
                           '$ptsCost PTS',
                           style: TextStyle(
-                            color: canAfford ? const Color(0xFF3B9BFF) : Colors.white38,
+                            color: canAfford ? const Color(0xFF3A7FCC) : Colors.white38,
                             fontWeight: FontWeight.w900,
                             fontSize: 12,
                           ),
@@ -401,10 +401,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     return showDialog<bool>(
       context: context,
       builder: (dCtx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFF5BC8FA), width: 1.2),
+          side: const BorderSide(color: Color(0xFF4AADDC), width: 1.2),
         ),
         title: const Text('Xaridni tasdiqlang', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
         content: Text(
@@ -418,7 +418,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5BC8FA),
+              backgroundColor: const Color(0xFF4AADDC),
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -434,7 +434,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
           side: const BorderSide(color: Color(0xFFFF5252), width: 1.2),
@@ -469,10 +469,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFF3B9BFF), width: 1.5),
+          side: const BorderSide(color: Color(0xFF3A7FCC), width: 1.5),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -481,7 +481,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             const SizedBox(height: 12),
             const Text(
               'Xarid muvaffaqiyatli!',
-              style: TextStyle(color: Color(0xFF3B9BFF), fontSize: 18, fontWeight: FontWeight.w900),
+              style: TextStyle(color: Color(0xFF3A7FCC), fontSize: 18, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 8),
             Text(
@@ -494,7 +494,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B9BFF),
+                  backgroundColor: const Color(0xFF3A7FCC),
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -534,7 +534,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF5BC8FA))),
+      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF4AADDC))),
       error: (_, __) => _buildEmptyCategoryBox(Icons.warning_amber_rounded, 'Kuponlarni yuklashda xatolik', const Color(0xFFFF5252)),
     );
   }
@@ -565,7 +565,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF5BC8FA))),
+      loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF4AADDC))),
       error: (_, __) => _buildEmptyCategoryBox(Icons.warning_amber_rounded, 'Sovg‘alarni yuklashda xatolik', const Color(0xFFFF5252)),
     );
   }

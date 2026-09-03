@@ -20,7 +20,7 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
     final missionsAsync = ref.watch(todayMissionsProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -34,13 +34,13 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF3B9BFF)),
+            icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF3A7FCC)),
             onPressed: () => _showCreateMissionModal(context),
           ),
         ],
       ),
       body: RefreshIndicator(
-        color: const Color(0xFF3B9BFF),
+        color: const Color(0xFF3A7FCC),
         onRefresh: () async => ref.invalidate(todayMissionsProvider),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
@@ -57,10 +57,10 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF0D1220), Color(0xFF0C1626)],
+                      colors: [Color(0xFF090B18), Color(0xFF0C1626)],
                     ),
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4)),
+                    border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +70,7 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
                         children: [
                           Text(
                             'family.today_missions_heading'.tr(),
-                            style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11.5, fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                            style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11.5, fontWeight: FontWeight.w900, letterSpacing: 1.1),
                           ),
                           Text(
                             '$completed / $total ${'family.completed'.tr()}',
@@ -84,7 +84,7 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
                         child: LinearProgressIndicator(
                           value: ratio,
                           backgroundColor: Colors.white10,
-                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B9BFF)),
+                          valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3A7FCC)),
                           minHeight: 6,
                         ),
                       ),
@@ -115,7 +115,7 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
                   return _buildMissionTile(m);
                 },
               ),
-              loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF3B9BFF))),
+              loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF3A7FCC))),
               error: (e, st) => const SizedBox.shrink(),
             ),
             const SizedBox(height: 24),
@@ -124,11 +124,11 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showCreateMissionModal(context),
-        backgroundColor: const Color(0xFF3B9BFF),
-        icon: const Icon(Icons.add_task_rounded, color: Color(0xFF080B14)),
+        backgroundColor: const Color(0xFF3A7FCC),
+        icon: const Icon(Icons.add_task_rounded, color: Color(0xFF04050D)),
         label: Text(
           'family.create_mission_btn'.tr(),
-          style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900),
+          style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900),
         ),
       ),
     );
@@ -143,7 +143,7 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
         typeIcon = Icons.school_rounded;
         break;
       case MissionType.reading:
-        typeColor = const Color(0xFF5BC8FA);
+        typeColor = const Color(0xFF4AADDC);
         typeIcon = Icons.auto_stories_rounded;
         break;
       case MissionType.workout:
@@ -151,11 +151,11 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
         typeIcon = Icons.fitness_center_rounded;
         break;
       case MissionType.location:
-        typeColor = const Color(0xFF3B9BFF);
+        typeColor = const Color(0xFF3A7FCC);
         typeIcon = Icons.location_on_rounded;
         break;
       case MissionType.screenTime:
-        typeColor = const Color(0xFF5BC8FA);
+        typeColor = const Color(0xFF4AADDC);
         typeIcon = Icons.phonelink_setup_rounded;
         break;
       default:
@@ -168,9 +168,9 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: isDone ? const Color(0xFF3B9BFF).withValues(alpha: 0.3) : Colors.white10),
+        border: Border.all(color: isDone ? const Color(0xFF3A7FCC).withValues(alpha: 0.3) : Colors.white10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,13 +224,13 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isDone ? const Color(0x2200FF88) : const Color(0x225BC8FA),
+                  color: isDone ? const Color(0x224AADDC) : const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   m.verificationDetails ?? (isDone ? 'Bajarildi' : 'Jarayonda'),
                   style: TextStyle(
-                    color: isDone ? const Color(0xFF3B9BFF) : const Color(0xFF5BC8FA),
+                    color: isDone ? const Color(0xFF3A7FCC) : const Color(0xFF4AADDC),
                     fontSize: 10.5,
                     fontWeight: FontWeight.w900,
                   ),
@@ -254,7 +254,7 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
@@ -296,7 +296,7 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
                     labelText: 'Missiya nomi',
                     labelStyle: const TextStyle(color: Colors.white54, fontSize: 12),
                     filled: true,
-                    fillColor: const Color(0xFF131929),
+                    fillColor: const Color(0xFF090B18),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   ),
                 ),
@@ -320,8 +320,8 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
                                 selected: isSel,
                                 onSelected: (_) => setModalState(() => coins = c),
                                 selectedColor: const Color(0xFFFFB703),
-                                backgroundColor: const Color(0xFF131929),
-                                labelStyle: TextStyle(color: isSel ? const Color(0xFF080B14) : Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+                                backgroundColor: const Color(0xFF090B18),
+                                labelStyle: TextStyle(color: isSel ? const Color(0xFF04050D) : Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
                               );
                             }).toList(),
                           ),
@@ -338,20 +338,20 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
                     Navigator.pop(ctx);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        backgroundColor: const Color(0xFF3B9BFF),
-                        content: Text('family.mission_assigned_toast'.tr(), style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.bold)),
+                        backgroundColor: const Color(0xFF3A7FCC),
+                        content: Text('family.mission_assigned_toast'.tr(), style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.bold)),
                       ),
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B9BFF),
+                    backgroundColor: const Color(0xFF3A7FCC),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   child: Center(
                     child: Text(
                       'family.assign_btn'.tr(),
-                      style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 14),
+                      style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 14),
                     ),
                   ),
                 ),
@@ -369,9 +369,9 @@ class _ParentMissionsScreenState extends ConsumerState<ParentMissionsScreen> {
       label: Text(label),
       selected: isSel,
       onSelected: (_) => onSelect(type),
-      selectedColor: const Color(0xFF3B9BFF),
-      backgroundColor: const Color(0xFF131929),
-      labelStyle: TextStyle(color: isSel ? const Color(0xFF080B14) : Colors.white70, fontWeight: FontWeight.bold, fontSize: 12),
+      selectedColor: const Color(0xFF3A7FCC),
+      backgroundColor: const Color(0xFF090B18),
+      labelStyle: TextStyle(color: isSel ? const Color(0xFF04050D) : Colors.white70, fontWeight: FontWeight.bold, fontSize: 12),
     );
   }
 }

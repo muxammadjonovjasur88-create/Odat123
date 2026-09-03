@@ -30,9 +30,9 @@ class _PtsHistoryModalContent extends ConsumerWidget {
       height: MediaQuery.of(context).size.height * 0.75,
       padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
       decoration: const BoxDecoration(
-        color: Color(0xFF0D1220),
+        color: Color(0xFF090B18),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+        border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -58,11 +58,11 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0x335BC8FA),
+                      color: const Color(0x334AADDC),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.history_rounded,
-                        color: Color(0xFF5BC8FA), size: 20),
+                        color: Color(0xFF4AADDC), size: 20),
                   ),
                   const SizedBox(width: 10),
                   const Column(
@@ -88,19 +88,19 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0x225BC8FA),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0x665BC8FA)),
+                  border: Border.all(color: const Color(0x664AADDC)),
                 ),
                 child: Row(
                   children: [
                     const Icon(Icons.bolt_rounded,
-                        color: Color(0xFF5BC8FA), size: 14),
+                        color: Color(0xFF4AADDC), size: 14),
                     const SizedBox(width: 3),
                     Text(
                       '$totalPts PTS',
                       style: const TextStyle(
-                        color: Color(0xFF5BC8FA),
+                        color: Color(0xFF4AADDC),
                         fontWeight: FontWeight.w900,
                         fontSize: 12,
                       ),
@@ -130,7 +130,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                           !snapshot.hasData) {
                         return const Center(
                           child: CircularProgressIndicator(
-                              color: Color(0xFF5BC8FA)),
+                              color: Color(0xFF4AADDC)),
                         );
                       }
 
@@ -159,7 +159,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF131929),
+                              color: const Color(0xFF090B18),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: Colors.white10),
                             ),
@@ -170,7 +170,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                                   height: 38,
                                   decoration: BoxDecoration(
                                     color: isEarn
-                                        ? const Color(0x2200FF88)
+                                        ? const Color(0x224AADDC)
                                         : const Color(0x22FF0055),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -179,7 +179,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                                         ? Icons.arrow_downward_rounded
                                         : Icons.arrow_upward_rounded,
                                     color: isEarn
-                                        ? const Color(0xFF3B9BFF)
+                                        ? const Color(0xFF3A7FCC)
                                         : const Color(0xFFFF0055),
                                     size: 18,
                                   ),
@@ -214,7 +214,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                                   isEarn ? '+$amount PTS' : '$amount PTS',
                                   style: TextStyle(
                                     color: isEarn
-                                        ? const Color(0xFF3B9BFF)
+                                        ? const Color(0xFF3A7FCC)
                                         : const Color(0xFFFF0055),
                                     fontWeight: FontWeight.w900,
                                     fontSize: 14,
@@ -279,7 +279,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xFF131929),
+            color: const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: Colors.white10),
           ),
@@ -290,7 +290,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: isEarn
-                      ? const Color(0x2200FF88)
+                      ? const Color(0x224AADDC)
                       : const Color(0x22FF0055),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -299,7 +299,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                       ? Icons.arrow_downward_rounded
                       : Icons.arrow_upward_rounded,
                   color: isEarn
-                      ? const Color(0xFF3B9BFF)
+                      ? const Color(0xFF3A7FCC)
                       : const Color(0xFFFF0055),
                   size: 18,
                 ),
@@ -332,7 +332,7 @@ class _PtsHistoryModalContent extends ConsumerWidget {
                 item['amount'] as String,
                 style: TextStyle(
                   color: isEarn
-                      ? const Color(0xFF3B9BFF)
+                      ? const Color(0xFF3A7FCC)
                       : const Color(0xFFFF0055),
                   fontWeight: FontWeight.w900,
                   fontSize: 14,

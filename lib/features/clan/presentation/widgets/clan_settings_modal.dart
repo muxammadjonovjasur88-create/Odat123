@@ -81,7 +81,7 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            backgroundColor: Color(0xFF3B9BFF),
+            backgroundColor: Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             content: Text(
               'Klan sozlamalari muvaffaqiyatli saqlandi! ✨',
@@ -113,7 +113,7 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
           border: Border(top: BorderSide(color: Color(0x555BC8FA), width: 1.5)),
         ),
@@ -140,11 +140,11 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0x225BC8FA),
+                          color: const Color(0x224AADDC),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0x445BC8FA)),
+                          border: Border.all(color: const Color(0x444AADDC)),
                         ),
-                        child: const Icon(Icons.settings_rounded, color: Color(0xFF5BC8FA), size: 22),
+                        child: const Icon(Icons.settings_rounded, color: Color(0xFF4AADDC), size: 22),
                       ),
                       const SizedBox(width: 12),
                       const Column(
@@ -174,10 +174,10 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131929),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: _isPublic ? const Color(0x4400FF88) : const Color(0x44FF0055),
+                    color: _isPublic ? const Color(0x444AADDC) : const Color(0x44FF0055),
                   ),
                 ),
                 child: Row(
@@ -187,7 +187,7 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
                       children: [
                         Icon(
                           _isPublic ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
-                          color: _isPublic ? const Color(0xFF3B9BFF) : const Color(0xFFFF0055),
+                          color: _isPublic ? const Color(0xFF3A7FCC) : const Color(0xFFFF0055),
                           size: 24,
                         ),
                         const SizedBox(width: 12),
@@ -210,8 +210,8 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
                     ),
                     Switch(
                       value: _isPublic,
-                      activeThumbColor: const Color(0xFF3B9BFF),
-                      activeTrackColor: const Color(0x4400FF88),
+                      activeThumbColor: const Color(0xFF3A7FCC),
+                      activeTrackColor: const Color(0x444AADDC),
                       inactiveThumbColor: const Color(0xFFFF0055),
                       inactiveTrackColor: const Color(0x44FF0055),
                       onChanged: (val) => setState(() => _isPublic = val),
@@ -232,10 +232,10 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
                   hintText: 'Klan maqsadi va intizom qoidalari...',
                   hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
                   filled: true,
-                  fillColor: const Color(0xFF131929),
+                  fillColor: const Color(0xFF090B18),
                   contentPadding: const EdgeInsets.all(12),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white12)),
-                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF5BC8FA))),
+                  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4AADDC))),
                 ),
               ),
               const SizedBox(height: 16),
@@ -246,7 +246,7 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131929),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: Colors.white12),
                 ),
@@ -254,7 +254,7 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
                   child: DropdownButton<String>(
                     value: _selectedRegion,
                     isExpanded: true,
-                    dropdownColor: const Color(0xFF131929),
+                    dropdownColor: const Color(0xFF090B18),
                     style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
                     items: _regions.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
                     onChanged: (val) {
@@ -285,7 +285,7 @@ class _ClanSettingsSheetState extends ConsumerState<_ClanSettingsSheet> {
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : _saveSettings,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5BC8FA),
+                        backgroundColor: const Color(0xFF4AADDC),
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         padding: const EdgeInsets.symmetric(vertical: 14),

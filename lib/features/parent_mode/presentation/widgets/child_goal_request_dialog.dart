@@ -26,10 +26,10 @@ class ChildGoalRequestDialog extends ConsumerWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF0D1420),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4), width: 1.5),
+          border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3B9BFF).withValues(alpha: 0.12),
+              color: const Color(0xFF3A7FCC).withValues(alpha: 0.12),
               blurRadius: 28,
               spreadRadius: 2,
             ),
@@ -42,11 +42,11 @@ class ChildGoalRequestDialog extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF3B9BFF).withValues(alpha: 0.15),
+                color: const Color(0xFF3A7FCC).withValues(alpha: 0.15),
                 shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.3)),
+                border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.3)),
               ),
-              child: const Icon(Icons.family_restroom_rounded, color: Color(0xFF3B9BFF), size: 36),
+              child: const Icon(Icons.family_restroom_rounded, color: Color(0xFF3A7FCC), size: 36),
             ),
             const SizedBox(height: 16),
 
@@ -61,7 +61,7 @@ class ChildGoalRequestDialog extends ConsumerWidget {
             // Goal Title
             Text(
               goal.title,
-              style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 16, fontWeight: FontWeight.w700),
+              style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 16, fontWeight: FontWeight.w700),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -70,7 +70,7 @@ class ChildGoalRequestDialog extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF131929),
+                color: const Color(0xFF090B18),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white10),
               ),
@@ -139,12 +139,12 @@ class ChildGoalRequestDialog extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF3B9BFF), Color(0xFF00C853)],
+                          colors: [Color(0xFF3A7FCC), Color(0xFF00C853)],
                         ),
                         borderRadius: BorderRadius.circular(14),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF3B9BFF).withValues(alpha: 0.3),
+                            color: const Color(0xFF3A7FCC).withValues(alpha: 0.3),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -153,7 +153,7 @@ class ChildGoalRequestDialog extends ConsumerWidget {
                       child: Center(
                         child: Text(
                           'family.accept'.tr(),
-                          style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 15),
+                          style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 15),
                         ),
                       ),
                     ),
@@ -170,7 +170,7 @@ class ChildGoalRequestDialog extends ConsumerWidget {
   Widget _buildDetailRow(IconData icon, String label, String value, {bool isGold = false}) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: isGold ? const Color(0xFFFFB703) : const Color(0xFF5BC8FA)),
+        Icon(icon, size: 18, color: isGold ? const Color(0xFFFFB703) : const Color(0xFF4AADDC)),
         const SizedBox(width: 10),
         Text(label, style: const TextStyle(color: Colors.white60, fontSize: 13)),
         const Spacer(),

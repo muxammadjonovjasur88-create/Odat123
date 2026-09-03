@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,9 +43,9 @@ class BattleArenaScreen extends ConsumerWidget {
           return Container(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+              border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -61,7 +61,7 @@ class BattleArenaScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const Row(
                   children: [
-                    Icon(Icons.bolt_rounded, color: Color(0xFF5BC8FA), size: 28),
+                    Icon(Icons.bolt_rounded, color: Color(0xFF4AADDC), size: 28),
                     SizedBox(width: 10),
                     Text(
                       '⚡ Tezkor Tasodifiy Jang',
@@ -90,9 +90,9 @@ class BattleArenaScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131929),
+                      color: const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF5BC8FA), width: 1),
+                      border: Border.all(color: const Color(0xFF4AADDC), width: 1),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: TextField(
@@ -136,8 +136,8 @@ class BattleArenaScreen extends ConsumerWidget {
                       selected: isSel,
                       onSelected: (_) => setModalState(() => selectedWager = pts),
                       label: Text('$pts ⚡ PTS', style: TextStyle(color: isSel ? Colors.black : Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                      selectedColor: const Color(0xFF5BC8FA),
-                      backgroundColor: const Color(0xFF131929),
+                      selectedColor: const Color(0xFF4AADDC),
+                      backgroundColor: const Color(0xFF090B18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     );
                   }).toList(),
@@ -155,7 +155,7 @@ class BattleArenaScreen extends ConsumerWidget {
                     icon: const Icon(Icons.flash_on_rounded),
                     label: Text('battle.start_battle'.tr(), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5BC8FA),
+                      backgroundColor: const Color(0xFF4AADDC),
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
@@ -182,10 +182,10 @@ class BattleArenaScreen extends ConsumerWidget {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFF5BC8FA), width: 1.5),
+          side: const BorderSide(color: Color(0xFF4AADDC), width: 1.5),
         ),
         content: const Padding(
           padding: EdgeInsets.all(16),
@@ -195,7 +195,7 @@ class BattleArenaScreen extends ConsumerWidget {
               SizedBox(
                 width: 48,
                 height: 48,
-                child: CircularProgressIndicator(color: Color(0xFF5BC8FA), strokeWidth: 3),
+                child: CircularProgressIndicator(color: Color(0xFF4AADDC), strokeWidth: 3),
               ),
               SizedBox(height: 20),
               Text(
@@ -274,7 +274,7 @@ class BattleArenaScreen extends ConsumerWidget {
           return Container(
             padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 32),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(top: BorderSide(color: Color(0xFFFF0055), width: 1.5)),
             ),
@@ -324,7 +324,7 @@ class BattleArenaScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('battle.winner_prize'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-                          Text('+$winnerPrize PTS', style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.w900, fontSize: 14)),
+                          Text('+$winnerPrize PTS', style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.w900, fontSize: 14)),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -356,7 +356,7 @@ class BattleArenaScreen extends ConsumerWidget {
                     suffixText: '⚡ PTS',
                     suffixStyle: const TextStyle(color: Color(0xFFFFB703), fontWeight: FontWeight.bold),
                     filled: true,
-                    fillColor: const Color(0xFF131929),
+                    fillColor: const Color(0xFF090B18),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   ),
                   onChanged: (val) {
@@ -380,7 +380,7 @@ class BattleArenaScreen extends ConsumerWidget {
                       },
                       label: Text('$pts ⚡', style: TextStyle(color: isSel ? Colors.black : Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
                       selectedColor: const Color(0xFFFFB703),
-                      backgroundColor: const Color(0xFF131929),
+                      backgroundColor: const Color(0xFF090B18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     );
                   }).toList(),
@@ -405,7 +405,7 @@ class BattleArenaScreen extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131929),
+                      color: const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: const Color(0xFFFF0055), width: 1),
                     ),
@@ -527,7 +527,7 @@ class BattleArenaScreen extends ConsumerWidget {
         : const AsyncValue<List<BattleMatch>>.data([]);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: const FlowaAppBar(
         showBackButton: true,
       ),
@@ -595,7 +595,7 @@ class BattleArenaScreen extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF5BC8FA), Color(0xFF0066FF)],
+                        colors: [Color(0xFF4AADDC), Color(0xFF0066FF)],
                       ),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: const [
@@ -685,7 +685,7 @@ class BattleArenaScreen extends ConsumerWidget {
                     SizedBox(width: 6),
                     Text(
                       'OCHIQ BELLASHUVLAR',
-                      style: TextStyle(color: Color(0xFF5BC8FA), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                      style: TextStyle(color: Color(0xFF4AADDC), fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.1),
                     ),
                   ],
                 ),
@@ -757,7 +757,7 @@ class BattleArenaScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Color(0xFFFF0055), width: 1.5),
@@ -791,7 +791,7 @@ class BattleArenaScreen extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      backgroundColor: const Color(0xFF3B9BFF),
+                      backgroundColor: const Color(0xFF3A7FCC),
                       content: Text('battle.room_deleted_refunded'.tr(namedArgs: {'wager': battle.wagerPoints.toString()})),
                     ),
                   );
@@ -911,23 +911,23 @@ class BattleArenaScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x335BC8FA), width: 1),
+        border: Border.all(color: const Color(0x334AADDC), width: 1),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0x225BC8FA),
+              color: const Color(0x224AADDC),
               borderRadius: BorderRadius.circular(14),
             ),
             child: Icon(
               battle.exerciseType == 'pushup'
                   ? Icons.fitness_center_rounded
                   : (battle.exerciseType == 'squat' ? Icons.directions_run_rounded : Icons.touch_app_rounded),
-              color: const Color(0xFF5BC8FA),
+              color: const Color(0xFF4AADDC),
               size: 24,
             ),
           ),
@@ -949,11 +949,11 @@ class BattleArenaScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: const Color(0x225BC8FA),
+                        color: const Color(0x224AADDC),
                         borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: const Color(0x445BC8FA)),
+                        border: Border.all(color: const Color(0x444AADDC)),
                       ),
-                      child: Text('battle.open_tag'.tr(), style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 8, fontWeight: FontWeight.bold)),
+                      child: Text('battle.open_tag'.tr(), style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 8, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -989,7 +989,7 @@ class BattleArenaScreen extends ConsumerWidget {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF5BC8FA),
+              backgroundColor: const Color(0xFF4AADDC),
               foregroundColor: Colors.black,
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
@@ -1019,7 +1019,7 @@ class BattleArenaScreen extends ConsumerWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSel ? const Color(0xFFFFB703) : const Color(0xFF131929),
+            color: isSel ? const Color(0xFFFFB703) : const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSel ? const Color(0xFFFFB703) : const Color(0x33FFFFFF),

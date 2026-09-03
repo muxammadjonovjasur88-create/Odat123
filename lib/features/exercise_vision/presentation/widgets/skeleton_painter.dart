@@ -23,11 +23,11 @@ class SkeletonPainter extends CustomPainter {
     final paintLine = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
-      ..color = const Color(0xFF3B9BFF); // Neon Green
+      ..color = const Color(0xFF3A7FCC); // Neon Green
 
     final paintJoint = Paint()
       ..style = PaintingStyle.fill
-      ..color = const Color(0xFF5BC8FA); // Neon Cyan
+      ..color = const Color(0xFF4AADDC); // Neon Cyan
 
     final paintJointBorder = Paint()
       ..style = PaintingStyle.stroke

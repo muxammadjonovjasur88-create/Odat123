@@ -41,7 +41,7 @@ class _BetaTickerBannerState extends State<BetaTickerBanner>
           gradient: LinearGradient(
             colors: [
               const Color(0xFFFF9100).withValues(alpha: 0.18),
-              const Color(0xFF5BC8FA).withValues(alpha: 0.12),
+              const Color(0xFF4AADDC).withValues(alpha: 0.12),
               const Color(0xFFFF9100).withValues(alpha: 0.18),
             ],
           ),

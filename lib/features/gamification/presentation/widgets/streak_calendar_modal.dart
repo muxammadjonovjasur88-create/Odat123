@@ -1,10 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/services/user_repository.dart';
 import '../../domain/streak_reward.dart';
 
@@ -138,7 +138,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF131929),
+          backgroundColor: const Color(0xFF090B18),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Text(
@@ -154,7 +154,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF131929),
+          backgroundColor: const Color(0xFF090B18),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Text(
@@ -175,21 +175,21 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
 
       HapticFeedback.heavyImpact();
 
-      final user = ref.read(userProfileProvider).asData?.value;
-      if (user != null) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
         final userRepo = ref.read(userRepositoryProvider);
         // Award points, coins, freezes to user
         if (reward.points > 0) {
-          await userRepo.awardPoints(user.uid, reward.points);
+          await userRepo.awardPoints(uid, reward.points);
         }
         if (reward.coins > 0) {
-          await userRepo.addFenixCoins(user.uid, reward.coins);
+          await userRepo.addFenixCoins(uid, reward.coins);
         }
         if (reward.freezes > 0) {
-          await userRepo.addFreezes(user.uid, reward.freezes);
+          await userRepo.addFreezes(uid, reward.freezes);
         }
         // Save claimed day and update streak in Firestore
-        await userRepo.claimStreakDay(user.uid, reward.day, now.month, now.year);
+        await userRepo.claimStreakDay(uid, reward.day, now.month, now.year);
       }
 
       final monthKey = 'claimed_streak_days_${now.year}_${now.month}';
@@ -204,7 +204,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             content: Row(
@@ -238,7 +238,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.88,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF080B14),
+        color: Color(0xFF04050D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         border: Border(top: BorderSide(color: Color(0x66FFB703), width: 1.5)),
       ),
@@ -354,7 +354,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          backgroundColor: const Color(0xFF131929),
+                          backgroundColor: const Color(0xFF090B18),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           content: Text('${r.day}-kunlik sovg‘a allaqachon olingan! ✅', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -370,7 +370,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                     decoration: BoxDecoration(
                       gradient: isClaimed
                           ? const LinearGradient(
-                              colors: [Color(0x2200FF88), Color(0x1100FF88)],
+                              colors: [Color(0x224AADDC), Color(0x114AADDC)],
                             )
                           : isAvailable
                               ? LinearGradient(
@@ -378,7 +378,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                                   end: Alignment.bottomRight,
                                   colors: [
                                     r.color.withValues(alpha: 0.25),
-                                    const Color(0xFF131929),
+                                    const Color(0xFF090B18),
                                   ],
                                 )
                               : const LinearGradient(
@@ -387,7 +387,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isClaimed
-                            ? const Color(0xFF3B9BFF)
+                            ? const Color(0xFF3A7FCC)
                             : isAvailable
                                 ? r.color
                                 : Colors.white12,
@@ -418,7 +418,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                               ),
                             ),
                             if (isClaimed)
-                              const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 14)
+                              const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 14)
                             else if (isLocked)
                               const Icon(Icons.lock_outline_rounded, color: Colors.white24, size: 13),
                           ],
@@ -435,7 +435,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                               r.title,
                               style: TextStyle(
                                 color: isClaimed
-                                    ? const Color(0xFF3B9BFF)
+                                    ? const Color(0xFF3A7FCC)
                                     : isAvailable
                                         ? Colors.white
                                         : Colors.white60,
@@ -451,7 +451,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: isClaimed
-                                    ? const Color(0x2200FF88)
+                                    ? const Color(0x224AADDC)
                                     : isAvailable
                                         ? r.color.withValues(alpha: 0.2)
                                         : Colors.white.withValues(alpha: 0.05),
@@ -465,7 +465,7 @@ class _StreakCalendarSheetState extends ConsumerState<_StreakCalendarSheet> {
                                         : 'QULFLANGAN',
                                 style: TextStyle(
                                   color: isClaimed
-                                      ? const Color(0xFF3B9BFF)
+                                      ? const Color(0xFF3A7FCC)
                                       : isAvailable
                                           ? r.color
                                           : Colors.white24,

@@ -38,7 +38,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
     final summaryAsync = ref.watch(screenTimeSummaryProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -54,9 +54,9 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
               height: 32,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)]),
+                gradient: LinearGradient(colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)]),
               ),
-              child: const Icon(Icons.phonelink_setup_rounded, color: Color(0xFF080B14), size: 18),
+              child: const Icon(Icons.phonelink_setup_rounded, color: Color(0xFF04050D), size: 18),
             ),
             const SizedBox(width: 10),
             Text(
@@ -72,7 +72,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.tune_rounded, color: Color(0xFF5BC8FA)),
+            icon: const Icon(Icons.tune_rounded, color: Color(0xFF4AADDC)),
             onPressed: () => context.push(AppRoutes.blocking),
           ),
         ],
@@ -81,7 +81,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
           ? _buildPermissionBanner()
           : summaryAsync.when(
               data: (summary) => RefreshIndicator(
-                color: const Color(0xFF5BC8FA),
+                color: const Color(0xFF4AADDC),
                 onRefresh: () async {
                   ref.invalidate(screenTimeSummaryProvider);
                   ref.invalidate(todayAppUsageListProvider);
@@ -109,7 +109,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
                 ),
               ),
               loading: () => const Center(
-                child: CircularProgressIndicator(color: Color(0xFF5BC8FA)),
+                child: CircularProgressIndicator(color: Color(0xFF4AADDC)),
               ),
               error: (err, _) => Center(
                 child: Padding(
@@ -147,7 +147,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
           decoration: BoxDecoration(
             color: const Color(0xFF121B2E),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.3)),
+            border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.3)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -157,9 +157,9 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
                 height: 60,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Color(0x225BC8FA),
+                  color: Color(0x224AADDC),
                 ),
-                child: const Icon(Icons.security_rounded, color: Color(0xFF5BC8FA), size: 32),
+                child: const Icon(Icons.security_rounded, color: Color(0xFF4AADDC), size: 32),
               ),
               const SizedBox(height: 16),
               Text(
@@ -180,13 +180,13 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
                   await Future.delayed(const Duration(seconds: 1));
                   _checkPermission();
                 },
-                icon: const Icon(Icons.settings_rounded, color: Color(0xFF080B14), size: 18),
+                icon: const Icon(Icons.settings_rounded, color: Color(0xFF04050D), size: 18),
                 label: Text(
                   'wellbeing.grant_permission'.tr(),
-                  style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
@@ -202,10 +202,10 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
     Color scoreColor;
     String statusKey;
     if (score >= 80) {
-      scoreColor = const Color(0xFF3B9BFF);
+      scoreColor = const Color(0xFF3A7FCC);
       statusKey = 'wellbeing.score_excellent';
     } else if (score >= 60) {
-      scoreColor = const Color(0xFF5BC8FA);
+      scoreColor = const Color(0xFF4AADDC);
       statusKey = 'wellbeing.score_good';
     } else {
       scoreColor = const Color(0xFFFFB703);
@@ -219,7 +219,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            const Color(0xFF131929),
+            const Color(0xFF090B18),
             scoreColor.withValues(alpha: 0.1),
           ],
         ),
@@ -237,7 +237,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
             height: 68,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF080B14),
+              color: const Color(0xFF04050D),
               border: Border.all(color: scoreColor, width: 3),
               boxShadow: [
                 BoxShadow(color: scoreColor.withValues(alpha: 0.4), blurRadius: 10),
@@ -304,9 +304,9 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0x335BC8FA)),
+        border: Border.all(color: const Color(0x334AADDC)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +317,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
               Text(
                 'wellbeing.screen_time_today'.tr(),
                 style: const TextStyle(
-                  color: Color(0xFF5BC8FA),
+                  color: Color(0xFF4AADDC),
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.1,
@@ -326,21 +326,21 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isReduced ? const Color(0x2200FF88) : const Color(0x22FF5252),
+                  color: isReduced ? const Color(0x224AADDC) : const Color(0x22FF5252),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       isReduced ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
-                      color: isReduced ? const Color(0xFF3B9BFF) : const Color(0xFFFF5252),
+                      color: isReduced ? const Color(0xFF3A7FCC) : const Color(0xFFFF5252),
                       size: 13,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '${diffMin}m',
                       style: TextStyle(
-                        color: isReduced ? const Color(0xFF3B9BFF) : const Color(0xFFFF5252),
+                        color: isReduced ? const Color(0xFF3A7FCC) : const Color(0xFFFF5252),
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                       ),
@@ -367,10 +367,10 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
             spacing: 8,
             runSpacing: 8,
             children: [
-              _categoryPill(Icons.people_rounded, 'wellbeing.cat_social'.tr(), summary.categoryMinutes[AppCategory.social] ?? 0, const Color(0xFF5BC8FA)),
+              _categoryPill(Icons.people_rounded, 'wellbeing.cat_social'.tr(), summary.categoryMinutes[AppCategory.social] ?? 0, const Color(0xFF4AADDC)),
               _categoryPill(Icons.play_circle_filled_rounded, 'wellbeing.cat_video'.tr(), summary.categoryMinutes[AppCategory.entertainment] ?? 0, const Color(0xFFFFB703)),
               _categoryPill(Icons.sports_esports_rounded, 'wellbeing.cat_games'.tr(), summary.categoryMinutes[AppCategory.games] ?? 0, const Color(0xFFFF5252)),
-              _categoryPill(Icons.work_rounded, 'wellbeing.cat_work'.tr(), summary.categoryMinutes[AppCategory.productivity] ?? 0, const Color(0xFF3B9BFF)),
+              _categoryPill(Icons.work_rounded, 'wellbeing.cat_work'.tr(), summary.categoryMinutes[AppCategory.productivity] ?? 0, const Color(0xFF3A7FCC)),
             ],
           ),
         ],
@@ -416,18 +416,18 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFF5BC8FA), Color(0xFF5BC8FA)]),
+                gradient: const LinearGradient(colors: [Color(0xFF4AADDC), Color(0xFF4AADDC)]),
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [BoxShadow(color: Color(0x335BC8FA), blurRadius: 12)],
+                boxShadow: const [BoxShadow(color: Color(0x334AADDC), blurRadius: 12)],
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.do_not_disturb_on_rounded, color: Color(0xFF080B14), size: 20),
+                  const Icon(Icons.do_not_disturb_on_rounded, color: Color(0xFF04050D), size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'wellbeing.digital_detox'.tr(),
-                    style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 13),
+                    style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 13),
                   ),
                 ],
               ),
@@ -447,14 +447,14 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF131929),
+                color: const Color(0xFF090B18),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.5)),
+                border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.5)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.timer_outlined, color: Color(0xFF3B9BFF), size: 20),
+                  const Icon(Icons.timer_outlined, color: Color(0xFF3A7FCC), size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'wellbeing.app_limits'.tr(),
@@ -493,7 +493,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
               },
               child: Text(
                 'wellbeing.set_limit'.tr(),
-                style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 12, fontWeight: FontWeight.bold),
+                style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 12, fontWeight: FontWeight.bold),
               ),
             ),
           ],
@@ -503,7 +503,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Center(
@@ -540,12 +540,12 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isExceeded
               ? const Color(0xFFFF5252)
-              : (hasLimit ? const Color(0xFF5BC8FA).withValues(alpha: 0.3) : Colors.white10),
+              : (hasLimit ? const Color(0xFF4AADDC).withValues(alpha: 0.3) : Colors.white10),
         ),
       ),
       child: Column(
@@ -604,13 +604,13 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isExceeded ? const Color(0x22FF5252) : const Color(0x225BC8FA),
+                    color: isExceeded ? const Color(0x22FF5252) : const Color(0x224AADDC),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     isExceeded ? 'wellbeing.limit_exceeded'.tr() : '${(progress * 100).toInt()}%',
                     style: TextStyle(
-                      color: isExceeded ? const Color(0xFFFF5252) : const Color(0xFF5BC8FA),
+                      color: isExceeded ? const Color(0xFFFF5252) : const Color(0xFF4AADDC),
                       fontSize: 10.5,
                       fontWeight: FontWeight.w900,
                     ),
@@ -627,7 +627,7 @@ class _DigitalWellbeingScreenState extends ConsumerState<DigitalWellbeingScreen>
                 value: progress,
                 backgroundColor: Colors.white10,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  isExceeded ? const Color(0xFFFF5252) : const Color(0xFF5BC8FA),
+                  isExceeded ? const Color(0xFFFF5252) : const Color(0xFF4AADDC),
                 ),
                 minHeight: 4,
               ),

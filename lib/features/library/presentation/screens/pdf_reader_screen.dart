@@ -205,9 +205,9 @@ class _PdfReaderScreenState extends ConsumerState<PdfReaderScreen> {
                 height: 36,
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(colors: [Color(0xFF3B9BFF), Color(0xFF5BC8FA)]),
+                  gradient: LinearGradient(colors: [Color(0xFF3A7FCC), Color(0xFF4AADDC)]),
                 ),
-                child: const Icon(Icons.check_rounded, color: Color(0xFF0D1220), size: 22),
+                child: const Icon(Icons.check_rounded, color: Color(0xFF090B18), size: 22),
               ),
               const SizedBox(width: 10),
               const Expanded(

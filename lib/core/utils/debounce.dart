@@ -27,7 +27,7 @@ class AppToast {
   static void show(
     BuildContext context,
     String message, {
-    Color backgroundColor = const Color(0xFF131929),
+    Color backgroundColor = const Color(0xFF090B18),
     Color textColor = Colors.white,
     Duration duration = const Duration(seconds: 2),
     Widget? icon,

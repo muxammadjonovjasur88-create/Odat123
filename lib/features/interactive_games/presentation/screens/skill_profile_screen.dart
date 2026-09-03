@@ -13,7 +13,7 @@ class SkillProfileScreen extends ConsumerWidget {
     final skill = ref.watch(skillProfileProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -35,10 +35,10 @@ class SkillProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF0D1220), Color(0xFF0C1626)],
+                colors: [Color(0xFF090B18), Color(0xFF0C1626)],
               ),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.4)),
+              border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.4)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,9 +48,9 @@ class SkillProfileScreen extends ConsumerWidget {
                   children: [
                     Text(
                       'play.learning_index_heading'.tr(),
-                      style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11.5, fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                      style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11.5, fontWeight: FontWeight.w900, letterSpacing: 1.1),
                     ),
-                    const Icon(Icons.auto_awesome_rounded, color: Color(0xFF5BC8FA), size: 18),
+                    const Icon(Icons.auto_awesome_rounded, color: Color(0xFF4AADDC), size: 18),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -71,7 +71,7 @@ class SkillProfileScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF080B14),
+                    color: const Color(0xFF04050D),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -98,16 +98,16 @@ class SkillProfileScreen extends ConsumerWidget {
           const SizedBox(height: 12),
 
           _buildSkillBar('Matematika (Math)', skill.mathScore, const Color(0xFFFFB703), 'Lvl 9 • Tezkor hisob a’lo'),
-          _buildSkillBar('Mantiq (Logic)', skill.logicScore, const Color(0xFF3B9BFF), 'Lvl 12 • Ketma-ketlik yuqori'),
+          _buildSkillBar('Mantiq (Logic)', skill.logicScore, const Color(0xFF3A7FCC), 'Lvl 12 • Ketma-ketlik yuqori'),
           _buildSkillBar('Xotira & Diqqat (Memory)', skill.memoryScore, const Color(0xFF9D4EDD), 'Lvl 7 • Diqqat barqaror'),
-          _buildSkillBar('Tillar (Languages)', skill.languageScore, const Color(0xFF5BC8FA), 'Lvl 15 • +120 yangi so‘z'),
+          _buildSkillBar('Tillar (Languages)', skill.languageScore, const Color(0xFF4AADDC), 'Lvl 15 • +120 yangi so‘z'),
           const SizedBox(height: 20),
 
           // Non-IQ Educational Transparency Disclaimer
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white10),
             ),
@@ -136,7 +136,7 @@ class SkillProfileScreen extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white10),
       ),

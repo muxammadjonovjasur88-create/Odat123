@@ -48,7 +48,8 @@ const GEMINI_API_KEY = defineSecret("GEMINI_API_KEY");
 const SUPABASE_URL_SECRET = defineSecret("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY_SECRET = defineSecret("SUPABASE_SERVICE_ROLE_KEY");
 
-const MODEL = "gemini-2.0-flash";
+// Use the most advanced Gemini reasoning model available (GPT-5 level)
+const MODEL = "gemini-2.5-pro";
 const ALLOWED_CATEGORIES = ["study", "sport", "work", "personal", "wellness"];
 const HHMM = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -388,21 +389,26 @@ export const askAiAssistant = onCall(
 
 function buildAssistantPrompt(stats, userMessage) {
   return `
-Sen Odat mahsuldorlik ilovasining shaxsiy aqlli yordamchisisan.
+Sen Odat mahsuldorlik ilovasining eng ilg'or, chuqur fikrlaydigan shaxsiy aqlli yordamchisisan (GPT-5 darajasida). 
+Sening maqsading nafaqat savollarga javob berish, balki foydalanuvchining psixologik holatini tushunish, ularni ruhlantirish va muvaffaqiyatga yetaklashdir.
+
 Foydalanuvchining so'nggi statistikasi (JSON formatida):
 ${JSON.stringify(stats, null, 2)}
 
 Foydalanuvchining so'rovi: "${userMessage}"
 
-QOIDALAR:
-1. Agar so'rov TAHLIL / STATISTIKA bo'lsa ("natijam qanday", "shu hafta nechta bajarildi", "maslahat ber"):
-   - Statistikadan kelib chiqib, o'zbek tilida, xotirjam va ilhomlantiruvchi Zen ohangida javob ber.
-   - Muhim raqamlarni qalin (**bold**) va bullet point'lar bilan shakllantir.
+QOIDALAR VA FIKRLASH (REASONING) KO'RSATMALARI:
+1. Eng avvalo, foydalanuvchining so'rovi ortida yotgan MAQSADni tahlil qil. U nima xohlayapti? (Dalda, tartib, qattiq intizom yoki shunchaki suhbat?)
+2. Javobni shakllantirishda "Zen" va "Qat'iy intizom" falsafalaridan foydalan. Foydalanuvchiga hissiy yordam va aqliy ravshanlik ber.
+3. Agar so'rov TAHLIL / STATISTIKA bo'lsa ("natijam qanday", "shu hafta nechta bajarildi", "maslahat ber"):
+   - Statistikadan kelib chiqib, o'zbek tilida chuqur, xotirjam va ilhomlantiruvchi javob ber.
+   - Muhim raqamlarni qalin (**bold**) va bullet point'lar bilan ajratib ko'rsat.
+   - Kichik maslahat (actionable advice) qo'sh.
    - "type": "analysis", "task": null bo'lsin.
 
-2. Agar so'rov VAZIFA / MAQSAD YARATISH bo'lsa ("sportni qo'shib qo'y", "ertaga soat 15:00 da o'qish qo'sh"):
+4. Agar so'rov VAZIFA / MAQSAD YARATISH bo'lsa ("sportni qo'shib qo'y", "ertaga soat 15:00 da o'qish qo'sh"):
    - "type": "task_suggestion" bo'lsin.
-   - "reply": vazifa taklif qilingani haqida qisqa (1 jumla) samimiy xabar yoz.
+   - "reply": vazifa taklif qilingani haqida qisqa (1 jumla) samimiy, kuchli motivatsion xabar yoz.
    - "task" obyektini tuz:
      - "title": vazifa nomi (O'zbek tilida, e.g. "Sport mashg'uloti")
      - "category": "study" | "sport" | "work" | "personal" | "wellness"
@@ -410,7 +416,7 @@ QOIDALAR:
      - "startTime": HH:mm (e.g. "17:00")
      - "durationMinutes": 30 yoki 45 kabi son.
 
-QAYTARILADIGAN JSON STRUKTURASI (FAQAT KELTIRILGAN JSON):
+QAYTARILADIGAN JSON STRUKTURASI (FAQAT KELTIRILGAN JSON, HECH QANDAY ORTIQCHA MATNSIZ):
 {
   "type": "analysis" | "task_suggestion",
   "reply": "Matnli javob...",

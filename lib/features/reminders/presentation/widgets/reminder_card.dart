@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -155,7 +155,7 @@ class _ReminderCardState extends ConsumerState<ReminderCard>
     final result = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Color(0xFFFF0055), width: 1.5),
@@ -215,8 +215,8 @@ class _GoalCardContent extends StatelessWidget {
     final isExercise = reminder.isExerciseGoal;
 
     final Color badgeColor = isFocus
-        ? const Color(0xFF5BC8FA)
-        : (isExercise ? const Color(0xFF3B9BFF) : const Color(0xFFFFB703));
+        ? const Color(0xFF4AADDC)
+        : (isExercise ? const Color(0xFF3A7FCC) : const Color(0xFFFFB703));
 
     final IconData badgeIcon = isFocus
         ? Icons.timer_outlined
@@ -234,7 +234,7 @@ class _GoalCardContent extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1220),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: reminder.isCompleted
@@ -293,7 +293,7 @@ class _GoalCardContent extends StatelessWidget {
                       isCompleted: reminder.isCompleted,
                       scaleAnim: checkScale,
                       opacityAnim: checkOpacity,
-                      primaryColor: const Color(0xFF3B9BFF),
+                      primaryColor: const Color(0xFF3A7FCC),
                       borderColor: Colors.white24,
                     ),
                   )
@@ -338,7 +338,7 @@ class _GoalCardContent extends StatelessWidget {
                           context.push(AppRoutes.strictDiscipline, extra: reminder.id);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5BC8FA),
+                          backgroundColor: const Color(0xFF4AADDC),
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -369,7 +369,7 @@ class _GoalCardContent extends StatelessWidget {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3B9BFF),
+                          backgroundColor: const Color(0xFF3A7FCC),
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

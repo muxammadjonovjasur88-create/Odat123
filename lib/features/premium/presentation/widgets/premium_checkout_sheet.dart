@@ -139,7 +139,7 @@ class _PremiumCheckoutSheetState extends ConsumerState<_PremiumCheckoutSheet>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF131929),
+            color: const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: kPremiumGold, width: 2),
             boxShadow: [
@@ -218,7 +218,7 @@ class _PremiumCheckoutSheetState extends ConsumerState<_PremiumCheckoutSheet>
         maxHeight: MediaQuery.of(context).size.height * 0.92,
       ),
       decoration: BoxDecoration(
-        color: const Color(0xFF0F1523),
+        color: const Color(0xFF090B18),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(
@@ -333,7 +333,7 @@ class _PremiumCheckoutSheetState extends ConsumerState<_PremiumCheckoutSheet>
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF141C2D),
+                      color: const Color(0xFF0E1020),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: Colors.white10),
                     ),
@@ -341,7 +341,7 @@ class _PremiumCheckoutSheetState extends ConsumerState<_PremiumCheckoutSheet>
                       children: [
                         const Icon(
                           Icons.verified_user_rounded,
-                          color: Color(0xFF3B9BFF),
+                          color: Color(0xFF3A7FCC),
                           size: 20,
                         ),
                         const SizedBox(width: 10),
@@ -446,7 +446,7 @@ class _PremiumCheckoutSheetState extends ConsumerState<_PremiumCheckoutSheet>
         gradient: LinearGradient(
           colors: [
             kPremiumGold.withValues(alpha: 0.15),
-            const Color(0xFF151F33),
+            const Color(0xFF0E1020),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -539,7 +539,7 @@ class _PremiumCheckoutSheetState extends ConsumerState<_PremiumCheckoutSheet>
         decoration: BoxDecoration(
           color: isSelected
               ? method.brandColor.withValues(alpha: 0.12)
-              : const Color(0xFF131929),
+              : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected

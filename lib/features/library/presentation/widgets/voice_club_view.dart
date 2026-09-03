@@ -76,7 +76,7 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.3)),
+              border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -86,7 +86,7 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                     color: Color(0x3300FF88),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.auto_stories_rounded, color: Color(0xFF3B9BFF), size: 22),
+                  child: const Icon(Icons.auto_stories_rounded, color: Color(0xFF3A7FCC), size: 22),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -160,16 +160,16 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                       return Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0D1220),
+                          color: const Color(0xFF090B18),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: isSpeaking ? const Color(0xFF3B9BFF) : Colors.white12,
+                            color: isSpeaking ? const Color(0xFF3A7FCC) : Colors.white12,
                             width: isSpeaking ? 2 : 1,
                           ),
                           boxShadow: isSpeaking
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF3B9BFF).withValues(alpha: 0.3),
+                                    color: const Color(0xFF3A7FCC).withValues(alpha: 0.3),
                                     blurRadius: 12,
                                   ),
                                 ]
@@ -187,7 +187,7 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                                     height: 58,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: const Color(0xFF3B9BFF), width: 2),
+                                      border: Border.all(color: const Color(0xFF3A7FCC), width: 2),
                                     ),
                                   ),
                                 AvatarCircle(
@@ -202,7 +202,7 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                                   child: Container(
                                     padding: const EdgeInsets.all(3),
                                     decoration: BoxDecoration(
-                                      color: isSpeaking ? const Color(0xFF3B9BFF) : const Color(0xFF334155),
+                                      color: isSpeaking ? const Color(0xFF3A7FCC) : const Color(0xFF334155),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
@@ -230,14 +230,14 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                       );
                     },
                   )
-                : const Center(child: CircularProgressIndicator(color: Color(0xFF3B9BFF))),
+                : const Center(child: CircularProgressIndicator(color: Color(0xFF3A7FCC))),
           ),
 
           // ── Bottom Voice Control Bar ──
           Container(
             padding: EdgeInsets.fromLTRB(16, 12, 16, MediaQuery.of(context).padding.bottom + 14),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
               border: Border(top: BorderSide(color: Colors.white12)),
             ),
@@ -248,7 +248,7 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                   icon: state.isSpeakerMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
                   label: state.isSpeakerMuted ? 'Dinamik o‘chiq' : 'Dinamik',
                   isActive: !state.isSpeakerMuted,
-                  activeColor: const Color(0xFF5BC8FA),
+                  activeColor: const Color(0xFF4AADDC),
                   onTap: () {
                     HapticFeedback.selectionClick();
                     ref.read(voiceClubProvider.notifier).toggleSpeaker();
@@ -258,7 +258,7 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                   icon: state.isMicMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
                   label: state.isMicMuted ? 'Mikrofon' : 'Gapiryapsiz',
                   isActive: !state.isMicMuted,
-                  activeColor: const Color(0xFF3B9BFF),
+                  activeColor: const Color(0xFF3A7FCC),
                   isLarge: true,
                   onTap: () {
                     HapticFeedback.heavyImpact();
@@ -275,7 +275,7 @@ class _VoiceClubViewState extends ConsumerState<VoiceClubView> {
                     setState(() => _hasRaisedHand = !_hasRaisedHand);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        backgroundColor: const Color(0xFF131929),
+                        backgroundColor: const Color(0xFF090B18),
                         behavior: SnackBarBehavior.floating,
                         content: Text(
                           _hasRaisedHand ? '✋ Moderatorga so‘z so‘rab navbatga yozildingiz' : 'Qo‘l tushirildi',

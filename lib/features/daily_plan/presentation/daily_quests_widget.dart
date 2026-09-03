@@ -54,7 +54,7 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
         decoration: const BoxDecoration(
           color: Color(0xFF0B111E),
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+          border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
         ),
         child: Column(
           children: [
@@ -180,10 +180,10 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                       colors: [Color(0xFF280036), Color(0xFF131722)],
                     ),
                     borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: const Color(0xFF7B2FFF), width: 1.1),
+                    border: Border.all(color: const Color(0xFF6B25CC), width: 1.1),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF7B2FFF).withValues(alpha: 0.12),
+                        color: const Color(0xFF6B25CC).withValues(alpha: 0.12),
                         blurRadius: 8,
                       ),
                     ],
@@ -194,9 +194,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: const Color(0xFF7B2FFF).withValues(alpha: 0.2),
+                          color: const Color(0xFF6B25CC).withValues(alpha: 0.2),
                         ),
-                        child: const Icon(Icons.casino_rounded, color: Color(0xFF7B2FFF), size: 18),
+                        child: const Icon(Icons.casino_rounded, color: Color(0xFF6B25CC), size: 18),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -207,7 +207,7 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                             Text(
                               'banners.wheel_title'.tr(),
                               style: const TextStyle(
-                                color: Color(0xFF7B2FFF),
+                                color: Color(0xFF6B25CC),
                                 fontSize: 9.5,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.5,
@@ -249,13 +249,12 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
         // 1. MASHG'ULOTLAR
         _BigCategoryCard(
           title: 'categories.workouts_title'.tr(),
-          subtitle: 'categories.workouts_sub'.tr(),
           emoji: '🏋️‍♂️',
           badgeText: '+450 PTS',
-          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF090B18)],
           borderColor: const Color(0xFF232D42),
-          accentColor: const Color(0xFF5BC8FA),
-          iconBgColor: const Color(0x225BC8FA),
+          accentColor: const Color(0xFF4AADDC),
+          iconBgColor: const Color(0x224AADDC),
           onTap: () => _openCategoryModal(
             context,
             'categories.workouts_title'.tr(),
@@ -265,9 +264,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'Yugurish (GPS Xarita)',
                 subtitle: '3.0 KM TARGET • Navoiy va barcha viloyatlar',
                 icon: Icons.directions_run_rounded,
-                iconColor: const Color(0xFF3B9BFF),
+                iconColor: const Color(0xFF3A7FCC),
                 badge: '+150 PTS',
-                badgeColor: const Color(0xFF3B9BFF),
+                badgeColor: const Color(0xFF3A7FCC),
                 onTap: () {
                   Navigator.pop(context);
                   context.push(AppRoutes.running);
@@ -277,9 +276,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'Kamera Vision AI Mashqlari',
                 subtitle: 'SQUAT • PUSHUP • PLANK • PRESS • TURNIK (AI Sanash)',
                 icon: Icons.fitness_center_rounded,
-                iconColor: const Color(0xFF5BC8FA),
+                iconColor: const Color(0xFF4AADDC),
                 badge: 'AI VISION',
-                badgeColor: const Color(0xFF5BC8FA),
+                badgeColor: const Color(0xFF4AADDC),
                 onTap: () {
                   Navigator.pop(context);
                   context.push(AppRoutes.exerciseSelect);
@@ -293,13 +292,12 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
         // 2. INTIZOM (Ertalabki Missiya Budilnigi, Qat'iy Intizom, Tungi Uyqu)
         _BigCategoryCard(
           title: 'INTIZOM',
-          subtitle: 'Missiya Budilnigi • Qat‘iy Intizom • Tungi "Ekran Yo‘q"',
           emoji: '🛡️',
           badgeText: '+500 PTS',
-          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF090B18)],
           borderColor: const Color(0xFF232D42),
-          accentColor: const Color(0xFF7B2FFF),
-          iconBgColor: const Color(0x227B2FFF),
+          accentColor: const Color(0xFF6B25CC),
+          iconBgColor: const Color(0x226B25CC),
           onTap: () => _openCategoryModal(
             context,
             'INTIZOM',
@@ -321,42 +319,30 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'Qat‘iy Intizom (Fokus)',
                 subtitle: '30 Daqiqa • Telefon to‘liq bloklanadi • Faqat qo‘ng‘iroq',
                 icon: Icons.lock_clock_rounded,
-                iconColor: const Color(0xFF5BC8FA),
+                iconColor: const Color(0xFF4AADDC),
                 badge: '+60 PTS',
-                badgeColor: const Color(0xFF5BC8FA),
+                badgeColor: const Color(0xFF4AADDC),
                 onTap: () {
                   Navigator.pop(context);
                   context.push(AppRoutes.strictDiscipline);
                 },
               ),
-              _QuestCard(
-                title: 'Tungi "Ekran Yo‘q" Mukofoti',
-                subtitle: '22:00 dan keyin telefon ishlatilmagan har 1 daqiqa = 1 PTS',
-                icon: Icons.nightlight_round,
-                iconColor: const Color(0xFF7B2FFF),
-                badge: '1 MIN = 1 PTS',
-                badgeColor: const Color(0xFF7B2FFF),
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push(AppRoutes.disciplineHub);
-                },
-              ),
+
             ],
           ),
         ),
 
         const SizedBox(height: 12),
 
-        // 3. BILIM OLISH (Kutubxona, Kitobxonlar Suhbati, Testlar, Audio Kitoblar)
+        // 3. BILIM OLISH
         _BigCategoryCard(
           title: 'categories.study_title'.tr(),
-          subtitle: 'categories.study_sub'.tr(),
           emoji: '📚',
           badgeText: '+200 PTS',
-          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF090B18)],
           borderColor: const Color(0xFF232D42),
-          accentColor: const Color(0xFF5BC8FA),
-          iconBgColor: const Color(0x225BC8FA),
+          accentColor: const Color(0xFF4AADDC),
+          iconBgColor: const Color(0x224AADDC),
           onTap: () => _openCategoryModal(
             context,
             'categories.study_title'.tr(),
@@ -366,9 +352,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'Kitob Mutolaasi & Kutubxona',
                 subtitle: 'Elektron PDF Kutubxona • Mutolaa Tahlili',
                 icon: Icons.menu_book_rounded,
-                iconColor: const Color(0xFF7B2FFF),
+                iconColor: const Color(0xFF6B25CC),
                 badge: '+60 PTS',
-                badgeColor: const Color(0xFF7B2FFF),
+                badgeColor: const Color(0xFF6B25CC),
                 onTap: () {
                   Navigator.pop(context);
                   context.push(AppRoutes.library);
@@ -390,9 +376,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'extra.audiobooks_title'.tr(),
                 subtitle: 'extra.audiobooks_desc'.tr(),
                 icon: Icons.headphones_rounded,
-                iconColor: const Color(0xFF3B9BFF),
+                iconColor: const Color(0xFF3A7FCC),
                 badge: 'AUDIO',
-                badgeColor: const Color(0xFF3B9BFF),
+                badgeColor: const Color(0xFF3A7FCC),
                 onTap: () {
                   Navigator.pop(context);
                   context.push(AppRoutes.audiobooks);
@@ -404,16 +390,15 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
 
         const SizedBox(height: 12),
 
-        // 3. QO'SHIMCHA PTS
+        // 4. QO'SHIMCHA PTS
         _BigCategoryCard(
           title: 'categories.extra_pts_title'.tr(),
-          subtitle: 'categories.extra_pts_sub'.tr(),
           emoji: '💎',
           badgeText: '+8,100 PTS',
-          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF090B18)],
           borderColor: const Color(0xFF232D42),
-          accentColor: const Color(0xFF7B2FFF),
-          iconBgColor: const Color(0x227B2FFF),
+          accentColor: const Color(0xFF6B25CC),
+          iconBgColor: const Color(0x226B25CC),
           onTap: () => _openCategoryModal(
             context,
             'categories.extra_pts_title'.tr(),
@@ -423,9 +408,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'extra.social_sub_title'.tr(),
                 subtitle: 'extra.social_sub_desc'.tr(),
                 icon: Icons.public_rounded,
-                iconColor: const Color(0xFF5BC8FA),
+                iconColor: const Color(0xFF4AADDC),
                 badge: '+3,000 PTS',
-                badgeColor: const Color(0xFF5BC8FA),
+                badgeColor: const Color(0xFF4AADDC),
                 onTap: () {
                   Navigator.pop(context);
                   showSocialSubscriptionModal(context);
@@ -435,9 +420,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'extra.wheel_fortune_title'.tr(),
                 subtitle: 'extra.wheel_fortune_desc'.tr(),
                 icon: Icons.casino_rounded,
-                iconColor: const Color(0xFF7B2FFF),
+                iconColor: const Color(0xFF6B25CC),
                 badge: 'extra.free_gift'.tr(),
-                badgeColor: const Color(0xFF7B2FFF),
+                badgeColor: const Color(0xFF6B25CC),
                 onTap: () {
                   Navigator.pop(context);
                   showLuckyWheelModal(context);
@@ -459,9 +444,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'Do‘stlarni Taklif Qilish (Referal)',
                 subtitle: 'Har bir do‘stingiz uchun +5,000 PTS katta bonus',
                 icon: Icons.group_add_rounded,
-                iconColor: const Color(0xFF3B9BFF),
+                iconColor: const Color(0xFF3A7FCC),
                 badge: '+5,000 PTS',
-                badgeColor: const Color(0xFF3B9BFF),
+                badgeColor: const Color(0xFF3A7FCC),
                 onTap: () {
                   Navigator.pop(context);
                   _shareReferral();
@@ -475,13 +460,12 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
         // 4. JANGLAR
         _BigCategoryCard(
           title: 'categories.battles_title'.tr(),
-          subtitle: 'categories.battles_sub'.tr(),
           emoji: '⚔️',
           badgeText: '+680 PTS',
-          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF090B18)],
           borderColor: const Color(0xFF232D42),
-          accentColor: const Color(0xFF5BC8FA),
-          iconBgColor: const Color(0x225BC8FA),
+          accentColor: const Color(0xFF4AADDC),
+          iconBgColor: const Color(0x224AADDC),
           onTap: () => _openCategoryModal(
             context,
             'categories.battles_title'.tr(),
@@ -503,9 +487,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                 title: 'extra.1v1_battle'.tr(),
                 subtitle: 'Do‘stingiz yoki tasodifiy raqib bilan bellashing',
                 icon: Icons.sports_martial_arts_rounded,
-                iconColor: const Color(0xFF3B9BFF),
+                iconColor: const Color(0xFF3A7FCC),
                 badge: '180 PTS 🏆',
-                badgeColor: const Color(0xFF3B9BFF),
+                badgeColor: const Color(0xFF3A7FCC),
                 onTap: () {
                   Navigator.pop(context);
                   context.push(AppRoutes.battle);
@@ -519,13 +503,12 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
         // 5. YANGILIKLAR & XABARLAR
         _BigCategoryCard(
           title: 'news.title'.tr(),
-          subtitle: 'news.subtitle'.tr(),
           emoji: '📰',
           badgeText: 'HOT 🔥',
-          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF090B18)],
           borderColor: const Color(0xFF232D42),
-          accentColor: const Color(0xFF7B2FFF),
-          iconBgColor: const Color(0x227B2FFF),
+          accentColor: const Color(0xFF6B25CC),
+          iconBgColor: const Color(0x226B25CC),
           onTap: () => context.push(AppRoutes.news),
         ),
         const SizedBox(height: 12),
@@ -533,13 +516,12 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
         // 6. MUSIQALAR & FOKUS AUDIO
         _BigCategoryCard(
           title: 'music.title'.tr(),
-          subtitle: 'music.sub'.tr(),
           emoji: '🎵',
           badgeText: 'AUDIO 🎧',
-          gradientColors: const [Color(0xFF151C2C), Color(0xFF0D1220)],
+          gradientColors: const [Color(0xFF151C2C), Color(0xFF090B18)],
           borderColor: const Color(0xFF232D42),
-          accentColor: const Color(0xFF5BC8FA),
-          iconBgColor: const Color(0x225BC8FA),
+          accentColor: const Color(0xFF4AADDC),
+          iconBgColor: const Color(0x224AADDC),
           onTap: () => _openMusicModal(context),
         ),
       ],
@@ -555,9 +537,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
       builder: (ctx) => Container(
         height: MediaQuery.of(context).size.height * 0.88,
         decoration: const BoxDecoration(
-          color: Color(0xFF080B14),
+          color: Color(0xFF04050D),
           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          border: Border(top: BorderSide(color: Color(0xFF7B2FFF), width: 1.8)),
+          border: Border(top: BorderSide(color: Color(0xFF6B25CC), width: 1.8)),
         ),
         child: Column(
           children: [
@@ -587,7 +569,6 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
 class _BigCategoryCard extends StatelessWidget {
   const _BigCategoryCard({
     required this.title,
-    required this.subtitle,
     required this.emoji,
     required this.badgeText,
     required this.gradientColors,
@@ -598,7 +579,6 @@ class _BigCategoryCard extends StatelessWidget {
   });
 
   final String title;
-  final String subtitle;
   final String emoji;
   final String badgeText;
   final List<Color> gradientColors;
@@ -612,7 +592,7 @@ class _BigCategoryCard extends StatelessWidget {
     return BouncyScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: gradientColors,
@@ -681,17 +661,6 @@ class _BigCategoryCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: Color(0xFF8899B0),
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
                 ],
               ),
             ),
@@ -730,9 +699,9 @@ class _QuestCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFF131929),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0x225BC8FA), width: 1),
+          border: Border.all(color: const Color(0x224AADDC), width: 1),
         ),
         child: Row(
           children: [

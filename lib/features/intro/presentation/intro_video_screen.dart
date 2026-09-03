@@ -154,7 +154,7 @@ class _IntroVideoScreenState extends State<IntroVideoScreen>
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) => const Icon(
                           Icons.access_time_filled_rounded,
-                          color: Color(0xFF5BC8FA),
+                          color: Color(0xFF4AADDC),
                           size: 72,
                         ),
                       ),

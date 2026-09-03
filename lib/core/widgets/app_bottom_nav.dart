@@ -50,7 +50,7 @@ class AppBottomNav extends StatelessWidget {
             color: const Color(0xF00D1220),
             borderRadius: BorderRadius.circular(36),
             border: Border.all(
-              color: const Color(0x2E3B9BFF),
+              color: const Color(0x2E4AADDC),
               width: 1,
             ),
             boxShadow: [
@@ -114,7 +114,7 @@ class _NavItem extends StatelessWidget {
     return BouncyScale(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -122,16 +122,16 @@ class _NavItem extends StatelessWidget {
             // Icon with optional active glow
             AnimatedContainer(
               duration: AppMotion.subtle,
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(6),
               decoration: active
                   ? BoxDecoration(
-                      color: AppColors.electricBlue.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.electricBlue.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(12),
                     )
                   : null,
               child: Icon(tab.icon, size: 22, color: color),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 3),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
@@ -141,27 +141,6 @@ class _NavItem extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: active ? FontWeight.w700 : FontWeight.w400,
                   letterSpacing: active ? 0.3 : 0,
-                ),
-              ),
-            ),
-            const SizedBox(height: 3),
-            // Electric Blue dot active indicator
-            AnimatedOpacity(
-              opacity: active ? 1 : 0,
-              duration: context.reduceMotion ? Duration.zero : AppMotion.subtle,
-              child: Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: AppColors.electricBlue,
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.electricBlue.withValues(alpha: 0.9),
-                      blurRadius: 6,
-                      spreadRadius: 1,
-                    ),
-                  ],
                 ),
               ),
             ),

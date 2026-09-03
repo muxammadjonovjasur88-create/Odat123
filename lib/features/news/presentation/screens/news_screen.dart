@@ -21,9 +21,9 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
 
   final List<Map<String, dynamic>> _categories = [
     {'id': 'all', 'label': '🔥 Barchasi', 'color': const Color(0xFFFFB703)},
-    {'id': 'uzbekistan', 'label': '🇺🇿 O‘zbekiston', 'color': const Color(0xFF5BC8FA)},
-    {'id': 'world', 'label': '🌍 Dunyo', 'color': const Color(0xFF3B9BFF)},
-    {'id': 'tech', 'label': '⚡ Texnologiya', 'color': const Color(0xFF7B2FFF)},
+    {'id': 'uzbekistan', 'label': '🇺🇿 O‘zbekiston', 'color': const Color(0xFF4AADDC)},
+    {'id': 'world', 'label': '🌍 Dunyo', 'color': const Color(0xFF3A7FCC)},
+    {'id': 'tech', 'label': '⚡ Texnologiya', 'color': const Color(0xFF6B25CC)},
     {'id': 'sport', 'label': '⚽ Sport', 'color': const Color(0xFFFF0055)},
   ];
 
@@ -32,9 +32,9 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
     final newsAsync = ref.watch(newsStreamProvider(_selectedCategory));
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -46,10 +46,10 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: const Color(0x335BC8FA),
+                color: const Color(0x334AADDC),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(Icons.newspaper_rounded, color: Color(0xFF5BC8FA), size: 20),
+              child: const Icon(Icons.newspaper_rounded, color: Color(0xFF4AADDC), size: 20),
             ),
             const SizedBox(width: 10),
             const Text(
@@ -65,7 +65,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               border: Border(bottom: BorderSide(color: Color(0x15FFFFFF))),
             ),
             child: SingleChildScrollView(
@@ -87,7 +87,7 @@ class _NewsScreenState extends ConsumerState<NewsScreen> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? catColor : const Color(0xFF131929),
+                        color: isSelected ? catColor : const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected ? catColor : const Color(0x22FFFFFF),
@@ -172,7 +172,7 @@ class _NewsCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1220),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0x22FFFFFF)),
           boxShadow: const [
@@ -213,9 +213,9 @@ class _NewsCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0x225BC8FA),
+                          color: const Color(0x224AADDC),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0x445BC8FA)),
+                          border: Border.all(color: const Color(0x444AADDC)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -224,7 +224,7 @@ class _NewsCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Text(
                               item.source,
-                              style: const TextStyle(color: Color(0xFF5BC8FA), fontWeight: FontWeight.bold, fontSize: 11),
+                              style: const TextStyle(color: Color(0xFF4AADDC), fontWeight: FontWeight.bold, fontSize: 11),
                             ),
                           ],
                         ),
@@ -280,9 +280,9 @@ class _NewsCard extends StatelessWidget {
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(20),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+          border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -313,10 +313,10 @@ class _NewsCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0x335BC8FA),
+                      color: const Color(0x334AADDC),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Text('${item.sourceEmoji} ${item.source}', style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11, fontWeight: FontWeight.bold)),
+                    child: Text('${item.sourceEmoji} ${item.source}', style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                   const Spacer(),
                   Text(_formatTimeAgo(item.publishedAt), style: const TextStyle(color: Colors.white38, fontSize: 11)),
@@ -351,7 +351,7 @@ class _NewsCard extends StatelessWidget {
                     } catch (_) {}
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BC8FA),
+                    backgroundColor: const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),

@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,13 +22,13 @@ import '../widgets/parent_ai_consultant_dialog.dart';
 import '../widgets/send_envelope_gift_dialog.dart';
 
 // ─── Color palette ─────────────────────────────────────────────────────
-const _bg = Color(0xFF080B14);
-const _card = Color(0xFF0D1220);
+const _bg = Color(0xFF04050D);
+const _card = Color(0xFF090B18);
 const _cardBorder = Color(0xFF1C2540);
-const _green = Color(0xFF3B9BFF);
+const _green = Color(0xFF3A7FCC);
 const _cyan = Color(0xFF00BCD4);
 const _amber = Color(0xFFFFB300);
-const _purple = Color(0xFF7B2FFF);
+const _purple = Color(0xFF6B25CC);
 // ────────────────────────────────────────────────────────────────────────
 
 class ParentHomeScreen extends ConsumerStatefulWidget {
@@ -1513,7 +1513,7 @@ class _LiveMapCard extends ConsumerWidget {
                           color: _bg.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                              color: isOnline ? const Color(0xFF00FF88) : _green.withValues(alpha: 0.4)),
+                              color: isOnline ? const Color(0xFF4AADDC) : _green.withValues(alpha: 0.4)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1522,12 +1522,12 @@ class _LiveMapCard extends ConsumerWidget {
                               width: 6,
                               height: 6,
                               decoration: BoxDecoration(
-                                  shape: BoxShape.circle, color: isOnline ? const Color(0xFF00FF88) : _green),
+                                  shape: BoxShape.circle, color: isOnline ? const Color(0xFF4AADDC) : _green),
                             ),
                             SizedBox(width: 5),
                             Text(isOnline ? 'JONLI GPS' : child.locationUpdatedAtStr,
                                 style: TextStyle(
-                                    color: isOnline ? const Color(0xFF00FF88) : _green,
+                                    color: isOnline ? const Color(0xFF4AADDC) : _green,
                                     fontSize: 10,
                                     fontWeight: FontWeight.w700)),
                           ],

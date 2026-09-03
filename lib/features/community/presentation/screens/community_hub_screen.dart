@@ -31,7 +31,7 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -54,9 +54,9 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
         ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFF3B9BFF),
+          indicatorColor: const Color(0xFF3A7FCC),
           indicatorWeight: 3,
-          labelColor: const Color(0xFF3B9BFF),
+          labelColor: const Color(0xFF3A7FCC),
           unselectedLabelColor: Colors.white54,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           tabs: [
@@ -127,9 +127,9 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
           margin: const EdgeInsets.only(bottom: 14),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.3)),
+            border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,7 +141,7 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
                     backgroundColor: const Color(0xFF18263E),
                     child: Text(
                       p.name.substring(0, 1),
-                      style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -157,20 +157,20 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
                           ],
                         ),
                         const SizedBox(height: 2),
-                        Text(p.primaryInterest, style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11.5, fontWeight: FontWeight.bold)),
+                        Text(p.primaryInterest, style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11.5, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0x2200FF88),
+                      color: const Color(0x224AADDC),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4)),
+                      border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4)),
                     ),
                     child: Text(
                       '${p.matchPercent}% Mos',
-                      style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11, fontWeight: FontWeight.w900),
+                      style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11, fontWeight: FontWeight.w900),
                     ),
                   ),
                 ],
@@ -201,19 +201,19 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
                         HapticFeedback.lightImpact();
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            backgroundColor: const Color(0xFF3B9BFF),
+                            backgroundColor: const Color(0xFF3A7FCC),
                             content: Text('${p.name}ga birgalikda mashq qilish taklifi yuborildi!'),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B9BFF),
+                        backgroundColor: const Color(0xFF3A7FCC),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
                       child: const Text(
                         'Birga boshlash 🤝',
-                        style: TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 12),
+                        style: TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 12),
                       ),
                     ),
                   ),
@@ -260,7 +260,7 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
           margin: const EdgeInsets.only(bottom: 14),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFFFB703).withValues(alpha: 0.3)),
           ),
@@ -291,7 +291,7 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Jamoaviy Natija', style: TextStyle(color: Colors.white70, fontSize: 11)),
-                  Text('${sq.aggregateProgressPercent}%', style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.bold, fontSize: 11)),
+                  Text('${sq.aggregateProgressPercent}%', style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.bold, fontSize: 11)),
                 ],
               ),
               const SizedBox(height: 6),
@@ -300,7 +300,7 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
                 child: LinearProgressIndicator(
                   value: sq.aggregateProgressPercent / 100,
                   backgroundColor: Colors.white10,
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B9BFF)),
+                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3A7FCC)),
                   minHeight: 6,
                 ),
               ),
@@ -318,7 +318,7 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
                   child: Text(
                     sq.isJoined ? 'Jamoa Chatini Ochish' : 'Jamoaga Qo‘shilish (+3 FC)',
                     style: TextStyle(
-                      color: sq.isJoined ? Colors.white : const Color(0xFF080B14),
+                      color: sq.isJoined ? Colors.white : const Color(0xFF04050D),
                       fontWeight: FontWeight.w900,
                       fontSize: 12,
                     ),
@@ -340,16 +340,16 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.3)),
+            border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Row(
                 children: [
-                  Icon(Icons.directions_run_rounded, color: Color(0xFF5BC8FA), size: 22),
+                  Icon(Icons.directions_run_rounded, color: Color(0xFF4AADDC), size: 22),
                   SizedBox(width: 8),
                   Text('5 km Kechki Yugurish Sessiyasi', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
                 ],
@@ -362,12 +362,12 @@ class _CommunityHubScreenState extends ConsumerState<CommunityHubScreen> with Si
                   HapticFeedback.lightImpact();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: const Text(
                   'Xonaga Kirish 🚀',
-                  style: TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 12),
+                  style: TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 12),
                 ),
               ),
             ],

@@ -69,7 +69,7 @@ class FlowaAppBar extends ConsumerWidget implements PreferredSizeWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+            colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
           ),
           borderRadius: BorderRadius.circular(8),
         ),

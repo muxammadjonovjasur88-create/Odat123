@@ -67,7 +67,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF5BC8FA),
+          backgroundColor: const Color(0xFF4AADDC),
           content: Text(
             '📄 "$bookName" yuklandi! AI darslar va testlarni tayyorlamoqda...',
             style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -131,9 +131,9 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final allProgress = allProgressAsync.asData?.value ?? {};
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
@@ -146,7 +146,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               _activeTopTab == 0
                   ? Icons.auto_stories_rounded
                   : (_activeTopTab == 1 ? Icons.school_rounded : Icons.headphones_rounded),
-              color: const Color(0xFF5BC8FA),
+              color: const Color(0xFF4AADDC),
               size: 22,
             ),
             const SizedBox(width: 8),
@@ -172,15 +172,15 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: const Color(0xFF131929),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: Colors.white12),
             ),
             child: Row(
               children: [
-                _buildTopTabItem(0, Icons.menu_book_rounded, 'Kitoblar', const Color(0xFF7B2FFF)),
-                _buildTopTabItem(1, Icons.school_rounded, 'Kurslar', const Color(0xFF5BC8FA)),
-                _buildTopTabItem(2, Icons.record_voice_over_rounded, 'Ovozli Klub', const Color(0xFF3B9BFF)),
+                _buildTopTabItem(0, Icons.menu_book_rounded, 'Kitoblar', const Color(0xFF6B25CC)),
+                _buildTopTabItem(1, Icons.school_rounded, 'Kurslar', const Color(0xFF4AADDC)),
+                _buildTopTabItem(2, Icons.record_voice_over_rounded, 'Ovozli Klub', const Color(0xFF3A7FCC)),
               ],
             ),
           ),
@@ -221,14 +221,14 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             children: [
               Icon(
                 icon,
-                color: isSelected ? (activeColor == const Color(0xFF5BC8FA) || activeColor == const Color(0xFF3B9BFF) ? Colors.black : Colors.white) : Colors.white70,
+                color: isSelected ? (activeColor == const Color(0xFF4AADDC) || activeColor == const Color(0xFF3A7FCC) ? Colors.black : Colors.white) : Colors.white70,
                 size: 16,
               ),
               const SizedBox(width: 5),
               Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? (activeColor == const Color(0xFF5BC8FA) || activeColor == const Color(0xFF3B9BFF) ? Colors.black : Colors.white) : Colors.white70,
+                  color: isSelected ? (activeColor == const Color(0xFF4AADDC) || activeColor == const Color(0xFF3A7FCC) ? Colors.black : Colors.white) : Colors.white70,
                   fontWeight: isSelected ? FontWeight.w900 : FontWeight.w500,
                   fontSize: 12,
                 ),
@@ -266,10 +266,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF7B2FFF) : const Color(0xFF131929),
+                    color: isSelected ? const Color(0xFF6B25CC) : const Color(0xFF090B18),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: isSelected ? const Color(0xFF7B2FFF) : Colors.white12,
+                      color: isSelected ? const Color(0xFF6B25CC) : Colors.white12,
                     ),
                   ),
                   child: Text(
@@ -289,7 +289,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         Expanded(
           child: booksAsync.when(
             loading: () => const Center(
-              child: CircularProgressIndicator(color: Color(0xFF7B2FFF)),
+              child: CircularProgressIndicator(color: Color(0xFF6B25CC)),
             ),
             error: (err, stack) => Center(
               child: Text(
@@ -364,10 +364,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xFF5BC8FA), width: 1.5),
+            border: Border.all(color: const Color(0xFF4AADDC), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF5BC8FA).withValues(alpha: 0.2),
+                color: const Color(0xFF4AADDC).withValues(alpha: 0.2),
                 blurRadius: 16,
               ),
             ],
@@ -377,7 +377,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
             children: [
               const Row(
                 children: [
-                  Icon(Icons.auto_awesome_rounded, color: Color(0xFF7B2FFF), size: 24),
+                  Icon(Icons.auto_awesome_rounded, color: Color(0xFF6B25CC), size: 24),
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -397,7 +397,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF0B1422),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0x665BC8FA)),
+                  border: Border.all(color: const Color(0x664AADDC)),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 child: TextField(
@@ -408,7 +408,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                     hintText: 'Kitob yoki mavzu (masalan: Atom Odatlar, Psixologiya...)',
                     hintStyle: const TextStyle(color: Colors.white30, fontSize: 12.5),
                     suffixIcon: IconButton(
-                      icon: const Icon(Icons.arrow_forward_rounded, color: Color(0xFF5BC8FA)),
+                      icon: const Icon(Icons.arrow_forward_rounded, color: Color(0xFF4AADDC)),
                       onPressed: () => _startCustomCourse(_customCourseController.text),
                     ),
                   ),
@@ -424,7 +424,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       child: ElevatedButton.icon(
                         onPressed: () => _startCustomCourse(_customCourseController.text),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5BC8FA),
+                          backgroundColor: const Color(0xFF4AADDC),
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
@@ -444,11 +444,11 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         onPressed: _pickAndUploadPdfForCourse,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1B283F),
-                          foregroundColor: const Color(0xFF3B9BFF),
-                          side: const BorderSide(color: Color(0xFF3B9BFF), width: 1.2),
+                          foregroundColor: const Color(0xFF3A7FCC),
+                          side: const BorderSide(color: Color(0xFF3A7FCC), width: 1.2),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        icon: const Icon(Icons.picture_as_pdf_rounded, size: 16, color: Color(0xFF3B9BFF)),
+                        icon: const Icon(Icons.picture_as_pdf_rounded, size: 16, color: Color(0xFF3A7FCC)),
                         label: const Text(
                           'PDF YUKLASH 📥',
                           style: TextStyle(fontWeight: FontWeight.w900, fontSize: 11.5),
@@ -477,7 +477,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         const SizedBox(height: 12),
 
         booksAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF5BC8FA))),
+          loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF4AADDC))),
           error: (e, _) => Center(child: Text('Xatolik: $e', style: const TextStyle(color: Colors.red))),
           data: (books) {
             return ListView.separated(
@@ -490,7 +490,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                 return Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0D1220),
+                    color: const Color(0xFF090B18),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Colors.white12),
                   ),
@@ -500,10 +500,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF5BC8FA).withValues(alpha: 0.15),
+                          color: const Color(0xFF4AADDC).withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.school_rounded, color: Color(0xFF5BC8FA)),
+                        child: const Icon(Icons.school_rounded, color: Color(0xFF4AADDC)),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -534,7 +534,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5BC8FA),
+                          backgroundColor: const Color(0xFF4AADDC),
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -565,7 +565,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF131929),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white12),
           boxShadow: [
@@ -601,7 +601,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
                       child: LinearProgressIndicator(
                         value: percent,
                         backgroundColor: Colors.black45,
-                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3B9BFF)),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF3A7FCC)),
                         minHeight: 4,
                       ),
                     ),
@@ -650,7 +650,7 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.menu_book_rounded, size: 36, color: Color(0xFF7B2FFF)),
+            const Icon(Icons.menu_book_rounded, size: 36, color: Color(0xFF6B25CC)),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),

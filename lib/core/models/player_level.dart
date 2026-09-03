@@ -54,11 +54,11 @@ class PlayerLevel {
     if (clampedLevel <= 5) {
       title = 'Yangi Boshlovchi $clampedLevel';
       icon = '🌱';
-      color = const Color(0xFF3B9BFF);
+      color = const Color(0xFF3A7FCC);
     } else if (clampedLevel <= 15) {
       title = 'Intizom Qadami ${clampedLevel - 5}';
       icon = '🔥';
-      color = const Color(0xFF5BC8FA);
+      color = const Color(0xFF4AADDC);
     } else if (clampedLevel <= 30) {
       title = 'Harakat Jangchisi ${clampedLevel - 15}';
       icon = '🥉';
@@ -82,7 +82,7 @@ class PlayerLevel {
     } else {
       title = 'ODAT Hukmdori';
       icon = '⚡';
-      color = const Color(0xFF3B9BFF);
+      color = const Color(0xFF3A7FCC);
     }
 
     return PlayerLevel(

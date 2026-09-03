@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +58,7 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -80,10 +80,10 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF0D1220), Color(0xFF0D1627)],
+                colors: [Color(0xFF090B18), Color(0xFF0D1627)],
               ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4)),
+              border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4)),
             ),
             child: Row(
               children: [
@@ -92,9 +92,9 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
                   height: 48,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Color(0x2200FF88),
+                    color: Color(0x224AADDC),
                   ),
-                  child: const Icon(Icons.handshake_rounded, color: Color(0xFF3B9BFF), size: 24),
+                  child: const Icon(Icons.handshake_rounded, color: Color(0xFF3A7FCC), size: 24),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -121,7 +121,7 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
           // Pillar 1: SAFETY
           _buildPillarSection(
             icon: Icons.shield_rounded,
-            iconColor: const Color(0xFF3B9BFF),
+            iconColor: const Color(0xFF3A7FCC),
             title: 'family.pillar_safety'.tr(),
             items: [
               'family.safety_item_1'.tr(),
@@ -136,7 +136,7 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
           // Pillar 2: DIGITAL DISCIPLINE
           _buildPillarSection(
             icon: Icons.timer_rounded,
-            iconColor: const Color(0xFF5BC8FA),
+            iconColor: const Color(0xFF4AADDC),
             title: 'family.pillar_discipline'.tr(),
             items: [
               'family.discipline_item_1'.tr(),
@@ -167,7 +167,7 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(color: const Color(0x3300FF88)),
             ),
@@ -176,22 +176,22 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.lock_outline_rounded, color: Color(0xFF3B9BFF), size: 20),
+                    const Icon(Icons.lock_outline_rounded, color: Color(0xFF3A7FCC), size: 20),
                     const SizedBox(width: 10),
                     Text(
                       'family.pillar_privacy'.tr(),
-                      style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 14, fontWeight: FontWeight.w900),
+                      style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 14, fontWeight: FontWeight.w900),
                     ),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0x2200FF88),
+                        color: const Color(0x224AADDC),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         'family.protected_badge'.tr(),
-                        style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 10, fontWeight: FontWeight.w900),
+                        style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 10, fontWeight: FontWeight.w900),
                       ),
                     ),
                   ],
@@ -225,7 +225,7 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
                   }
                 : null,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _allAgreed ? const Color(0xFF3B9BFF) : Colors.white12,
+              backgroundColor: _allAgreed ? const Color(0xFF3A7FCC) : Colors.white12,
               disabledBackgroundColor: Colors.white12,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -242,7 +242,7 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
                         ? 'family.agree_continue_btn'.tr()
                         : 'family.agree_all_required'.tr(),
                     style: TextStyle(
-                      color: _allAgreed ? const Color(0xFF080B14) : Colors.white38,
+                      color: _allAgreed ? const Color(0xFF04050D) : Colors.white38,
                       fontSize: 15,
                       fontWeight: FontWeight.w900,
                     ),
@@ -265,7 +265,7 @@ class _FamilyAgreementScreenState extends State<FamilyAgreementScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: value ? iconColor.withValues(alpha: 0.4) : Colors.white10),
       ),

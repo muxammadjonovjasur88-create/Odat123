@@ -104,7 +104,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -115,7 +115,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFF5BC8FA)),
+                leading: const Icon(Icons.camera_alt_rounded, color: Color(0xFF4AADDC)),
                 title: Text('friends.take_photo'.tr(), style: const TextStyle(color: Colors.white)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -123,7 +123,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library_rounded, color: Color(0xFF3B9BFF)),
+                leading: const Icon(Icons.photo_library_rounded, color: Color(0xFF3A7FCC)),
                 title: Text('friends.pick_gallery'.tr(), style: const TextStyle(color: Colors.white)),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -160,7 +160,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
           return Container(
             padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(context).viewInsets.bottom + 24),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(top: BorderSide(color: Color(0xFFFFB703), width: 1.5)),
             ),
@@ -199,7 +199,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                           ),
                           Text(
                             'Mavjud: $myPts ⚡ PTS | $myCoins 🪙 Coins',
-                            style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11.5, fontWeight: FontWeight.bold),
+                            style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11.5, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -217,7 +217,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
-                            color: currency == 'pts' ? const Color(0x33FFB703) : const Color(0xFF131929),
+                            color: currency == 'pts' ? const Color(0x33FFB703) : const Color(0xFF090B18),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: currency == 'pts' ? const Color(0xFFFFB703) : Colors.transparent),
                           ),
@@ -233,9 +233,9 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           decoration: BoxDecoration(
-                            color: currency == 'coins' ? const Color(0x335BC8FA) : const Color(0xFF131929),
+                            color: currency == 'coins' ? const Color(0x334AADDC) : const Color(0xFF090B18),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: currency == 'coins' ? const Color(0xFF5BC8FA) : Colors.transparent),
+                            border: Border.all(color: currency == 'coins' ? const Color(0xFF4AADDC) : Colors.transparent),
                           ),
                           alignment: Alignment.center,
                           child: Text('friends.fenix_coins'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
@@ -263,7 +263,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                       },
                       label: Text('$amt', style: TextStyle(color: isSel ? Colors.black : Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                       selectedColor: const Color(0xFFFFB703),
-                      backgroundColor: const Color(0xFF131929),
+                      backgroundColor: const Color(0xFF090B18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     );
                   }).toList(),
@@ -278,7 +278,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                     labelStyle: const TextStyle(color: Colors.white60, fontSize: 12),
                     prefixIcon: const Icon(Icons.bolt_rounded, color: Color(0xFFFFB703)),
                     filled: true,
-                    fillColor: const Color(0xFF131929),
+                    fillColor: const Color(0xFF090B18),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                   onChanged: (val) {
@@ -294,7 +294,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                     hintText: 'Izoh (masalan: "Omad, do‘stim!")',
                     hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
                     filled: true,
-                    fillColor: const Color(0xFF131929),
+                    fillColor: const Color(0xFF090B18),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -331,7 +331,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    backgroundColor: const Color(0xFF3B9BFF),
+                                    backgroundColor: const Color(0xFF3A7FCC),
                                     content: Text('🎉 $selectedAmount $symbol muvaffaqiyatli sovg‘a qilindi!'),
                                   ),
                                 );
@@ -397,9 +397,9 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
         .watchWeeklyChat(widget.myUid, widget.friendUid);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -425,7 +425,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                   ),
                   const Text(
                     'Haftalik xabarlar tarixi saqlanadi',
-                    style: TextStyle(color: Color(0xFF5BC8FA), fontSize: 10.5, fontWeight: FontWeight.w600),
+                    style: TextStyle(color: Color(0xFF4AADDC), fontSize: 10.5, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -447,7 +447,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
             color: const Color(0x155BC8FA),
             child: const Row(
               children: [
-                Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF5BC8FA)),
+                Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF4AADDC)),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -509,7 +509,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
                           decoration: BoxDecoration(
-                            color: isMe ? const Color(0xFF0088CC) : const Color(0xFF131929),
+                            color: isMe ? const Color(0xFF0088CC) : const Color(0xFF090B18),
                             borderRadius: BorderRadius.only(
                               topLeft: const Radius.circular(16),
                               topRight: const Radius.circular(16),
@@ -517,7 +517,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                               bottomRight: Radius.circular(isMe ? 4 : 16),
                             ),
                             border: Border.all(
-                              color: isMe ? const Color(0x335BC8FA) : const Color(0x22FFFFFF),
+                              color: isMe ? const Color(0x334AADDC) : const Color(0x22FFFFFF),
                             ),
                           ),
                           child: Column(
@@ -566,7 +566,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
           Container(
             padding: EdgeInsets.fromLTRB(10, 8, 14, MediaQuery.of(context).viewInsets.bottom > 0 ? 8 : 24),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               border: Border(top: BorderSide(color: Colors.white10)),
             ),
             child: SafeArea(
@@ -579,16 +579,16 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                     onPressed: _showGiftPtsSheet,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.camera_alt_rounded, color: Color(0xFF5BC8FA), size: 22),
+                    icon: const Icon(Icons.camera_alt_rounded, color: Color(0xFF4AADDC), size: 22),
                     onPressed: _showImageSourceSheet,
                   ),
                   Expanded(
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF131929),
+                        color: const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: const Color(0x335BC8FA)),
+                        border: Border.all(color: const Color(0x334AADDC)),
                       ),
                       child: TextField(
                         controller: _textController,
@@ -613,7 +613,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
                       padding: const EdgeInsets.all(12),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Color(0xFF0088CC), Color(0xFF5BC8FA)],
+                          colors: [Color(0xFF0088CC), Color(0xFF4AADDC)],
                         ),
                         shape: BoxShape.circle,
                       ),
@@ -639,7 +639,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF261D0C), Color(0xFF131929)],
+            colors: [Color(0xFF261D0C), Color(0xFF090B18)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -671,7 +671,7 @@ class _DirectChatScreenState extends ConsumerState<DirectChatScreen> {
               child: Text(
                 isMe ? '-$giftAmt ⚡ PTS' : '+$giftAmt ⚡ PTS',
                 style: TextStyle(
-                  color: isMe ? const Color(0xFFFF4D6D) : const Color(0xFF3B9BFF),
+                  color: isMe ? const Color(0xFFFF4D6D) : const Color(0xFF3A7FCC),
                   fontWeight: FontWeight.w900,
                   fontSize: 14,
                 ),

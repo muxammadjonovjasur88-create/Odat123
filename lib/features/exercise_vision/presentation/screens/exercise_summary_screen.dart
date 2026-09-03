@@ -92,9 +92,9 @@ class _ExerciseSummaryScreenState
         : (exerciseType.toUpperCase() == 'PLANK' ? 'PLANK' : 'SQUAT');
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         elevation: 0,
         automaticallyImplyLeading: false,
         title: const Text(
@@ -120,14 +120,14 @@ class _ExerciseSummaryScreenState
                   gradient: LinearGradient(
                     colors: isPlank
                         ? [const Color(0xFFFF9F00), const Color(0xFFFF0055)]
-                        : [const Color(0xFF3B9BFF), const Color(0xFF5BC8FA)],
+                        : [const Color(0xFF3A7FCC), const Color(0xFF4AADDC)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: isPlank ? const Color(0x66FF9F00) : const Color(0x6639FF14),
+                      color: isPlank ? const Color(0x66FF9F00) : const Color(0x664AADDC),
                       blurRadius: 20,
                     ),
                   ],
@@ -169,7 +169,7 @@ class _ExerciseSummaryScreenState
                       isPlank ? 'PLANK DAVOMIYLIGI' : 'TAKRORLAR',
                       isPlank ? plankHoldText : '$reps ta',
                       isPlank ? Icons.timer_rounded : Icons.fitness_center_rounded,
-                      isPlank ? const Color(0xFFFF9F00) : const Color(0xFF5BC8FA),
+                      isPlank ? const Color(0xFFFF9F00) : const Color(0xFF4AADDC),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -194,7 +194,7 @@ class _ExerciseSummaryScreenState
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Color(0xFF5BC8FA),
+                        color: Color(0xFF4AADDC),
                       ),
                     ),
                     SizedBox(width: 10),
@@ -217,7 +217,7 @@ class _ExerciseSummaryScreenState
                     context.go('/daily');
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B9BFF),
+                    backgroundColor: const Color(0xFF3A7FCC),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -247,7 +247,7 @@ class _ExerciseSummaryScreenState
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF131929),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFF262D40)),
       ),

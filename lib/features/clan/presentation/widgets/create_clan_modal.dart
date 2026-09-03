@@ -101,7 +101,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             content: Row(
@@ -149,10 +149,10 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
       ),
       child: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(
-            top: BorderSide(color: Color(0x665BC8FA), width: 1.5),
+            top: BorderSide(color: Color(0x664AADDC), width: 1.5),
           ),
         ),
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
@@ -180,13 +180,13 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0x225BC8FA),
+                      color: const Color(0x224AADDC),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0x445BC8FA)),
+                      border: Border.all(color: const Color(0x444AADDC)),
                     ),
                     child: const Icon(
                       Icons.shield_rounded,
-                      color: Color(0xFF5BC8FA),
+                      color: Color(0xFF4AADDC),
                       size: 22,
                     ),
                   ),
@@ -197,7 +197,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                       Text(
                         'clan.create_title'.tr(),
                         style: const TextStyle(
-                          color: Color(0xFF5BC8FA),
+                          color: Color(0xFF4AADDC),
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.2,
@@ -246,12 +246,12 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                         width: 48,
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0x335BC8FA)
-                              : const Color(0xFF131929),
+                              ? const Color(0x334AADDC)
+                              : const Color(0xFF090B18),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF5BC8FA)
+                                ? const Color(0xFF4AADDC)
                                 : const Color(0x22FFFFFF),
                             width: isSelected ? 2 : 1,
                           ),
@@ -283,7 +283,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   hintText: 'clan.name_hint'.tr(),
                   hintStyle: const TextStyle(color: Colors.white30),
                   filled: true,
-                  fillColor: const Color(0xFF131929),
+                  fillColor: const Color(0xFF090B18),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -291,7 +291,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFF5BC8FA)),
+                    borderSide: const BorderSide(color: Color(0xFF4AADDC)),
                   ),
                 ),
               ),
@@ -312,7 +312,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                 maxLength: 5,
                 textCapitalization: TextCapitalization.characters,
                 style: const TextStyle(
-                  color: Color(0xFF5BC8FA),
+                  color: Color(0xFF4AADDC),
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,
                 ),
@@ -325,7 +325,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   prefixStyle: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
                   suffixStyle: const TextStyle(color: Colors.white54, fontWeight: FontWeight.bold),
                   filled: true,
-                  fillColor: const Color(0xFF131929),
+                  fillColor: const Color(0xFF090B18),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -333,7 +333,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFF5BC8FA)),
+                    borderSide: const BorderSide(color: Color(0xFF4AADDC)),
                   ),
                 ),
               ),
@@ -357,7 +357,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   hintText: 'clan.desc_hint'.tr(),
                   hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
                   filled: true,
-                  fillColor: const Color(0xFF131929),
+                  fillColor: const Color(0xFF090B18),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
@@ -365,7 +365,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: const BorderSide(color: Color(0xFF5BC8FA)),
+                    borderSide: const BorderSide(color: Color(0xFF4AADDC)),
                   ),
                 ),
               ),
@@ -384,7 +384,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131929),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: const Color(0x22FFFFFF)),
                 ),
@@ -392,7 +392,7 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                   child: DropdownButton<String>(
                     value: _selectedRegion,
                     isExpanded: true,
-                    dropdownColor: const Color(0xFF0D1220),
+                    dropdownColor: const Color(0xFF090B18),
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
                     items: _regions.map((r) {
                       return DropdownMenuItem(
@@ -417,13 +417,13 @@ class _CreateClanSheetState extends ConsumerState<_CreateClanSheet> {
                 child: ElevatedButton(
                   onPressed: _isCreating ? null : _handleCreate,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BC8FA),
+                    backgroundColor: const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
                     elevation: 8,
-                    shadowColor: const Color(0x885BC8FA),
+                    shadowColor: const Color(0x884AADDC),
                   ),
                   child: _isCreating
                       ? const SizedBox(

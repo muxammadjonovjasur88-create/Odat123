@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -342,7 +342,7 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             duration: const Duration(seconds: 2),
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             content: Row(
@@ -352,9 +352,9 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                   height: 30,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: [Color(0xFF3B9BFF), Color(0xFF5BC8FA)]),
+                    gradient: LinearGradient(colors: [Color(0xFF3A7FCC), Color(0xFF4AADDC)]),
                   ),
-                  child: Icon(_badgeIconData(badge['id'] as String), color: const Color(0xFF0D1220), size: 18),
+                  child: Icon(_badgeIconData(badge['id'] as String), color: const Color(0xFF090B18), size: 18),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -391,10 +391,10 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        side: BorderSide(color: Color(0x447B2FFF)),
+        side: BorderSide(color: Color(0x446B25CC)),
       ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(24),
@@ -416,16 +416,16 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: isClaimed
-                      ? [const Color(0x4400FF88), const Color(0x1100FF88)]
+                      ? [const Color(0x444AADDC), const Color(0x114AADDC)]
                       : isUnlocked
-                          ? [const Color(0x557B2FFF), const Color(0x227B2FFF)]
+                          ? [const Color(0x557B2FFF), const Color(0x226B25CC)]
                           : [const Color(0x22FFFFFF), const Color(0x05FFFFFF)],
                 ),
                 border: Border.all(
                   color: isClaimed
-                      ? const Color(0xFF3B9BFF)
+                      ? const Color(0xFF3A7FCC)
                       : isUnlocked
-                          ? const Color(0xFF7B2FFF)
+                          ? const Color(0xFF6B25CC)
                           : Colors.white24,
                   width: 2,
                 ),
@@ -434,9 +434,9 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                 child: Icon(
                   _badgeIconData(badge['id'] as String),
                   color: isClaimed
-                      ? const Color(0xFF3B9BFF)
+                      ? const Color(0xFF3A7FCC)
                       : isUnlocked
-                          ? const Color(0xFF7B2FFF)
+                          ? const Color(0xFF6B25CC)
                           : Colors.white24,
                   size: 36,
                 ),
@@ -463,7 +463,7 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('profile.main_metrics'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
-                    Text('$progress / $target $unit', style: const TextStyle(color: Color(0xFF5BC8FA), fontWeight: FontWeight.bold, fontSize: 11)),
+                    Text('$progress / $target $unit', style: const TextStyle(color: Color(0xFF4AADDC), fontWeight: FontWeight.bold, fontSize: 11)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -471,8 +471,8 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
                     value: (progress / target).clamp(0.0, 1.0),
-                    backgroundColor: const Color(0xFF131929),
-                    valueColor: AlwaysStoppedAnimation<Color>(isUnlocked ? const Color(0xFF3B9BFF) : const Color(0xFF7B2FFF)),
+                    backgroundColor: const Color(0xFF090B18),
+                    valueColor: AlwaysStoppedAnimation<Color>(isUnlocked ? const Color(0xFF3A7FCC) : const Color(0xFF6B25CC)),
                     minHeight: 8,
                   ),
                 ),
@@ -495,10 +495,10 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                   backgroundColor: isClaimed
                       ? const Color(0x3300FF88)
                       : isUnlocked
-                          ? const Color(0xFF7B2FFF)
+                          ? const Color(0xFF6B25CC)
                           : const Color(0x22FFFFFF),
                   foregroundColor: isClaimed
-                      ? const Color(0xFF3B9BFF)
+                      ? const Color(0xFF3A7FCC)
                       : isUnlocked
                           ? Colors.white
                           : Colors.white38,
@@ -567,7 +567,7 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                             color: const Color(0x337B2FFF),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(Icons.military_tech_rounded, color: Color(0xFF7B2FFF), size: 24),
+                          child: const Icon(Icons.military_tech_rounded, color: Color(0xFF6B25CC), size: 24),
                         ),
                         const SizedBox(width: 12),
                         Column(
@@ -588,13 +588,13 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0x2200FF88),
+                        color: const Color(0x224AADDC),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4)),
+                        border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4)),
                       ),
                       child: Text(
                         '$claimedCount / ${_badgeDefinitions.length}',
-                        style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.w900, fontSize: 12),
+                        style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.w900, fontSize: 12),
                       ),
                     ),
                   ],
@@ -651,7 +651,7 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                           ? const LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
-                              colors: [Color(0x2200FF88), Color(0x0A00FF88)],
+                              colors: [Color(0x224AADDC), Color(0x0A00FF88)],
                             )
                           : isUnlocked
                               ? const LinearGradient(
@@ -664,16 +664,16 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isClaimed
-                            ? const Color(0xFF3B9BFF).withValues(alpha: 0.6)
+                            ? const Color(0xFF3A7FCC).withValues(alpha: 0.6)
                             : isUnlocked
-                                ? const Color(0xFF7B2FFF).withValues(alpha: 0.6)
+                                ? const Color(0xFF6B25CC).withValues(alpha: 0.6)
                                 : Colors.white10,
                         width: isUnlocked || isClaimed ? 1.6 : 1,
                       ),
                       boxShadow: isUnlocked && !isClaimed
                           ? [
                               BoxShadow(
-                                color: const Color(0xFF7B2FFF).withValues(alpha: 0.25),
+                                color: const Color(0xFF6B25CC).withValues(alpha: 0.25),
                                 blurRadius: 10,
                               ),
                             ]
@@ -701,16 +701,16 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                                 child: Icon(
                                   _badgeIconData(badge['id'] as String),
                                   color: isClaimed
-                                      ? const Color(0xFF3B9BFF)
+                                      ? const Color(0xFF3A7FCC)
                                       : isUnlocked
-                                          ? const Color(0xFF7B2FFF)
+                                          ? const Color(0xFF6B25CC)
                                           : Colors.white38,
                                   size: 20,
                                 ),
                               ),
                             ),
                             if (isClaimed)
-                              const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 18)
+                              const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 18)
                             else if (isUnlocked)
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -736,7 +736,7 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 color: isClaimed
-                                    ? const Color(0xFF3B9BFF)
+                                    ? const Color(0xFF3A7FCC)
                                     : isUnlocked
                                         ? Colors.white
                                         : Colors.white38,
@@ -749,7 +749,7 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
                               isClaimed ? 'Olingan' : '+$reward PTS',
                               style: TextStyle(
                                 color: isClaimed
-                                    ? const Color(0xFF3B9BFF)
+                                    ? const Color(0xFF3A7FCC)
                                     : isUnlocked
                                         ? const Color(0xFFFFB703)
                                         : Colors.white24,
@@ -786,8 +786,8 @@ class _BadgesModalSheetState extends ConsumerState<_BadgesModalSheet>
             fontWeight: FontWeight.bold,
           ),
         ),
-        selectedColor: const Color(0xFF7B2FFF),
-        backgroundColor: const Color(0xFF131929),
+        selectedColor: const Color(0xFF6B25CC),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
     );

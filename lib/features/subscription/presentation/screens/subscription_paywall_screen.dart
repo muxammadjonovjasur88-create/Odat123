@@ -23,7 +23,7 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
     ref.watch(userSubscriptionProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -115,7 +115,7 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
           _buildPlanCard(
             tier: SubscriptionPlanTier.family,
             badge: 'sub.best_for_families'.tr(),
-            badgeColor: const Color(0xFF3B9BFF),
+            badgeColor: const Color(0xFF3A7FCC),
             title: 'ODAT FAMILY',
             subtitle: 'sub.family_tagline'.tr(),
             monthlyPrice: '99,900 UZS / oy',
@@ -140,17 +140,17 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    backgroundColor: const Color(0xFF3B9BFF),
+                    backgroundColor: const Color(0xFF3A7FCC),
                     content: Text(
                       'sub.trial_activated_msg'.tr(),
-                      style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.bold),
                     ),
                   ),
                 );
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B9BFF),
+              backgroundColor: const Color(0xFF3A7FCC),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               elevation: 4,
@@ -158,11 +158,11 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.bolt_rounded, color: Color(0xFF080B14), size: 20),
+                const Icon(Icons.bolt_rounded, color: Color(0xFF04050D), size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'sub.cta_try_free'.tr(),
-                  style: const TextStyle(color: Color(0xFF080B14), fontSize: 15, fontWeight: FontWeight.w900),
+                  style: const TextStyle(color: Color(0xFF04050D), fontSize: 15, fontWeight: FontWeight.w900),
                 ),
               ],
             ),
@@ -187,7 +187,7 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: Colors.white12),
       ),
@@ -246,12 +246,12 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF3B9BFF),
+                        color: const Color(0xFF3A7FCC),
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: const Text(
                         '-30%',
-                        style: TextStyle(color: Color(0xFF080B14), fontSize: 9.5, fontWeight: FontWeight.w900),
+                        style: TextStyle(color: Color(0xFF04050D), fontSize: 9.5, fontWeight: FontWeight.w900),
                       ),
                     ),
                   ],
@@ -338,7 +338,7 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
                   const SizedBox(width: 8),
                   Text(
                     yearlyEquiv,
-                    style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11.5, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11.5, fontWeight: FontWeight.bold),
                   ),
                 ],
               ],
@@ -350,7 +350,7 @@ class _SubscriptionPaywallScreenState extends ConsumerState<SubscriptionPaywallS
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Row(
                     children: [
-                      const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 15),
+                      const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 15),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(f, style: const TextStyle(color: Colors.white70, fontSize: 12)),

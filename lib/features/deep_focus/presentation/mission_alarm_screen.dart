@@ -280,7 +280,7 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF0D1220),
+          backgroundColor: const Color(0xFF090B18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
             side: const BorderSide(color: Color(0xFFFFB703), width: 1.5),
@@ -346,9 +346,9 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
     final dayNames = ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
@@ -422,7 +422,7 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
                         data: ThemeData.dark().copyWith(
                           colorScheme: const ColorScheme.dark(
                             primary: Color(0xFFFFB703),
-                            surface: Color(0xFF0D1220),
+                            surface: Color(0xFF090B18),
                           ),
                         ),
                         child: child!,
@@ -499,7 +499,7 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: Colors.white12),
             ),
@@ -625,7 +625,7 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
                       showDialog(
                         context: context,
                         builder: (ctx) => AlertDialog(
-                          backgroundColor: const Color(0xFF0D1220),
+                          backgroundColor: const Color(0xFF090B18),
                           title: const Text('Budilnikni to‘xtatish', style: TextStyle(color: Colors.white)),
                           content: const Text(
                             'Missiyani bekor qilib chiqmoqchimisiz?',
@@ -672,7 +672,7 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
                 color: Colors.black.withValues(alpha: 0.85),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: _currentStage == 1 ? const Color(0xFFFFB703) : const Color(0xFF3B9BFF),
+                  color: _currentStage == 1 ? const Color(0xFFFFB703) : const Color(0xFF3A7FCC),
                   width: 2,
                 ),
               ),
@@ -682,7 +682,7 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
                   Text(
                     _currentStage == 1 ? '1-BOSQICH: SQUATS (O‘TIRIB-TURISH)' : '2-BOSQICH: PUSH-UPS (OTJIMANIYA)',
                     style: TextStyle(
-                      color: _currentStage == 1 ? const Color(0xFFFFB703) : const Color(0xFF3B9BFF),
+                      color: _currentStage == 1 ? const Color(0xFFFFB703) : const Color(0xFF3A7FCC),
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
                     ),
@@ -708,7 +708,7 @@ class _MissionAlarmScreenState extends ConsumerState<MissionAlarmScreen> {
                           : (_pushupsDone / _targetPushups).clamp(0.0, 1.0),
                       backgroundColor: Colors.white12,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        _currentStage == 1 ? const Color(0xFFFFB703) : const Color(0xFF3B9BFF),
+                        _currentStage == 1 ? const Color(0xFFFFB703) : const Color(0xFF3A7FCC),
                       ),
                       minHeight: 8,
                     ),

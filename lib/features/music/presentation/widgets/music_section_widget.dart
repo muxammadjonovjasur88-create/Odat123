@@ -34,9 +34,9 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
 
     final categories = [
       {'id': 'all', 'label': '🔥 Barchasi', 'color': const Color(0xFFFFB703)},
-      {'id': 'workout', 'label': '🏋️ ${'music.workout'.tr()}', 'color': const Color(0xFF3B9BFF)},
-      {'id': 'study', 'label': '📚 ${'music.study'.tr()}', 'color': const Color(0xFF5BC8FA)},
-      {'id': 'zen', 'label': '🧘 ${'music.zen'.tr()}', 'color': const Color(0xFF7B2FFF)},
+      {'id': 'workout', 'label': '🏋️ ${'music.workout'.tr()}', 'color': const Color(0xFF3A7FCC)},
+      {'id': 'study', 'label': '📚 ${'music.study'.tr()}', 'color': const Color(0xFF4AADDC)},
+      {'id': 'zen', 'label': '🧘 ${'music.zen'.tr()}', 'color': const Color(0xFF6B25CC)},
       {'id': 'motivation', 'label': '⚡ Motivatsiya', 'color': const Color(0xFFFF7B00)},
       {'id': 'gaming', 'label': '🎮 ${'music.gaming'.tr()}', 'color': const Color(0xFFFF0055)},
     ];
@@ -48,13 +48,13 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF131929), Color(0xFF0D1220)],
+          colors: [Color(0xFF090B18), Color(0xFF090B18)],
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0x335BC8FA), width: 1.5),
+        border: Border.all(color: const Color(0x334AADDC), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF5BC8FA).withValues(alpha: 0.1),
+            color: const Color(0xFF4AADDC).withValues(alpha: 0.1),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -69,10 +69,10 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
               Container(
                 padding: const EdgeInsets.all(7),
                 decoration: BoxDecoration(
-                  color: const Color(0x225BC8FA),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.music_note_rounded, color: Color(0xFF5BC8FA), size: 20),
+                child: const Icon(Icons.music_note_rounded, color: Color(0xFF4AADDC), size: 20),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -104,18 +104,18 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0x2239FF14),
+                    color: const Color(0x224AADDC),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF3B9BFF)),
+                    border: Border.all(color: const Color(0xFF3A7FCC)),
                   ),
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.graphic_eq_rounded, color: Color(0xFF3B9BFF), size: 12),
+                      Icon(Icons.graphic_eq_rounded, color: Color(0xFF3A7FCC), size: 12),
                       SizedBox(width: 4),
                       Text(
                         'IJRO ETILMOQDA',
-                        style: TextStyle(color: Color(0xFF3B9BFF), fontSize: 8.5, fontWeight: FontWeight.w900),
+                        style: TextStyle(color: Color(0xFF3A7FCC), fontSize: 8.5, fontWeight: FontWeight.w900),
                       ),
                     ],
                   ),
@@ -129,10 +129,10 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
           Container(
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: _searchQuery.isNotEmpty ? const Color(0xFF5BC8FA) : const Color(0x22FFFFFF),
+                color: _searchQuery.isNotEmpty ? const Color(0xFF4AADDC) : const Color(0x22FFFFFF),
               ),
             ),
             child: TextField(
@@ -146,7 +146,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
               decoration: InputDecoration(
                 hintText: 'Musiqa yoki ijrochini qidirish...',
                 hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF5BC8FA), size: 18),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF4AADDC), size: 18),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 16),
@@ -182,7 +182,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: isSel ? color.withValues(alpha: 0.25) : const Color(0xFF131929),
+                        color: isSel ? color.withValues(alpha: 0.25) : const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isSel ? color : const Color(0x22FFFFFF),
@@ -270,10 +270,10 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
-                        color: isCurrent ? const Color(0x225BC8FA) : const Color(0xFF0D1220),
+                        color: isCurrent ? const Color(0x224AADDC) : const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isCurrent ? const Color(0xFF5BC8FA) : const Color(0x15FFFFFF),
+                          color: isCurrent ? const Color(0xFF4AADDC) : const Color(0x15FFFFFF),
                         ),
                       ),
                       child: Row(
@@ -288,7 +288,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                             child: Center(
                               child: Icon(
                                 isCurrent ? Icons.graphic_eq_rounded : Icons.music_note_rounded,
-                                color: isCurrent ? const Color(0xFF5BC8FA) : Colors.white60,
+                                color: isCurrent ? const Color(0xFF4AADDC) : Colors.white60,
                                 size: 20,
                               ),
                             ),
@@ -301,7 +301,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                 Text(
                                   track.title,
                                   style: TextStyle(
-                                    color: isCurrent ? const Color(0xFF5BC8FA) : Colors.white,
+                                    color: isCurrent ? const Color(0xFF4AADDC) : Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 13,
                                   ),
@@ -319,7 +319,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                       ),
                                       child: Text(
                                         track.category.toUpperCase(),
-                                        style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 8.5, fontWeight: FontWeight.bold),
+                                        style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 8.5, fontWeight: FontWeight.bold),
                                       ),
                                     ),
                                     const SizedBox(width: 6),
@@ -330,10 +330,10 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                         return Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                                           decoration: BoxDecoration(
-                                            color: isDownloaded ? const Color(0x2200FF88) : const Color(0x22FFFFFF),
+                                            color: isDownloaded ? const Color(0x224AADDC) : const Color(0x22FFFFFF),
                                             borderRadius: BorderRadius.circular(6),
                                             border: Border.all(
-                                              color: isDownloaded ? const Color(0xFF3B9BFF) : Colors.white24,
+                                              color: isDownloaded ? const Color(0xFF3A7FCC) : Colors.white24,
                                               width: 0.6,
                                             ),
                                           ),
@@ -343,13 +343,13 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                               Icon(
                                                 isDownloaded ? Icons.download_done_rounded : Icons.cloud_outlined,
                                                 size: 10,
-                                                color: isDownloaded ? const Color(0xFF3B9BFF) : Colors.white60,
+                                                color: isDownloaded ? const Color(0xFF3A7FCC) : Colors.white60,
                                               ),
                                               const SizedBox(width: 3),
                                               Text(
                                                 isDownloaded ? 'Yuklangan' : 'Online',
                                                 style: TextStyle(
-                                                  color: isDownloaded ? const Color(0xFF3B9BFF) : Colors.white60,
+                                                  color: isDownloaded ? const Color(0xFF3A7FCC) : Colors.white60,
                                                   fontSize: 8,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -387,7 +387,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2.5,
-                                  color: Color(0xFF5BC8FA),
+                                  color: Color(0xFF4AADDC),
                                 ),
                               ),
                             )
@@ -423,7 +423,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                             IconButton(
                               icon: Icon(
                                 isThisPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                                color: isCurrent ? const Color(0xFF5BC8FA) : const Color(0xFF3B9BFF),
+                                color: isCurrent ? const Color(0xFF4AADDC) : const Color(0xFF3A7FCC),
                                 size: 36,
                               ),
                               onPressed: () {
@@ -447,7 +447,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                         },
                         icon: Icon(
                           _showAll ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                          color: const Color(0xFF5BC8FA),
+                          color: const Color(0xFF4AADDC),
                           size: 18,
                         ),
                         label: Text(
@@ -455,7 +455,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                               ? 'Kamroq ko‘rsatish'
                               : 'Barchasini ko‘rish (jami $totalCount ta)',
                           style: const TextStyle(
-                            color: Color(0xFF5BC8FA),
+                            color: Color(0xFF4AADDC),
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -469,15 +469,15 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFF1C2540), Color(0xFF0D1220)],
+                          colors: [Color(0xFF1C2540), Color(0xFF090B18)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF5BC8FA), width: 1.5),
+                        border: Border.all(color: const Color(0xFF4AADDC), width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF5BC8FA).withValues(alpha: 0.25),
+                            color: const Color(0xFF4AADDC).withValues(alpha: 0.25),
                             blurRadius: 16,
                             spreadRadius: 1,
                           ),
@@ -493,7 +493,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                 height: 42,
                                 decoration: BoxDecoration(
                                   gradient: const LinearGradient(
-                                    colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+                                    colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
                                   ),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -530,7 +530,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                               IconButton(
                                 icon: Icon(
                                   playerState.isShuffling ? Icons.shuffle_on_rounded : Icons.shuffle_rounded,
-                                  color: playerState.isShuffling ? const Color(0xFF3B9BFF) : Colors.white38,
+                                  color: playerState.isShuffling ? const Color(0xFF3A7FCC) : Colors.white38,
                                   size: 20,
                                 ),
                                 onPressed: () {
@@ -551,7 +551,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                   height: 32,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
-                                    color: Color(0xFF5BC8FA),
+                                    color: Color(0xFF4AADDC),
                                   ),
                                 )
                               else
@@ -560,7 +560,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                     playerState.isPlaying
                                         ? Icons.pause_circle_filled_rounded
                                         : Icons.play_circle_fill_rounded,
-                                    color: const Color(0xFF5BC8FA),
+                                    color: const Color(0xFF4AADDC),
                                     size: 38,
                                   ),
                                   onPressed: () {
@@ -582,7 +582,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                               IconButton(
                                 icon: Icon(
                                   playerState.isLooping ? Icons.repeat_one_rounded : Icons.repeat_rounded,
-                                  color: playerState.isLooping ? const Color(0xFF3B9BFF) : Colors.white38,
+                                  color: playerState.isLooping ? const Color(0xFF3A7FCC) : Colors.white38,
                                   size: 20,
                                 ),
                                 onPressed: () {
@@ -606,9 +606,9 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                                     thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
                                     overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
                                     trackHeight: 3,
-                                    activeTrackColor: const Color(0xFF5BC8FA),
+                                    activeTrackColor: const Color(0xFF4AADDC),
                                     inactiveTrackColor: Colors.white24,
-                                    thumbColor: const Color(0xFF3B9BFF),
+                                    thumbColor: const Color(0xFF3A7FCC),
                                   ),
                                   child: Slider(
                                     value: playerState.duration.inMilliseconds > 0
@@ -642,7 +642,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
             },
             loading: () => const Padding(
               padding: EdgeInsets.all(20),
-              child: Center(child: CircularProgressIndicator(color: Color(0xFF5BC8FA))),
+              child: Center(child: CircularProgressIndicator(color: Color(0xFF4AADDC))),
             ),
             error: (e, _) => Center(
               child: Text('Audio xatolik: $e', style: const TextStyle(color: Colors.red)),
@@ -665,9 +665,9 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+          border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -686,15 +686,15 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
               height: 68,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF5BC8FA), Color(0xFFFFB703)],
+                  colors: [Color(0xFF4AADDC), Color(0xFFFFB703)],
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: const [
-                  BoxShadow(color: Color(0x445BC8FA), blurRadius: 16),
+                  BoxShadow(color: Color(0x444AADDC), blurRadius: 16),
                 ],
               ),
               child: const Center(
-                child: Icon(Icons.music_note_rounded, color: Color(0xFF0D1220), size: 36),
+                child: Icon(Icons.music_note_rounded, color: Color(0xFF090B18), size: 36),
               ),
             ),
             const SizedBox(height: 14),
@@ -737,7 +737,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                     children: [
                       Text('music.your_balance'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
                       const SizedBox(height: 2),
-                      Text('$currentPoints ⚡ PTS', style: TextStyle(color: canAfford ? const Color(0xFF3B9BFF) : const Color(0xFFFF4D6D), fontWeight: FontWeight.w900, fontSize: 15)),
+                      Text('$currentPoints ⚡ PTS', style: TextStyle(color: canAfford ? const Color(0xFF3A7FCC) : const Color(0xFFFF4D6D), fontWeight: FontWeight.w900, fontSize: 15)),
                     ],
                   ),
                 ],
@@ -750,7 +750,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                 height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BC8FA),
+                    backgroundColor: const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 6,
@@ -765,7 +765,7 @@ class _MusicSectionWidgetState extends ConsumerState<MusicSectionWidget> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('🎉 "${track.title}" muvaffaqiyatli ochildi!'),
-                              backgroundColor: const Color(0xFF3B9BFF),
+                              backgroundColor: const Color(0xFF3A7FCC),
                               behavior: SnackBarBehavior.floating,
                             ),
                           );

@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+﻿import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,7 +71,7 @@ class _AddChildDialogState extends ConsumerState<AddChildDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
         padding: const EdgeInsets.all(22),
@@ -86,8 +86,8 @@ class _AddChildDialogState extends ConsumerState<AddChildDialog> {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x2200FF88)),
-                      child: const Icon(Icons.person_add_alt_1_rounded, color: Color(0xFF3B9BFF), size: 20),
+                      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x224AADDC)),
+                      child: const Icon(Icons.person_add_alt_1_rounded, color: Color(0xFF3A7FCC), size: 20),
                     ),
                     const SizedBox(width: 10),
                     Text(
@@ -115,7 +115,7 @@ class _AddChildDialogState extends ConsumerState<AddChildDialog> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF141F32),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.3)),
+                  border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.3)),
                 ),
                 child: TextField(
                   controller: _idController,
@@ -125,7 +125,7 @@ class _AddChildDialogState extends ConsumerState<AddChildDialog> {
                     hintText: 'family.odat_id_placeholder'.tr(),
                     hintStyle: const TextStyle(color: Colors.white30, fontSize: 13, letterSpacing: 0),
                     border: InputBorder.none,
-                    icon: const Icon(Icons.badge_rounded, color: Color(0xFF5BC8FA), size: 20),
+                    icon: const Icon(Icons.badge_rounded, color: Color(0xFF4AADDC), size: 20),
                   ),
                 ),
               ),
@@ -158,7 +158,7 @@ class _AddChildDialogState extends ConsumerState<AddChildDialog> {
                 child: ElevatedButton(
                   onPressed: _isSearching ? null : _searchAndSend,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B9BFF),
+                    backgroundColor: const Color(0xFF3A7FCC),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
@@ -166,11 +166,11 @@ class _AddChildDialogState extends ConsumerState<AddChildDialog> {
                       ? const SizedBox(
                           height: 20,
                           width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF080B14)),
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Color(0xFF04050D)),
                         )
                       : Text(
                           'family.send_request_btn'.tr(),
-                          style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 14),
+                          style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 14),
                         ),
                 ),
               ),
@@ -180,11 +180,11 @@ class _AddChildDialogState extends ConsumerState<AddChildDialog> {
                 decoration: BoxDecoration(
                   color: const Color(0x1A00FF88),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4)),
+                  border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 28),
+                    const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 28),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Master switch for the entire Premium system.
 const bool kPremiumEnabled = true;
@@ -17,8 +17,8 @@ const Color kPremiumGold = Color(0xFFC9A24B);
 const Color kPremiumGoldSoft = Color(0xFFEFE3C4);
 
 /// Pricing in UZS (O'zbek so'mi)
-const int kMonthlyPriceUzs = 40000;
-const int kYearlyPriceUzs = 390000;
+const int kMonthlyPriceUzs = 30000;
+const int kYearlyPriceUzs = 270000;
 
 // Display-only pricing keys resolved with `.tr()`
 const String kMonthlyPriceLabel = 'premium.price_monthly';
@@ -71,7 +71,7 @@ enum PremiumPlan {
 
   int get priceUzs => this == PremiumPlan.monthly ? kMonthlyPriceUzs : kYearlyPriceUzs;
 
-  String get formattedPriceUzs => this == PremiumPlan.monthly ? '40 000 so\'m' : '390 000 so\'m';
+  String get formattedPriceUzs => this == PremiumPlan.monthly ? '30 000 so\'m' : '270 000 so\'m';
 
   Duration get duration => this == PremiumPlan.monthly ? const Duration(days: 30) : const Duration(days: 365);
 }

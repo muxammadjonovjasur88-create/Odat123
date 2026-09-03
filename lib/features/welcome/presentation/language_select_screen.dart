@@ -78,19 +78,19 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                 height: 76,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF5BC8FA), Color(0xFF7B2FFF)],
+                    colors: [Color(0xFF4AADDC), Color(0xFF6B25CC)],
                   ),
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF5BC8FA).withValues(alpha: 0.3),
+                      color: const Color(0xFF4AADDC).withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ],
                 ),
                 child: const Center(
-                  child: Icon(Icons.language_rounded, color: Color(0xFF5BC8FA), size: 36),
+                  child: Icon(Icons.language_rounded, color: Color(0xFF4AADDC), size: 36),
                 ),
               ),
               const SizedBox(height: 24),
@@ -138,14 +138,14 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFF5BC8FA)
+                                ? const Color(0xFF4AADDC)
                                 : Colors.white12,
                             width: isSelected ? 2 : 1,
                           ),
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: const Color(0xFF5BC8FA).withValues(alpha: 0.25),
+                                    color: const Color(0xFF4AADDC).withValues(alpha: 0.25),
                                     blurRadius: 16,
                                     offset: const Offset(0, 4),
                                   ),
@@ -161,7 +161,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                                 color: const Color(0xFF1B243B),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: isSelected ? const Color(0xFF5BC8FA) : Colors.white12,
+                                  color: isSelected ? const Color(0xFF4AADDC) : Colors.white12,
                                 ),
                               ),
                               child: Center(
@@ -185,7 +185,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                                   Text(
                                     lang['subname']!,
                                     style: TextStyle(
-                                      color: isSelected ? const Color(0xFF5BC8FA) : Colors.white38,
+                                      color: isSelected ? const Color(0xFF4AADDC) : Colors.white38,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -198,9 +198,9 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                               height: 24,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isSelected ? const Color(0xFF5BC8FA) : Colors.transparent,
+                                color: isSelected ? const Color(0xFF4AADDC) : Colors.transparent,
                                 border: Border.all(
-                                  color: isSelected ? const Color(0xFF5BC8FA) : Colors.white24,
+                                  color: isSelected ? const Color(0xFF4AADDC) : Colors.white24,
                                   width: 2,
                                 ),
                               ),
@@ -223,7 +223,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                 child: ElevatedButton(
                   onPressed: () => _selectAndContinue(_selectedCode),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BC8FA),
+                    backgroundColor: const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                     elevation: 6,

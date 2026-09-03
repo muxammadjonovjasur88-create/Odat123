@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -105,9 +105,9 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
       height: MediaQuery.of(context).size.height * 0.85,
       padding: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
-        color: Color(0xFF080B14),
+        color: Color(0xFF04050D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border(top: BorderSide(color: Color(0xFF3B9BFF), width: 2)),
+        border: Border(top: BorderSide(color: Color(0xFF3A7FCC), width: 2)),
       ),
       child: Column(
         children: [
@@ -128,9 +128,9 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: LinearGradient(colors: [Color(0xFF3B9BFF), Color(0xFF5BC8FA)]),
+                    gradient: LinearGradient(colors: [Color(0xFF3A7FCC), Color(0xFF4AADDC)]),
                   ),
-                  child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF080B14), size: 22),
+                  child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF04050D), size: 22),
                 ),
                 const SizedBox(width: 12),
                 Column(
@@ -138,7 +138,7 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
                   children: [
                     const Text(
                       'PARENT AI KONSULTANT',
-                      style: TextStyle(color: Color(0xFF3B9BFF), fontSize: 13.5, fontWeight: FontWeight.w900, letterSpacing: 1.1),
+                      style: TextStyle(color: Color(0xFF3A7FCC), fontSize: 13.5, fontWeight: FontWeight.w900, letterSpacing: 1.1),
                     ),
                     Text(
                       '${widget.childName} bo‘yicha aqlli tahlil va maslahat',
@@ -172,13 +172,13 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
                     constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.85),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isUser ? const Color(0xFF0B3A26) : const Color(0xFF131929),
+                      color: isUser ? const Color(0xFF0B3A26) : const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(18).copyWith(
                         bottomRight: isUser ? const Radius.circular(2) : const Radius.circular(18),
                         bottomLeft: !isUser ? const Radius.circular(2) : const Radius.circular(18),
                       ),
                       border: Border.all(
-                        color: isUser ? const Color(0xFF3B9BFF).withValues(alpha: 0.4) : const Color(0x335BC8FA),
+                        color: isUser ? const Color(0xFF3A7FCC).withValues(alpha: 0.4) : const Color(0x334AADDC),
                       ),
                     ),
                     child: Text(
@@ -200,7 +200,7 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
                   SizedBox(
                     width: 16,
                     height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF3B9BFF)),
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF3A7FCC)),
                   ),
                   SizedBox(width: 10),
                   Text('AI tahlil qilmoqda...', style: TextStyle(color: Colors.white60, fontSize: 12)),
@@ -224,7 +224,7 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131929),
+                      color: const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: const Color(0x3300FF88)),
                     ),
@@ -244,9 +244,9 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
             margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0x4400FF88)),
+              border: Border.all(color: const Color(0x444AADDC)),
             ),
             child: Row(
               children: [
@@ -263,7 +263,7 @@ class _ParentAiConsultantSheetState extends ConsumerState<_ParentAiConsultantShe
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send_rounded, color: Color(0xFF3B9BFF)),
+                  icon: const Icon(Icons.send_rounded, color: Color(0xFF3A7FCC)),
                   onPressed: () => _askAi(_queryController.text),
                 ),
               ],

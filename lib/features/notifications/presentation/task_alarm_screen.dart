@@ -5,9 +5,14 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/router/app_routes.dart';
+import '../../../core/services/auth_repository.dart';
+import '../../../core/services/task_repository.dart';
 import '../../../core/theme/app_text_styles.dart';
 
-class TaskAlarmScreen extends StatefulWidget {
+class TaskAlarmScreen extends ConsumerStatefulWidget {
   final String taskId;
   final String title;
   final int minutesBefore;
@@ -22,10 +27,10 @@ class TaskAlarmScreen extends StatefulWidget {
   });
 
   @override
-  State<TaskAlarmScreen> createState() => _TaskAlarmScreenState();
+  ConsumerState<TaskAlarmScreen> createState() => _TaskAlarmScreenState();
 }
 
-class _TaskAlarmScreenState extends State<TaskAlarmScreen>
+class _TaskAlarmScreenState extends ConsumerState<TaskAlarmScreen>
     with SingleTickerProviderStateMixin {
   final AudioPlayer _audioPlayer = AudioPlayer();
   Timer? _vibrationTimer;
@@ -105,6 +110,33 @@ class _TaskAlarmScreenState extends State<TaskAlarmScreen>
     }
   }
 
+  Future<void> _startSession() async {
+    _stopAlarm();
+
+    try {
+      final uid = ref.read(authStateProvider).asData?.value?.uid;
+      if (uid == null) return;
+
+      final task = await ref.read(taskRepositoryProvider).getTask(uid, widget.taskId);
+      if (task == null) return;
+
+      if (!mounted) return;
+
+      final titleLow = task.title.toLowerCase();
+      if (titleLow.contains('squat') || titleLow.contains('o\'tirib turish')) {
+        context.push('${AppRoutes.exerciseCamera}?mode=squat', extra: task);
+      } else if (titleLow.contains('pushup') || titleLow.contains('otjimaniye')) {
+        context.push('${AppRoutes.exerciseCamera}?mode=pushup', extra: task);
+      } else if (titleLow.contains('plank') || titleLow.contains('planka')) {
+        context.push('${AppRoutes.exerciseCamera}?mode=plank', extra: task);
+      } else {
+        context.push(AppRoutes.activeFocus, extra: task);
+      }
+    } catch (e) {
+      debugPrint('Error starting task from alarm: $e');
+    }
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -180,42 +212,71 @@ class _TaskAlarmScreenState extends State<TaskAlarmScreen>
                 ],
               ),
 
-              // Stop Button (Single focal action)
-              GestureDetector(
-                onTap: _stopAlarm,
-                child: Container(
-                  height: 80,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFFE53935),
-                        Color(0xFFD32F2F),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(40),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFD32F2F).withValues(alpha: 0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
+              // Start & Stop Buttons
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: _startSession,
+                    child: Container(
+                      height: 80,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF4AADDC),
+                            Color(0xFF3A7FCC),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(40),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF4AADDC).withValues(alpha: 0.4),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      "TO'XTATISH",
-                      style: AppTextStyles.body.copyWith(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.5,
+                      child: Center(
+                        child: Text(
+                          "BOSHLASH",
+                          style: AppTextStyles.body.copyWith(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  GestureDetector(
+                    onTap: _stopAlarm,
+                    child: Container(
+                      height: 60,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF222222),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.white12),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "TO'XTATISH",
+                          style: AppTextStyles.body.copyWith(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

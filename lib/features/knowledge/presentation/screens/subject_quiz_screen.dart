@@ -14,7 +14,7 @@ import '../../../../core/widgets/widgets.dart';
 
 
 enum QuizDifficulty {
-  easy(label: 'Oson', pts: 20, color: Color(0xFF3B9BFF), icon: Icons.sentiment_satisfied_alt_rounded),
+  easy(label: 'Oson', pts: 20, color: Color(0xFF3A7FCC), icon: Icons.sentiment_satisfied_alt_rounded),
   medium(label: 'O‘rta', pts: 40, color: Color(0xFFFFB703), icon: Icons.psychology_rounded),
   hard(label: 'Qiyin', pts: 80, color: Color(0xFFFF0055), icon: Icons.local_fire_department_rounded);
 
@@ -70,22 +70,22 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
 
   final Map<int, List<Map<String, dynamic>>> _subjectsByAge = {
     0: [
-      {'name': 'Matematika & Hisob', 'icon': Icons.calculate_rounded, 'color': Color(0xFF5BC8FA)},
-      {'name': 'Ona tili & Alifbo', 'icon': Icons.menu_book_rounded, 'color': Color(0xFF7B2FFF)},
+      {'name': 'Matematika & Hisob', 'icon': Icons.calculate_rounded, 'color': Color(0xFF4AADDC)},
+      {'name': 'Ona tili & Alifbo', 'icon': Icons.menu_book_rounded, 'color': Color(0xFF6B25CC)},
       {'name': 'Mantiqiy Topishmoq', 'icon': Icons.lightbulb_rounded, 'color': Color(0xFFFFB703)},
-      {'name': 'Ingliz tili (Kids)', 'icon': Icons.language_rounded, 'color': Color(0xFF3B9BFF)},
+      {'name': 'Ingliz tili (Kids)', 'icon': Icons.language_rounded, 'color': Color(0xFF3A7FCC)},
     ],
     1: [
-      {'name': 'Matematika & Algebra', 'icon': Icons.functions_rounded, 'color': Color(0xFF5BC8FA)},
+      {'name': 'Matematika & Algebra', 'icon': Icons.functions_rounded, 'color': Color(0xFF4AADDC)},
       {'name': 'Fizika & Tabiat', 'icon': Icons.science_rounded, 'color': Color(0xFFFF0055)},
       {'name': 'Tarix & Geografiya', 'icon': Icons.public_rounded, 'color': Color(0xFFFFB703)},
-      {'name': 'Ingliz tili (Grammar)', 'icon': Icons.translate_rounded, 'color': Color(0xFF3B9BFF)},
-      {'name': 'IT & Dasturlash Asoslari', 'icon': Icons.code_rounded, 'color': Color(0xFF7B2FFF)},
+      {'name': 'Ingliz tili (Grammar)', 'icon': Icons.translate_rounded, 'color': Color(0xFF3A7FCC)},
+      {'name': 'IT & Dasturlash Asoslari', 'icon': Icons.code_rounded, 'color': Color(0xFF6B25CC)},
     ],
     2: [
-      {'name': 'Matematika & Mantiq', 'icon': Icons.auto_awesome_rounded, 'color': Color(0xFF5BC8FA)},
-      {'name': 'IELTS & Advanced English', 'icon': Icons.school_rounded, 'color': Color(0xFF3B9BFF)},
-      {'name': 'IT, Flutter & Python', 'icon': Icons.terminal_rounded, 'color': Color(0xFF7B2FFF)},
+      {'name': 'Matematika & Mantiq', 'icon': Icons.auto_awesome_rounded, 'color': Color(0xFF4AADDC)},
+      {'name': 'IELTS & Advanced English', 'icon': Icons.school_rounded, 'color': Color(0xFF3A7FCC)},
+      {'name': 'IT, Flutter & Python', 'icon': Icons.terminal_rounded, 'color': Color(0xFF6B25CC)},
       {'name': 'Jahon Tarixi & Moliya', 'icon': Icons.account_balance_rounded, 'color': Color(0xFFFFB703)},
       {'name': 'Tanqidiy Tafakkur & AI', 'icon': Icons.psychology_alt_rounded, 'color': Color(0xFFFF0055)},
     ],
@@ -308,7 +308,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                 colors: [Color(0xFF2D154B), Color(0xFF101626)],
               ),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFF7B2FFF).withValues(alpha: 0.4)),
+              border: Border.all(color: const Color(0xFF6B25CC).withValues(alpha: 0.4)),
             ),
             child: Row(
               children: [
@@ -319,7 +319,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                     color: const Color(0x337B2FFF),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Icon(Icons.psychology_rounded, color: Color(0xFF7B2FFF), size: 28),
+                  child: const Icon(Icons.psychology_rounded, color: Color(0xFF6B25CC), size: 28),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -347,7 +347,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
           const Text(
             '1. YOSH TOIFASINI TANLANG',
             style: TextStyle(
-              color: Color(0xFF5BC8FA),
+              color: Color(0xFF4AADDC),
               fontWeight: FontWeight.w900,
               fontSize: 11,
               letterSpacing: 1.1,
@@ -369,7 +369,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
           const Text(
             '2. FANNI TANLANG',
             style: TextStyle(
-              color: Color(0xFF5BC8FA),
+              color: Color(0xFF4AADDC),
               fontWeight: FontWeight.w900,
               fontSize: 11,
               letterSpacing: 1.1,
@@ -390,7 +390,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: isSelected ? color.withValues(alpha: 0.2) : const Color(0xFF0D1220),
+                    color: isSelected ? color.withValues(alpha: 0.2) : const Color(0xFF090B18),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isSelected ? color : Colors.white12,
@@ -422,7 +422,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
           const Text(
             '3. QIYINLIK DARAJASI VA MUKOFOT',
             style: TextStyle(
-              color: Color(0xFF5BC8FA),
+              color: Color(0xFF4AADDC),
               fontWeight: FontWeight.w900,
               fontSize: 11,
               letterSpacing: 1.1,
@@ -442,7 +442,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                     margin: const EdgeInsets.symmetric(horizontal: 4),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: isSelected ? diff.color.withValues(alpha: 0.2) : const Color(0xFF0D1220),
+                      color: isSelected ? diff.color.withValues(alpha: 0.2) : const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: isSelected ? diff.color : Colors.white12,
@@ -482,7 +482,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
             child: ElevatedButton(
               onPressed: _startQuiz,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF7B2FFF),
+                backgroundColor: const Color(0xFF6B25CC),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 elevation: 0,
@@ -522,10 +522,10 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0x335BC8FA) : const Color(0xFF0D1220),
+            color: isSelected ? const Color(0x334AADDC) : const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected ? const Color(0xFF5BC8FA) : Colors.white12,
+              color: isSelected ? const Color(0xFF4AADDC) : Colors.white12,
               width: isSelected ? 1.5 : 1,
             ),
           ),
@@ -534,7 +534,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
               Text(
                 title,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF5BC8FA) : Colors.white,
+                  color: isSelected ? const Color(0xFF4AADDC) : Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 12,
                 ),
@@ -572,24 +572,24 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: _secondsRemaining <= 5 ? const Color(0x33FF0055) : const Color(0x225BC8FA),
+                  color: _secondsRemaining <= 5 ? const Color(0x33FF0055) : const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: _secondsRemaining <= 5 ? const Color(0xFFFF0055) : const Color(0xFF5BC8FA),
+                    color: _secondsRemaining <= 5 ? const Color(0xFFFF0055) : const Color(0xFF4AADDC),
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.timer_rounded,
-                      color: _secondsRemaining <= 5 ? const Color(0xFFFF0055) : const Color(0xFF5BC8FA),
+                      color: _secondsRemaining <= 5 ? const Color(0xFFFF0055) : const Color(0xFF4AADDC),
                       size: 16,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '$_secondsRemaining s',
                       style: TextStyle(
-                        color: _secondsRemaining <= 5 ? const Color(0xFFFF0055) : const Color(0xFF5BC8FA),
+                        color: _secondsRemaining <= 5 ? const Color(0xFFFF0055) : const Color(0xFF4AADDC),
                         fontWeight: FontWeight.w900,
                         fontSize: 13,
                       ),
@@ -606,7 +606,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
               value: progress,
               minHeight: 6,
               backgroundColor: Colors.white12,
-              valueColor: const AlwaysStoppedAnimation(Color(0xFF7B2FFF)),
+              valueColor: const AlwaysStoppedAnimation(Color(0xFF6B25CC)),
             ),
           ),
           const SizedBox(height: 20),
@@ -616,7 +616,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(color: const Color(0x22FFFFFF)),
             ),
@@ -648,9 +648,9 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
 
                 if (_answered) {
                   if (isCorrect) {
-                    cardColor = const Color(0x2239FF14);
-                    borderColor = const Color(0xFF3B9BFF);
-                    textColor = const Color(0xFF3B9BFF);
+                    cardColor = const Color(0x224AADDC);
+                    borderColor = const Color(0xFF3A7FCC);
+                    textColor = const Color(0xFF3A7FCC);
                   } else if (isSelected) {
                     cardColor = const Color(0x22FF0055);
                     borderColor = const Color(0xFFFF0055);
@@ -699,7 +699,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                           ),
                         ),
                         if (_answered && isCorrect)
-                          const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 20)
+                          const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 20)
                         else if (_answered && isSelected)
                           const Icon(Icons.cancel_rounded, color: Color(0xFFFF0055), size: 20),
                       ],
@@ -717,12 +717,12 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF1B2338),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0x335BC8FA)),
+                border: Border.all(color: const Color(0x334AADDC)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline_rounded, color: Color(0xFF5BC8FA), size: 18),
+                  const Icon(Icons.info_outline_rounded, color: Color(0xFF4AADDC), size: 18),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -740,7 +740,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
               child: ElevatedButton(
                 onPressed: _nextQuestion,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   elevation: 0,
@@ -777,7 +777,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                 color: isSuccess ? const Color(0x3339FF14) : const Color(0x33FFB703),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSuccess ? const Color(0xFF3B9BFF) : const Color(0xFFFFB703),
+                  color: isSuccess ? const Color(0xFF3A7FCC) : const Color(0xFFFFB703),
                   width: 2,
                 ),
               ),
@@ -805,9 +805,9 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D1220),
+                color: const Color(0xFF090B18),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.4)),
+                border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.4)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -817,7 +817,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                       Text(
                         '+$earnedPts PTS',
                         style: const TextStyle(
-                          color: Color(0xFF5BC8FA),
+                          color: Color(0xFF4AADDC),
                           fontWeight: FontWeight.w900,
                           fontSize: 22,
                         ),
@@ -832,7 +832,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                       Text(
                         '${(ratio * 100).round()}%',
                         style: const TextStyle(
-                          color: Color(0xFF3B9BFF),
+                          color: Color(0xFF3A7FCC),
                           fontWeight: FontWeight.w900,
                           fontSize: 22,
                         ),
@@ -865,7 +865,7 @@ class _SubjectQuizScreenState extends ConsumerState<SubjectQuizScreen> {
                   child: ElevatedButton(
                     onPressed: () => context.pop(),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5BC8FA),
+                      backgroundColor: const Color(0xFF4AADDC),
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

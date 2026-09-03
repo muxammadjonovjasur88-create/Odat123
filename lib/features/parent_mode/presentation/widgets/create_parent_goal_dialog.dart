@@ -56,10 +56,10 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
         decoration: BoxDecoration(
           color: const Color(0xFF0D1420),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.4), width: 1.5),
+          border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.4), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF3B9BFF).withValues(alpha: 0.1),
+              color: const Color(0xFF3A7FCC).withValues(alpha: 0.1),
               blurRadius: 30,
             ),
           ],
@@ -74,10 +74,10 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF3B9BFF).withValues(alpha: 0.15),
+                      color: const Color(0xFF3A7FCC).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.add_task_rounded, color: Color(0xFF3B9BFF), size: 22),
+                    child: const Icon(Icons.add_task_rounded, color: Color(0xFF3A7FCC), size: 22),
                   ),
                   const SizedBox(width: 12),
                   Text(
@@ -114,10 +114,10 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                             });
                           }
                         },
-                        selectedColor: const Color(0xFF3B9BFF),
+                        selectedColor: const Color(0xFF3A7FCC),
                         backgroundColor: const Color(0xFF162032),
                         labelStyle: TextStyle(
-                          color: isSelected ? const Color(0xFF080B14) : Colors.white70,
+                          color: isSelected ? const Color(0xFF04050D) : Colors.white70,
                           fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                           fontSize: 12,
                         ),
@@ -141,7 +141,7 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                   hintText: 'Masalan: Har kuni 20 bet kitob o\'qish',
                   hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
                   filled: true,
-                  fillColor: const Color(0xFF131929),
+                  fillColor: const Color(0xFF090B18),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 ),
@@ -166,7 +166,7 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                           style: const TextStyle(color: Colors.white, fontSize: 14),
                           decoration: InputDecoration(
                             filled: true,
-                            fillColor: const Color(0xFF131929),
+                            fillColor: const Color(0xFF090B18),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
                             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           ),
@@ -202,12 +202,12 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF131929),
+                              color: const Color(0xFF090B18),
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF3B9BFF)),
+                                const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFF3A7FCC)),
                                 const SizedBox(width: 8),
                                 Text(
                                   _scheduledTime,
@@ -241,7 +241,7 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF3B9BFF), size: 20),
+                    icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF3A7FCC), size: 20),
                     onPressed: () {
                       if (_rewardCoins < 10) setState(() => _rewardCoins++);
                     },
@@ -279,12 +279,12 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF3B9BFF), Color(0xFF00C853)],
+                      colors: [Color(0xFF3A7FCC), Color(0xFF00C853)],
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF3B9BFF).withValues(alpha: 0.3),
+                        color: const Color(0xFF3A7FCC).withValues(alpha: 0.3),
                         blurRadius: 14,
                         offset: const Offset(0, 4),
                       ),
@@ -293,7 +293,7 @@ class _CreateParentGoalDialogState extends ConsumerState<CreateParentGoalDialog>
                   child: Center(
                     child: Text(
                       'family.send_goal_to_child'.tr(),
-                      style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900, fontSize: 15),
+                      style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900, fontSize: 15),
                     ),
                   ),
                 ),

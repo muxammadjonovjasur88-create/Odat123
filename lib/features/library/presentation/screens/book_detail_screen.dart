@@ -362,9 +362,9 @@ class BookDetailScreen extends ConsumerWidget {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF131929),
+                        backgroundColor: const Color(0xFF090B18),
                         foregroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF5BC8FA), width: 1.2),
+                        side: const BorderSide(color: Color(0xFF4AADDC), width: 1.2),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
@@ -372,12 +372,12 @@ class BookDetailScreen extends ConsumerWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.school_rounded, color: Color(0xFF5BC8FA), size: 20),
+                          Icon(Icons.school_rounded, color: Color(0xFF4AADDC), size: 20),
                           SizedBox(width: 8),
                           Text(
                             '🎓 Interaktiv Kurs (Dars → Mashq → Imtihon)',
                             style: TextStyle(
-                              color: Color(0xFF5BC8FA),
+                              color: Color(0xFF4AADDC),
                               fontSize: 13.5,
                               fontWeight: FontWeight.bold,
                             ),

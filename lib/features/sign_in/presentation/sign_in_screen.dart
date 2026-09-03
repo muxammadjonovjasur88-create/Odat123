@@ -30,9 +30,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 2)),
+          border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -47,7 +47,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             const SizedBox(height: 16),
             const Row(
               children: [
-                Icon(Icons.security_rounded, color: Color(0xFF5BC8FA), size: 26),
+                Icon(Icons.security_rounded, color: Color(0xFF4AADDC), size: 26),
                 SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -90,7 +90,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                         child: Text(
                           '🔗 https://flowa-4fca9.web.app/privacy.html',
                           style: TextStyle(
-                            color: Color(0xFF5BC8FA),
+                            color: Color(0xFF4AADDC),
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
                             decoration: TextDecoration.underline,
@@ -108,7 +108,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
               height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -256,7 +256,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       children: [
                         Checkbox(
                           value: _agreedToPrivacy,
-                          activeColor: const Color(0xFF5BC8FA),
+                          activeColor: const Color(0xFF4AADDC),
                           checkColor: Colors.black,
                           onChanged: (val) => setState(() => _agreedToPrivacy = val ?? false),
                         ),
@@ -266,7 +266,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             child: Text(
                               'signin.agree_and_accept'.tr(),
                               style: const TextStyle(
-                                color: Color(0xFF5BC8FA),
+                                color: Color(0xFF4AADDC),
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                                 decoration: TextDecoration.underline,

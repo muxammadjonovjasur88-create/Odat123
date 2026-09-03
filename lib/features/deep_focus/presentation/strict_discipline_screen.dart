@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -213,7 +213,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(top: BorderSide(color: Color(0xFFFF0055), width: 2)),
         ),
@@ -349,17 +349,6 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
 
     // Schedule native app blocker foreground service & blocking overlay
     try {
-      const blockingChannel = MethodChannel('flowa/blocking');
-      blockingChannel.invokeMethod('startSession', {
-        'packages': packagesToBlock,
-        'startAt': DateTime.now().millisecondsSinceEpoch,
-        'endTime': endTime.millisecondsSinceEpoch,
-        'strict': true,
-        'lang': 'uz',
-      });
-    } catch (_) {}
-
-    try {
       FocusService.instance.scheduleSession(
         taskId: 'strict_discipline',
         title: 'Qat‘iy Intizom Seansi',
@@ -387,10 +376,6 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
   }
 
   Future<void> _onLockCompleted() async {
-    try {
-      const blockingChannel = MethodChannel('flowa/blocking');
-      blockingChannel.invokeMethod('stopSession');
-    } catch (_) {}
     try {
       FocusService.instance.stopSession();
     } catch (_) {}
@@ -420,10 +405,10 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
         context: context,
         barrierDismissible: false,
         builder: (ctx) => AlertDialog(
-          backgroundColor: const Color(0xFF0D1220),
+          backgroundColor: const Color(0xFF090B18),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Color(0xFF3B9BFF), width: 1.5),
+            side: const BorderSide(color: Color(0xFF3A7FCC), width: 1.5),
           ),
           title: const Row(
             children: [
@@ -450,11 +435,11 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
                 decoration: BoxDecoration(
                   color: const Color(0x3300FF88),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF3B9BFF)),
+                  border: Border.all(color: const Color(0xFF3A7FCC)),
                 ),
                 child: Text(
                   '+$earnedPts PTS MUKOFOT BERILDI ⚡',
-                  style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.w900, fontSize: 13),
+                  style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.w900, fontSize: 13),
                 ),
               ),
             ],
@@ -466,7 +451,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
                 context.pop();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B9BFF),
+                backgroundColor: const Color(0xFF3A7FCC),
                 foregroundColor: Colors.black,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -508,7 +493,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         body: SafeArea(
           child: _isLocked ? _buildLockedView() : _buildSetupView(),
         ),
@@ -657,7 +642,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
                   }
                 },
                 icon: const Icon(Icons.remove_rounded, color: Colors.white),
-                style: IconButton.styleFrom(backgroundColor: const Color(0xFF131929)),
+                style: IconButton.styleFrom(backgroundColor: const Color(0xFF090B18)),
               ),
               const SizedBox(width: 16),
               Text(
@@ -679,7 +664,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
                   });
                 },
                 icon: const Icon(Icons.add_rounded, color: Colors.white),
-                style: IconButton.styleFrom(backgroundColor: const Color(0xFF131929)),
+                style: IconButton.styleFrom(backgroundColor: const Color(0xFF090B18)),
               ),
             ],
           ),
@@ -690,19 +675,19 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0x2200FF88),
+                color: const Color(0x224AADDC),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.5)),
+                border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.5)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.bolt_rounded, color: Color(0xFF3B9BFF), size: 18),
+                  const Icon(Icons.bolt_rounded, color: Color(0xFF3A7FCC), size: 18),
                   const SizedBox(width: 6),
                   Text(
                     'Daqiqasiga 2 PTS: +${_selectedMinutes * 2} PTS olasiz 🏆',
                     style: const TextStyle(
-                      color: Color(0xFF3B9BFF),
+                      color: Color(0xFF3A7FCC),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w900,
                     ),
@@ -738,7 +723,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
               hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
               prefixIcon: const Icon(Icons.search_rounded, color: Colors.white38, size: 18),
               filled: true,
-              fillColor: const Color(0xFF0D1220),
+              fillColor: const Color(0xFF090B18),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -751,7 +736,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
           Container(
             constraints: const BoxConstraints(maxHeight: 260),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0x22FFFFFF)),
             ),
@@ -947,7 +932,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
                   child: CircularProgressIndicator(
                     value: progress,
                     strokeWidth: 12,
-                    backgroundColor: const Color(0xFF131929),
+                    backgroundColor: const Color(0xFF090B18),
                     color: const Color(0xFFFF0055),
                   ),
                 ),
@@ -992,7 +977,7 @@ class _StrictDisciplineScreenState extends ConsumerState<StrictDisciplineScreen>
                   side: const BorderSide(color: Colors.white24),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                icon: const Icon(Icons.phone_in_talk_rounded, color: Color(0xFF3B9BFF), size: 18),
+                icon: const Icon(Icons.phone_in_talk_rounded, color: Color(0xFF3A7FCC), size: 18),
                 label: Text('deep_focus.emergency_call'.tr(), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5)),
               ),
             ),

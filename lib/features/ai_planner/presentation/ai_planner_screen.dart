@@ -279,8 +279,8 @@ class _WeeklyAnalyticsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cyan = Color(0xFF5BC8FA);
-    const purple = Color(0xFF7B2FFF);
+    const cyan = Color(0xFF4AADDC);
+    const purple = Color(0xFF6B25CC);
 
     final days = ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'];
     final rates = analytics.rates;
@@ -289,7 +289,7 @@ class _WeeklyAnalyticsSection extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF131929),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: cyan.withValues(alpha: 0.25),
@@ -435,7 +435,7 @@ class _AiMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cyan = Color(0xFF5BC8FA);
+    const cyan = Color(0xFF4AADDC);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -465,7 +465,7 @@ class _AiMessageBubble extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: const Color(0xFF131929),
+                color: const Color(0xFF090B18),
                 borderRadius: const BorderRadius.only(
                   topRight: Radius.circular(18),
                   bottomLeft: Radius.circular(18),
@@ -533,7 +533,7 @@ class _TaskSuggestionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cyan = Color(0xFF5BC8FA);
+    const cyan = Color(0xFF4AADDC);
 
     IconData icon;
     switch (task.category) {
@@ -565,7 +565,7 @@ class _TaskSuggestionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isAccepted
-              ? const Color(0xFF3B9BFF)
+              ? const Color(0xFF3A7FCC)
               : (isDeclined
                   ? Colors.redAccent.withValues(alpha: 0.5)
                   : cyan.withValues(alpha: 0.4)),
@@ -610,12 +610,12 @@ class _TaskSuggestionCard extends StatelessWidget {
             Row(
               children: [
                 const Icon(Icons.check_circle_rounded,
-                    color: Color(0xFF3B9BFF), size: 16),
+                    color: Color(0xFF3A7FCC), size: 16),
                 const SizedBox(width: 6),
                 Text(
                   'Vazifa jadvalga qo\'shildi',
                   style: AppTextStyles.caption.copyWith(
-                    color: const Color(0xFF3B9BFF),
+                    color: const Color(0xFF3A7FCC),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -760,7 +760,7 @@ class _TypingIndicatorBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cyan = Color(0xFF5BC8FA);
+    const cyan = Color(0xFF4AADDC);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -783,7 +783,7 @@ class _TypingIndicatorBubble extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFF131929),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: cyan.withValues(alpha: 0.25),
@@ -824,8 +824,8 @@ class _UserMessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cyan = Color(0xFF5BC8FA);
-    const purple = Color(0xFF7B2FFF);
+    const cyan = Color(0xFF4AADDC);
+    const purple = Color(0xFF6B25CC);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -890,7 +890,7 @@ class _ChatInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cyan = Color(0xFF5BC8FA);
+    const cyan = Color(0xFF4AADDC);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -899,7 +899,7 @@ class _ChatInputField extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF131929),
+                color: const Color(0xFF090B18),
                 borderRadius: BorderRadius.circular(26),
                 border: Border.all(
                   color: cyan.withValues(alpha: 0.2),
@@ -985,7 +985,7 @@ class _AiGeneratedResult extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF131929),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(18),
         ),
         child: Row(
@@ -1007,10 +1007,10 @@ class _AiGeneratedResult extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF131929),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: const Color(0xFF5BC8FA).withValues(alpha: 0.3),
+            color: const Color(0xFF4AADDC).withValues(alpha: 0.3),
           ),
         ),
         child: Column(
@@ -1045,7 +1045,7 @@ class _AiGeneratedResult extends StatelessWidget {
                 IconButton(
                   icon: Icon(
                     editing ? Icons.check_rounded : Icons.edit_outlined,
-                    color: const Color(0xFF5BC8FA),
+                    color: const Color(0xFF4AADDC),
                   ),
                   onPressed: onToggleEdit,
                 ),
@@ -1083,7 +1083,7 @@ class _PlannedTaskRow extends StatelessWidget {
           width: 50,
           child: Text(
             formatHm24(task.startMinute),
-            style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 12),
+            style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 12),
           ),
         ),
         const SizedBox(width: 8),

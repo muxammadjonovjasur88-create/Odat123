@@ -39,13 +39,13 @@ class AppMessage {
   Color get accentColor {
     switch (type) {
       case MessageType.system:
-        return const Color(0xFF5BC8FA);
+        return const Color(0xFF4AADDC);
       case MessageType.admin:
         return const Color(0xFFBF00FF);
       case MessageType.clan:
         return const Color(0xFFFFB703);
       case MessageType.friend:
-        return const Color(0xFF3B9BFF);
+        return const Color(0xFF3A7FCC);
       case MessageType.reward:
         return const Color(0xFFFFD700);
       case MessageType.achievement:

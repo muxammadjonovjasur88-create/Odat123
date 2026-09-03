@@ -133,7 +133,7 @@ class RemindersNotificationService {
         >();
     final canExact = await android?.canScheduleExactNotifications() ?? false;
     final mode = canExact
-        ? AndroidScheduleMode.exactAllowWhileIdle
+        ? AndroidScheduleMode.alarmClock
         : AndroidScheduleMode.inexactAllowWhileIdle;
 
     try {

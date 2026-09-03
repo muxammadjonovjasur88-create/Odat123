@@ -19,7 +19,7 @@ class PlayHubScreen extends ConsumerWidget {
     final skill = ref.watch(skillProfileProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -40,12 +40,12 @@ class PlayHubScreen extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0x2200FF88),
+                    color: const Color(0x224AADDC),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(
                     'PLAY',
-                    style: TextStyle(color: Color(0xFF3B9BFF), fontSize: 9.5, fontWeight: FontWeight.w900),
+                    style: TextStyle(color: Color(0xFF3A7FCC), fontSize: 9.5, fontWeight: FontWeight.w900),
                   ),
                 ),
               ],
@@ -58,7 +58,7 @@ class PlayHubScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.insights_rounded, color: Color(0xFF5BC8FA)),
+            icon: const Icon(Icons.insights_rounded, color: Color(0xFF4AADDC)),
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const SkillProfileScreen()),
@@ -100,7 +100,7 @@ class PlayHubScreen extends ConsumerWidget {
           _buildCategoryCard(
             context: context,
             icon: Icons.psychology_rounded,
-            iconColor: const Color(0xFF3B9BFF),
+            iconColor: const Color(0xFF3A7FCC),
             title: 'play.cat_logic'.tr(),
             levelStr: 'Lvl 12 • 72/100',
             desc: 'Ketma-ketlik, Qonuniyat, Guruhlash',
@@ -110,7 +110,7 @@ class PlayHubScreen extends ConsumerWidget {
           _buildCategoryCard(
             context: context,
             icon: Icons.translate_rounded,
-            iconColor: const Color(0xFF5BC8FA),
+            iconColor: const Color(0xFF4AADDC),
             title: 'play.cat_language'.tr(),
             levelStr: 'Lvl 15 • 67/100',
             desc: 'Ingliz, Rus, O‘zbek tillari so‘z boyligi',
@@ -169,7 +169,7 @@ class PlayHubScreen extends ConsumerWidget {
                 ),
                 child: const Text(
                   '+50 XP  +20 FC',
-                  style: TextStyle(color: Color(0xFF3B9BFF), fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Color(0xFF3A7FCC), fontSize: 11, fontWeight: FontWeight.bold),
                 ),
               ),
             ],
@@ -207,7 +207,7 @@ class PlayHubScreen extends ConsumerWidget {
               ),
               child: Text(
                 'play.continue_btn'.tr(),
-                style: const TextStyle(color: Color(0xFF080B14), fontWeight: FontWeight.w900),
+                style: const TextStyle(color: Color(0xFF04050D), fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -227,16 +227,16 @@ class PlayHubScreen extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1220),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.3)),
+          border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x225BC8FA)),
-              child: const Icon(Icons.insights_rounded, color: Color(0xFF5BC8FA), size: 20),
+              decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x224AADDC)),
+              child: const Icon(Icons.insights_rounded, color: Color(0xFF4AADDC), size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -255,7 +255,7 @@ class PlayHubScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF5BC8FA), size: 14),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF4AADDC), size: 14),
           ],
         ),
       ),
@@ -274,7 +274,7 @@ class PlayHubScreen extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white10),
       ),
@@ -333,7 +333,7 @@ class PlayHubScreen extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131929),
+                      color: const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: iconColor.withValues(alpha: 0.3)),
                     ),

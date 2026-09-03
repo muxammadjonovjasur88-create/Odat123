@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../../core/services/user_repository.dart';
 
@@ -55,12 +56,12 @@ class _LuckyWheelSheetState extends ConsumerState<_LuckyWheelSheet>
   _WheelPrize? _wonPrize;
 
   static const List<_WheelPrize> _prizes = [
-    _WheelPrize(label: '+100 PTS', icon: '⚡', color: Color(0xFF5BC8FA), points: 100),
-    _WheelPrize(label: 'Muzlatgich', icon: '❄️', color: Color(0xFF3B9BFF), freezes: 1),
-    _WheelPrize(label: '+250 PTS', icon: '⚡', color: Color(0xFF3B9BFF), points: 250),
+    _WheelPrize(label: '+100 PTS', icon: '⚡', color: Color(0xFF4AADDC), points: 100),
+    _WheelPrize(label: 'Muzlatgich', icon: '❄️', color: Color(0xFF3A7FCC), freezes: 1),
+    _WheelPrize(label: '+250 PTS', icon: '⚡', color: Color(0xFF3A7FCC), points: 250),
     _WheelPrize(label: '2x Buster', icon: '🚀', color: Color(0xFFFF0055), points: 150),
     _WheelPrize(label: '+500 PTS', icon: '💎', color: Color(0xFFBF00FF), points: 500),
-    _WheelPrize(label: '+50 PTS', icon: '⚡', color: Color(0xFF5BC8FA), points: 50),
+    _WheelPrize(label: '+50 PTS', icon: '⚡', color: Color(0xFF4AADDC), points: 50),
     _WheelPrize(label: '10 Coin', icon: '🪙', color: Color(0xFFFF9E00), coins: 10),
     _WheelPrize(label: '100 Coin 🔥', icon: '👑', color: Color(0xFFFFB703), coins: 100),
   ];
@@ -211,17 +212,17 @@ class _LuckyWheelSheetState extends ConsumerState<_LuckyWheelSheet>
       _currentAngle = endAngle;
       final selectedPrize = _prizes[targetIndex];
 
-      final user = ref.read(userProfileProvider).asData?.value;
-      if (user != null) {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid != null) {
         final repo = ref.read(userRepositoryProvider);
         if (selectedPrize.points > 0) {
-          await repo.awardPoints(user.uid, selectedPrize.points);
+          await repo.awardPoints(uid, selectedPrize.points);
         }
         if (selectedPrize.coins > 0) {
-          await repo.addFenixCoins(user.uid, selectedPrize.coins);
+          await repo.addFenixCoins(uid, selectedPrize.coins);
         }
         if (selectedPrize.freezes > 0) {
-          await repo.addFreezes(user.uid, selectedPrize.freezes);
+          await repo.addFreezes(uid, selectedPrize.freezes);
         }
       }
 
@@ -230,9 +231,9 @@ class _LuckyWheelSheetState extends ConsumerState<_LuckyWheelSheet>
       await prefs.setInt('last_wheel_spin_epoch', nowMs);
       await prefs.setInt('highest_seen_epoch', nowMs);
 
-      if (user != null) {
+      if (uid != null) {
         try {
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+          await FirebaseFirestore.instance.collection('users').doc(uid).set(
             {'lastWheelSpinEpoch': nowMs},
             SetOptions(merge: true),
           );
@@ -257,7 +258,7 @@ class _LuckyWheelSheetState extends ConsumerState<_LuckyWheelSheet>
         maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF080B14),
+        color: Color(0xFF04050D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         border: Border(top: BorderSide(color: Color(0xFFFFB703), width: 1.5)),
       ),
@@ -415,9 +416,9 @@ class _LuckyWheelSheetState extends ConsumerState<_LuckyWheelSheet>
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0x2200FF88),
+                color: const Color(0x224AADDC),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF3B9BFF)),
+                border: Border.all(color: const Color(0xFF3A7FCC)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -427,7 +428,7 @@ class _LuckyWheelSheetState extends ConsumerState<_LuckyWheelSheet>
                   Text(
                     'TABRIKLAYMIZ: ${_wonPrize!.label}! 🎉',
                     style: const TextStyle(
-                      color: Color(0xFF3B9BFF),
+                      color: Color(0xFF3A7FCC),
                       fontWeight: FontWeight.w900,
                       fontSize: 14,
                     ),

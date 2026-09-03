@@ -19,14 +19,14 @@ import '../../domain/services/territory_geometry_service.dart';
 import '../providers/running_provider.dart';
 
 const List<Color> _kDistinctPalettes = [
-  Color(0xFF5BC8FA), // Cyber Cyan
+  Color(0xFF4AADDC), // Cyber Cyan
   Color(0xFFFFB703), // Gold Amber
   Color(0xFFFF0055), // Crimson Rose
-  Color(0xFF3B9BFF), // Neon Green
+  Color(0xFF3A7FCC), // Neon Green
   Color(0xFFBF00FF), // Cyber Purple
   Color(0xFFFF5400), // Lava Orange
   Color(0xFF0088FF), // Deep Azure
-  Color(0xFF3B9BFF), // Spring Mint
+  Color(0xFF3A7FCC), // Spring Mint
   Color(0xFFFF00AA), // Neon Magenta
   Color(0xFFE5E4E2), // Platinum White
   Color(0xFFFFD700), // Pure Gold
@@ -34,7 +34,7 @@ const List<Color> _kDistinctPalettes = [
 ];
 
 Color _getTerritoryBorderColor(TerritoryPolygon poly, bool isMine) {
-  if (isMine) return const Color(0xFF5BC8FA);
+  if (isMine) return const Color(0xFF4AADDC);
   if (poly.status == 'under_attack' || poly.status == 'contested') return const Color(0xFFFF0055);
   final hash = poly.ownerId.hashCode.abs();
   return _kDistinctPalettes[hash % _kDistinctPalettes.length];
@@ -153,7 +153,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: const Color(0xFFFFB703), width: 2),
             boxShadow: const [
@@ -309,7 +309,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         body: Stack(
           children: [
             // ==========================================
@@ -352,8 +352,8 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                         point: LatLng(state.startPos!.latitude, state.startPos!.longitude),
                         radius: state.startFinishRadiusMeters,
                         useRadiusInMeter: true,
-                        color: const Color(0x225BC8FA),
-                        borderColor: const Color(0xFF5BC8FA),
+                        color: const Color(0x224AADDC),
+                        borderColor: const Color(0xFF4AADDC),
                         borderStrokeWidth: 2,
                       ),
                     ],
@@ -386,7 +386,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                         points: state.gpsPath
                             .map((p) => LatLng(p.latitude, p.longitude))
                             .toList(),
-                        color: const Color(0x665BC8FA),
+                        color: const Color(0x664AADDC),
                         strokeWidth: 8.0,
                       ),
                       // Core bright neon live route
@@ -394,7 +394,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                         points: state.gpsPath
                             .map((p) => LatLng(p.latitude, p.longitude))
                             .toList(),
-                        color: const Color(0xFF5BC8FA),
+                        color: const Color(0xFF4AADDC),
                         strokeWidth: 4.5,
                       ),
                     ],
@@ -447,9 +447,9 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                         radius: 300,
                         useRadiusInMeter: true,
                         color: isMine
-                            ? const Color(0xFF5BC8FA).withValues(alpha: 0.16)
+                            ? const Color(0xFF4AADDC).withValues(alpha: 0.16)
                             : const Color(0xFFFF0055).withValues(alpha: 0.16),
-                        borderColor: isMine ? const Color(0xFF5BC8FA) : const Color(0xFFFF0055),
+                        borderColor: isMine ? const Color(0xFF4AADDC) : const Color(0xFFFF0055),
                         borderStrokeWidth: 2.0,
                       );
                     }),
@@ -471,16 +471,16 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF5BC8FA),
+                                color: const Color(0xFF4AADDC),
                                 borderRadius: BorderRadius.circular(8),
-                                boxShadow: const [BoxShadow(color: Color(0xAA5BC8FA), blurRadius: 8)],
+                                boxShadow: const [BoxShadow(color: Color(0xAA4AADDC), blurRadius: 8)],
                               ),
                               child: const Text(
                                 'START',
                                 style: TextStyle(color: Colors.black, fontSize: 10, fontWeight: FontWeight.w900),
                               ),
                             ),
-                            const Icon(Icons.location_pin, color: Color(0xFF5BC8FA), size: 32),
+                            const Icon(Icons.location_pin, color: Color(0xFF4AADDC), size: 32),
                           ],
                         ),
                       ),
@@ -501,22 +501,22 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                               Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: isMine ? const Color(0xFF0C1628) : const Color(0xFF220C18),
+                                  color: isMine ? const Color(0xFF090B18) : const Color(0xFF220C18),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: isMine ? const Color(0xFF5BC8FA) : const Color(0xFFFF0055),
+                                    color: isMine ? const Color(0xFF4AADDC) : const Color(0xFFFF0055),
                                     width: 2,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: isMine ? const Color(0x885BC8FA) : const Color(0x88FF0055),
+                                      color: isMine ? const Color(0x884AADDC) : const Color(0x88FF0055),
                                       blurRadius: 10,
                                     ),
                                   ],
                                 ),
                                 child: Icon(
                                   isMine ? Icons.shield_rounded : Icons.military_tech_rounded,
-                                  color: isMine ? const Color(0xFF5BC8FA) : const Color(0xFFFF0055),
+                                  color: isMine ? const Color(0xFF4AADDC) : const Color(0xFFFF0055),
                                   size: 18,
                                 ),
                               ),
@@ -601,7 +601,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                                   height: 32 + (_pulseController.value * 22),
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: const Color(0xFF5BC8FA).withValues(
+                                    color: const Color(0xFF4AADDC).withValues(
                                       alpha: 0.35 * (1.0 - _pulseController.value),
                                     ),
                                   ),
@@ -611,8 +611,8 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                             Container(
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFF5BC8FA), width: 2.5),
-                                boxShadow: const [BoxShadow(color: Color(0xFF5BC8FA), blurRadius: 10, spreadRadius: 2)],
+                                border: Border.all(color: const Color(0xFF4AADDC), width: 2.5),
+                                boxShadow: const [BoxShadow(color: Color(0xFF4AADDC), blurRadius: 10, spreadRadius: 2)],
                               ),
                               child: AvatarCircle(
                                 avatarKey: user?.avatar ?? 'shield',
@@ -674,7 +674,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                                 border: Border.all(color: runnerColor.withValues(alpha: 0.7)),
                               ),
                               child: Text(
-                                tag.isNotEmpty && tag != 'SOLO' ? '[$tag] $name\n${speed.toStringAsFixed(1)} km/s' : '$name\n${speed.toStringAsFixed(1)} km/s',
+                                tag.isNotEmpty && tag != 'SOLO' ? '[$tag] $name\n${speed.toStringAsFixed(1)} km/soat' : '$name\n${speed.toStringAsFixed(1)} km/soat',
                                 textAlign: TextAlign.center,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
@@ -735,7 +735,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                       ],
                       if (state.closedLoopNotification != null) ...[
                         const SizedBox(height: 6),
-                        _buildToast(state.closedLoopNotification!, const Color(0xFF5BC8FA), Icons.track_changes_rounded),
+                        _buildToast(state.closedLoopNotification!, const Color(0xFF4AADDC), Icons.track_changes_rounded),
                       ],
                     ],
                   ),
@@ -756,14 +756,14 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                   decoration: BoxDecoration(
                     color: const Color(0xEE101726),
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFF3B9BFF), width: 1.5),
-                    boxShadow: const [BoxShadow(color: Color(0x4439FF14), blurRadius: 16)],
+                    border: Border.all(color: const Color(0xFF3A7FCC), width: 1.5),
+                    boxShadow: const [BoxShadow(color: Color(0x444AADDC), blurRadius: 16)],
                   ),
                   child: Row(
                     children: [
                       Icon(
                         _towerVectorIcon(_placingTowerTier!.level),
-                        color: const Color(0xFF3B9BFF),
+                        color: const Color(0xFF3A7FCC),
                         size: 24,
                       ),
                       const SizedBox(width: 12),
@@ -822,8 +822,8 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                               FloatingActionButton.small(
                                 heroTag: 'defense_shop_btn',
                                 onPressed: () => _showDefenseShopModal(context),
-                                backgroundColor: const Color(0xFF0D1220),
-                                foregroundColor: const Color(0xFF3B9BFF),
+                                backgroundColor: const Color(0xFF090B18),
+                                foregroundColor: const Color(0xFF3A7FCC),
                                 elevation: 6,
                                 child: const Icon(Icons.shield_rounded, size: 20),
                               ),
@@ -833,8 +833,8 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                               FloatingActionButton.small(
                                 heroTag: 'recenter_btn',
                                 onPressed: _recenterMap,
-                                backgroundColor: _autoFollow ? const Color(0xFF5BC8FA) : const Color(0xFF0D1220),
-                                foregroundColor: _autoFollow ? Colors.black : const Color(0xFF5BC8FA),
+                                backgroundColor: _autoFollow ? const Color(0xFF4AADDC) : const Color(0xFF090B18),
+                                foregroundColor: _autoFollow ? Colors.black : const Color(0xFF4AADDC),
                                 elevation: 6,
                                 child: Icon(
                                   _autoFollow ? Icons.my_location_rounded : Icons.location_searching_rounded,
@@ -882,10 +882,10 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF5BC8FA) : const Color(0xDD101726),
+                  color: isSelected ? const Color(0xFF4AADDC) : const Color(0xDD101726),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFF5BC8FA) : const Color(0x33FFFFFF),
+                    color: isSelected ? const Color(0xFF4AADDC) : const Color(0x33FFFFFF),
                   ),
                 ),
                 child: Row(
@@ -921,14 +921,14 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
       decoration: BoxDecoration(
         color: isInside ? const Color(0xEE39FF14) : const Color(0xDD101726),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isInside ? Colors.white : const Color(0xFF5BC8FA)),
+        border: Border.all(color: isInside ? Colors.white : const Color(0xFF4AADDC)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             isInside ? Icons.check_circle_rounded : Icons.near_me_rounded,
-            color: isInside ? Colors.black : const Color(0xFF5BC8FA),
+            color: isInside ? Colors.black : const Color(0xFF4AADDC),
             size: 16,
           ),
           const SizedBox(width: 8),
@@ -958,7 +958,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
           decoration: BoxDecoration(
             color: const Color(0xDD0C101A),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0x335BC8FA)),
+            border: Border.all(color: const Color(0x334AADDC)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -975,7 +975,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                   ),
                   Text(
                     '⚡ ${user?.totalPoints ?? 0} PTS | 🔥 ${user?.streak ?? 0} kun',
-                    style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11, fontWeight: FontWeight.bold),
+                    style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -985,11 +985,11 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 icon: Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: const Color(0x335BC8FA),
+                    color: const Color(0x334AADDC),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF5BC8FA)),
+                    border: Border.all(color: const Color(0xFF4AADDC)),
                   ),
-                  child: const Icon(Icons.podcasts_rounded, color: Color(0xFF5BC8FA), size: 18),
+                  child: const Icon(Icons.podcasts_rounded, color: Color(0xFF4AADDC), size: 18),
                 ),
               ),
             ],
@@ -1018,14 +1018,14 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isRunning
-                  ? const Color(0xFF3B9BFF)
-                  : (isPaused ? const Color(0xFFFFB703) : const Color(0x335BC8FA)),
+                  ? const Color(0xFF3A7FCC)
+                  : (isPaused ? const Color(0xFFFFB703) : const Color(0x334AADDC)),
               width: isRunning ? 1.5 : 1.0,
             ),
             boxShadow: isRunning
                 ? [
                     BoxShadow(
-                      color: const Color(0xFF3B9BFF).withValues(alpha: 0.15),
+                      color: const Color(0xFF3A7FCC).withValues(alpha: 0.15),
                       blurRadius: 16,
                       spreadRadius: 2,
                     ),
@@ -1039,19 +1039,19 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 'MASOFA',
                 '${state.distanceKm.toStringAsFixed(2)} km',
                 Icons.straighten_rounded,
-                accentColor: const Color(0xFF3B9BFF),
+                accentColor: const Color(0xFF3A7FCC),
               ),
               _buildTelemetryItem(
                 'TEZLIK',
-                '${displaySpeed.toStringAsFixed(1)} km/s',
+                '${displaySpeed.toStringAsFixed(1)} km/soat',
                 Icons.speed_rounded,
-                accentColor: const Color(0xFF5BC8FA),
+                accentColor: const Color(0xFF4AADDC),
               ),
               _buildTelemetryItem(
                 'VAQT',
                 _formatDuration(state.elapsedSeconds),
                 Icons.timer_outlined,
-                accentColor: isRunning ? const Color(0xFFFFB703) : const Color(0xFF5BC8FA),
+                accentColor: isRunning ? const Color(0xFFFFB703) : const Color(0xFF4AADDC),
               ),
               _buildTelemetryItem(
                 'KALORIYA',
@@ -1070,7 +1070,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
     String label,
     String value,
     IconData icon, {
-    Color accentColor = const Color(0xFF5BC8FA),
+    Color accentColor = const Color(0xFF4AADDC),
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1128,30 +1128,35 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
   }
 
   Widget _buildTerritoryBadge(RunningState state) {
+    final user = ref.watch(userProfileProvider).asData?.value;
+    final myUid = user?.uid ?? '';
+    final myTerritoriesCount = state.territories.where((t) => t.ownerId == myUid).length;
+    final totalCount = myTerritoriesCount + state.capturedLoopCount;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
         color: const Color(0xDD0C101A),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x6639FF14), width: 1.2),
+        border: Border.all(color: const Color(0x664AADDC), width: 1.2),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.shield_rounded, color: Color(0xFF3B9BFF), size: 18),
+          const Icon(Icons.shield_rounded, color: Color(0xFF3A7FCC), size: 18),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '${state.capturedLoopCount} ta egallangan hudud',
+                '$totalCount ta egallangan hudud',
                 style: const TextStyle(color: Colors.white, fontSize: 11.5, fontWeight: FontWeight.w800),
               ),
               if (state.totalAreaSqMeters > 0)
                 Text(
                   'Maydon: ${state.formattedTotalArea}',
-                  style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 10, fontWeight: FontWeight.w700),
+                  style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 10, fontWeight: FontWeight.w700),
                 ),
             ],
           ),
@@ -1174,7 +1179,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 notifier.startRun(isWalking: widget.isWalking, targetKm: widget.targetKm);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF5BC8FA),
+                backgroundColor: const Color(0xFF4AADDC),
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
@@ -1232,7 +1237,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
             child: ElevatedButton.icon(
               onPressed: () => notifier.resumeRun(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF3B9BFF),
+                backgroundColor: const Color(0xFF3A7FCC),
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -1271,7 +1276,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
@@ -1291,7 +1296,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                   ),
                   Text(
                     '${user?.totalPoints ?? 0} PTS',
-                    style: const TextStyle(color: Color(0xFF5BC8FA), fontWeight: FontWeight.bold, fontSize: 14),
+                    style: const TextStyle(color: Color(0xFF4AADDC), fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                 ],
               ),
@@ -1314,9 +1319,9 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                       margin: const EdgeInsets.only(bottom: 10),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF131929),
+                        color: const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0x335BC8FA)),
+                        border: Border.all(color: const Color(0x334AADDC)),
                       ),
                       child: Row(
                         children: [
@@ -1325,10 +1330,10 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                             height: 44,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: const Color(0xFF3B9BFF).withValues(alpha: 0.15),
-                              border: Border.all(color: const Color(0xFF3B9BFF).withValues(alpha: 0.5)),
+                              color: const Color(0xFF3A7FCC).withValues(alpha: 0.15),
+                              border: Border.all(color: const Color(0xFF3A7FCC).withValues(alpha: 0.5)),
                             ),
-                            child: Icon(_towerVectorIcon(tier.level), color: const Color(0xFF3B9BFF), size: 24),
+                            child: Icon(_towerVectorIcon(tier.level), color: const Color(0xFF3A7FCC), size: 24),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -1339,7 +1344,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                                 const SizedBox(height: 2),
                                 Text(
                                   'HP: ${tier.hp} | Hujum: ${tier.attackPower} | Himoya: ${tier.defensePower}',
-                                  style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 11),
+                                  style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 11),
                                 ),
                               ],
                             ),
@@ -1352,7 +1357,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                                   }
                                 : null,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF5BC8FA),
+                              backgroundColor: const Color(0xFF4AADDC),
                               foregroundColor: Colors.black,
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1383,7 +1388,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${tier.name} uchun hududingiz ichidagi nuqtaga bosing!'),
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
       ),
     );
   }
@@ -1413,7 +1418,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ ${tier.name} muvaffaqiyatli o‘rnatildi! 🏰'), backgroundColor: const Color(0xFF3B9BFF)),
+          SnackBar(content: Text('✅ ${tier.name} muvaffaqiyatli o‘rnatildi! 🏰'), backgroundColor: const Color(0xFF3A7FCC)),
         );
       }
     }
@@ -1423,7 +1428,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
   void _showTerritoryDetailModal(BuildContext context, TerritoryPolygon territory, bool isMine) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
       builder: (ctx) {
         return Padding(
@@ -1436,7 +1441,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 children: [
                   Icon(
                     isMine ? Icons.shield_rounded : Icons.military_tech_rounded,
-                    color: isMine ? const Color(0xFF5BC8FA) : const Color(0xFFFF0055),
+                    color: isMine ? const Color(0xFF4AADDC) : const Color(0xFFFF0055),
                     size: 28,
                   ),
                   const SizedBox(width: 12),
@@ -1463,7 +1468,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF131929),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
@@ -1484,7 +1489,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                     _showDefenseShopModal(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BC8FA),
+                    backgroundColor: const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     minimumSize: const Size(double.infinity, 46),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -1522,11 +1527,11 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
       barrierDismissible: false,
       builder: (ctx) {
         return Dialog(
-          backgroundColor: const Color(0xFF080B14),
+          backgroundColor: const Color(0xFF04050D),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
             side: BorderSide(
-              color: result.isAttackerWinner ? const Color(0xFF3B9BFF) : const Color(0xFFFF0055),
+              color: result.isAttackerWinner ? const Color(0xFF3A7FCC) : const Color(0xFFFF0055),
               width: 2,
             ),
           ),
@@ -1538,7 +1543,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 Text(
                   result.isAttackerWinner ? '🏆 G‘ALABA! HUDUD ZABT ETILDI!' : '🛡️ HUJUM QAYTARILDI!',
                   style: TextStyle(
-                    color: result.isAttackerWinner ? const Color(0xFF3B9BFF) : const Color(0xFFFF0055),
+                    color: result.isAttackerWinner ? const Color(0xFF3A7FCC) : const Color(0xFFFF0055),
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
                   ),
@@ -1550,7 +1555,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF131929),
+                    color: const Color(0xFF090B18),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
@@ -1560,7 +1565,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                         children: [
                           Text('running.your_power'.tr(), style: TextStyle(color: Colors.white54, fontSize: 9.5)),
                           const SizedBox(height: 4),
-                          Text('${result.attackerTotalPower} ATK', style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 16, fontWeight: FontWeight.w900)),
+                          Text('${result.attackerTotalPower} ATK', style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 16, fontWeight: FontWeight.w900)),
                         ],
                       ),
                       const Text('VS', style: TextStyle(color: Colors.white30, fontWeight: FontWeight.w900, fontSize: 16)),
@@ -1586,7 +1591,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
                 ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: result.isAttackerWinner ? const Color(0xFF3B9BFF) : const Color(0xFF5BC8FA),
+                    backgroundColor: result.isAttackerWinner ? const Color(0xFF3A7FCC) : const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     minimumSize: const Size(double.infinity, 44),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -1611,7 +1616,7 @@ class _RunningScreenState extends ConsumerState<RunningScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         title: Text('running.stop_running_title'.tr(), style: TextStyle(color: Colors.white)),
         content: Text('running.stop_running_desc'.tr(), style: TextStyle(color: Colors.white70)),
         actions: [
@@ -1653,7 +1658,7 @@ class _Isometric3DTowerMarker extends StatelessWidget {
         ? const Color(0xFFFF0055)
         : lvl >= 3
             ? const Color(0xFFFFB703)
-            : const Color(0xFF5BC8FA);
+            : const Color(0xFF4AADDC);
 
     return SizedBox(
       width: 56,
@@ -1705,7 +1710,7 @@ class _Isometric3DTowerMarker extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     colors: [
                       const Color(0xFF202C45),
-                      const Color(0xFF080B14),
+                      const Color(0xFF04050D),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(6),
@@ -1760,7 +1765,7 @@ class _Isometric3DTowerMarker extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               decoration: BoxDecoration(
-                color: const Color(0xFF080B14),
+                color: const Color(0xFF04050D),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: towerColor, width: 1.2),
                 boxShadow: [

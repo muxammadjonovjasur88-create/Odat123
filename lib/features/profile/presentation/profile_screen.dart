@@ -77,14 +77,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0x335BC8FA)),
+          side: const BorderSide(color: Color(0x334AADDC)),
         ),
         title: Row(
           children: [
-            const Icon(Icons.language_rounded, color: Color(0xFF5BC8FA)),
+            const Icon(Icons.language_rounded, color: Color(0xFF4AADDC)),
             const SizedBox(width: 10),
             Text(
               'language.title'.tr(),
@@ -109,12 +109,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               title: Text(
                 localeNativeName(loc.languageCode),
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF5BC8FA) : Colors.white,
+                  color: isSelected ? const Color(0xFF4AADDC) : Colors.white,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
               trailing: isSelected
-                  ? const Icon(Icons.check_circle_rounded, color: Color(0xFF5BC8FA))
+                  ? const Icon(Icons.check_circle_rounded, color: Color(0xFF4AADDC))
                   : null,
             );
           }).toList(),
@@ -127,7 +127,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: Color(0x44FF0055)),
@@ -171,12 +171,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
     if (profile == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF070B13),
+        backgroundColor: Color(0xFF04050D),
         body: Center(child: FlowaLoading()),
       );
     }
 
-    final referralCode = profile.uid.substring(0, 6).toUpperCase();
     final rankTier = RankTier.fromWinsAndPoints(
       battleWins: profile.battleWins,
       points: profile.totalPoints,
@@ -184,7 +183,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final progress = rankTier.progress(profile.totalPoints);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF070B13),
+      backgroundColor: const Color(0xFF04050D),
       bottomNavigationBar: AppBottomNav(
         current: AppNavTab.profile,
         onSelected: (tab) => goToTab(context, tab),
@@ -202,10 +201,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             _buildHeroProfileCard(profile, rankTier, progress),
             const SizedBox(height: 16),
 
-            // Clan Banner Card
-            _buildClanCard(profile, userClan),
-            const SizedBox(height: 16),
-
             // Matrix Stats Grid (PTS, Coins, Streak, Distance, Battles)
             _buildStatsMatrix(profile),
             const SizedBox(height: 16),
@@ -221,33 +216,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Widget _buildUnifiedSettingsMenu(int friendsCount) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white10),
       ),
       child: Column(
         children: [
+          // Wallet & Premium
+          ListTile(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              context.push(AppRoutes.wallet);
+            },
+            leading: const Icon(Icons.account_balance_wallet_rounded, color: Color(0xFFC9A24B)),
+            title: Text('profile.premium_title'.trFallback('ODAT Premium'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
+          ),
+          const Divider(color: Colors.white10, height: 1),
           // Badges
           ListTile(
             onTap: () {
               HapticFeedback.lightImpact();
               showBadgesModal(context);
             },
-            leading: const Icon(Icons.military_tech_rounded, color: Color(0xFF7B2FFF)),
+            leading: const Icon(Icons.military_tech_rounded, color: Color(0xFF6B25CC)),
             title: Text('profile.badges_title'.trFallback('Nishonlar & Yutuqlar'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
             trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
           ),
-          const Divider(color: Colors.white10, height: 1),
-          // Community Squads
-          ListTile(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push(AppRoutes.communityHub);
-            },
-            leading: const Icon(Icons.people_outline_rounded, color: Color(0xFF00FF88)),
-            title: Text('community.card_title'.trFallback('Hamfikrlar / Squads'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
-          ),
+
           const Divider(color: Colors.white10, height: 1),
           // Friends
           ListTile(
@@ -255,49 +251,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               HapticFeedback.lightImpact();
               context.push('${AppRoutes.leaderboard}?tab=friends');
             },
-            leading: const Icon(Icons.people_alt_rounded, color: Color(0xFF3B9BFF)),
+            leading: const Icon(Icons.people_alt_rounded, color: Color(0xFF3A7FCC)),
             title: Text('profile.friends_title'.trFallback('Do‘stlar: $friendsCount ta'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   onPressed: () => _showFriendsChatModal(context),
-                  icon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF3B9BFF), size: 18),
+                  icon: const Icon(Icons.chat_bubble_rounded, color: Color(0xFF3A7FCC), size: 18),
                   tooltip: 'Chat',
                 ),
                 IconButton(
                   onPressed: () => showAddFriendModal(context),
-                  icon: const Icon(Icons.person_add_rounded, color: Color(0xFF3B9BFF), size: 18),
+                  icon: const Icon(Icons.person_add_rounded, color: Color(0xFF3A7FCC), size: 18),
                   tooltip: 'Qo‘shish',
                 ),
-              ],
-            ),
-          ),
-          const Divider(color: Colors.white10, height: 1),
-          // Digital Wellbeing
-          ListTile(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push(AppRoutes.digitalWellbeing);
-            },
-            leading: const Icon(Icons.phonelink_setup_rounded, color: Color(0xFF5BC8FA)),
-            title: Text('wellbeing.card_title'.trFallback('Raqamli Salomatlik'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: const Color(0x2200FF88),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    'wellbeing.live'.trFallback('LIVE'),
-                    style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 9.5, fontWeight: FontWeight.w900),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
               ],
             ),
           ),
@@ -310,7 +278,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             trailing: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('+4000 PTS', style: TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.w900, fontSize: 11)),
+                Text('+4000 PTS', style: TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.w900, fontSize: 11)),
                 SizedBox(width: 8),
                 Icon(Icons.arrow_forward_ios_rounded, color: Colors.white54, size: 14),
               ],
@@ -328,7 +296,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             },
             leading: const Text('💡', style: TextStyle(fontSize: 18)),
             title: Text('profile.suggestions_btn'.trFallback('Takliflaringiz (@salomov_2502)'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-            trailing: const Icon(Icons.send_rounded, color: Color(0xFF5BC8FA), size: 14),
+            trailing: const Icon(Icons.send_rounded, color: Color(0xFF4AADDC), size: 14),
           ),
         ],
       ),
@@ -344,7 +312,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+              colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
             ),
             borderRadius: BorderRadius.circular(10),
           ),
@@ -364,7 +332,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           children: [
             IconButton(
               tooltip: 'profile.tooltip_messages'.trFallback('Xabarlar'),
-              icon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF5BC8FA), size: 22),
+              icon: const Icon(Icons.mail_outline_rounded, color: Color(0xFF4AADDC), size: 22),
               onPressed: () => showInboxModal(context),
             ),
             if (unreadCount > 0)
@@ -391,7 +359,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         ),
         IconButton(
           tooltip: 'profile.tooltip_language'.trFallback('Tilni o‘zgartirish'),
-          icon: const Icon(Icons.language_rounded, color: Color(0xFF5BC8FA), size: 22),
+          icon: const Icon(Icons.language_rounded, color: Color(0xFF4AADDC), size: 22),
           onPressed: _showLanguageDialog,
         ),
         IconButton(
@@ -415,13 +383,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF161B26), Color(0xFF080B14)],
+              colors: [Color(0xFF161B26), Color(0xFF04050D)],
             ),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0x335BC8FA), width: 1.5),
+            border: Border.all(color: const Color(0x334AADDC), width: 1.5),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x225BC8FA),
+                color: Color(0x224AADDC),
                 blurRadius: 20,
                 offset: Offset(0, 8),
               ),
@@ -451,7 +419,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: const BoxDecoration(
-                              color: Color(0xFF5BC8FA),
+                              color: Color(0xFF4AADDC),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.camera_alt_rounded, color: Colors.black, size: 12),
@@ -504,7 +472,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: const Color(0x225BC8FA),
+                              color: const Color(0x224AADDC),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -513,14 +481,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 Text(
                                   'ID: ${profile.numericId}',
                                   style: const TextStyle(
-                                    color: Color(0xFF5BC8FA),
+                                    color: Color(0xFF4AADDC),
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 0.5,
                                   ),
                                 ),
                                 const SizedBox(width: 4),
-                                const Icon(Icons.copy_rounded, color: Color(0xFF5BC8FA), size: 11),
+                                const Icon(Icons.copy_rounded, color: Color(0xFF4AADDC), size: 11),
                               ],
                             ),
                           ),
@@ -680,10 +648,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: hasClan ? const Color(0xFF5BC8FA) : const Color(0x22FFFFFF),
+              color: hasClan ? const Color(0xFF4AADDC) : const Color(0x22FFFFFF),
               width: hasClan ? 1.5 : 1,
             ),
           ),
@@ -712,7 +680,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         Text(
                           hasClan ? clan.formattedTag : 'profile.clan_none'.trFallback('KLANSIZ'),
                           style: TextStyle(
-                            color: hasClan ? const Color(0xFF5BC8FA) : Colors.white54,
+                            color: hasClan ? const Color(0xFF4AADDC) : Colors.white54,
                             fontWeight: FontWeight.w900,
                             fontSize: 12,
                           ),
@@ -755,8 +723,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: hasClan ? const Color(0x225BC8FA) : const Color(0xFF5BC8FA),
-                  foregroundColor: hasClan ? const Color(0xFF5BC8FA) : Colors.black,
+                  backgroundColor: hasClan ? const Color(0x224AADDC) : const Color(0xFF4AADDC),
+                  foregroundColor: hasClan ? const Color(0xFF4AADDC) : Colors.black,
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -785,13 +753,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF131929), Color(0xFF0F1726)],
+                colors: [Color(0xFF090B18), Color(0xFF0F1726)],
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.6), width: 1.5),
+              border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.6), width: 1.5),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x225BC8FA),
+                  color: Color(0x224AADDC),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -800,7 +768,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.backpack_rounded, color: Color(0xFF5BC8FA), size: 20),
+                const Icon(Icons.backpack_rounded, color: Color(0xFF4AADDC), size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'profile.inventory_title'.trFallback('INVENTAR'),
@@ -822,7 +790,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           child: Text(
             'profile.main_metrics'.trFallback('ASOSIY METRIKALAR'),
             style: const TextStyle(
-              color: Color(0xFF5BC8FA),
+              color: Color(0xFF4AADDC),
               fontSize: 9.5,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.2,
@@ -841,7 +809,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               title: 'PTS',
               value: '${profile.totalPoints}',
               icon: Icons.bolt_rounded,
-              color: const Color(0xFF5BC8FA),
+              color: const Color(0xFF4AADDC),
               onTap: () => showPtsHistoryModal(context),
             ),
             _statItem(
@@ -861,14 +829,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               title: 'profile.freezes'.trFallback('Muzlatgich'),
               value: '${profile.freezes} ❄️',
               icon: Icons.ac_unit_rounded,
-              color: const Color(0xFF5BC8FA),
+              color: const Color(0xFF4AADDC),
               onTap: () => showInventoryModal(context),
             ),
             _statItem(
               title: 'Qat‘iy Intizom',
               value: '${(profile.totalFocusMinutes / 60).toStringAsFixed(1)} soat',
               icon: Icons.timer_rounded,
-              color: const Color(0xFF3B9BFF),
+              color: const Color(0xFF3A7FCC),
             ),
             _statItem(
               title: '1v1 Winrate',
@@ -898,7 +866,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
-          color: const Color(0xFF0D1220),
+          color: const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: color.withValues(alpha: 0.35)),
         ),
@@ -953,9 +921,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+          border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -975,10 +943,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0x225BC8FA),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF5BC8FA)),
+                child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF4AADDC)),
               ),
               title: Text('profile.avatar_camera'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               subtitle: Text('profile.avatar_camera_sub'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
@@ -992,10 +960,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               leading: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0x2239FF14),
+                  color: const Color(0x224AADDC),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.photo_library_rounded, color: Color(0xFF3B9BFF)),
+                child: const Icon(Icons.photo_library_rounded, color: Color(0xFF3A7FCC)),
               ),
               title: Text('profile.avatar_gallery'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               subtitle: Text('profile.avatar_gallery_sub'.tr(), style: const TextStyle(color: Colors.white54, fontSize: 11)),
@@ -1022,7 +990,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF5BC8FA),
+          backgroundColor: const Color(0xFF4AADDC),
           content: Text('profile.avatar_uploading'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         ),
       );
@@ -1050,7 +1018,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         HapticFeedback.heavyImpact();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: const Color(0xFF3B9BFF),
+            backgroundColor: const Color(0xFF3A7FCC),
             content: Text('profile.avatar_success'.tr(), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
           ),
         );
@@ -1079,7 +1047,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               border: Border(top: BorderSide(color: Color(0xFF0088CC), width: 1.5)),
             ),
@@ -1102,7 +1070,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     ),
                     const Spacer(),
                     IconButton(
-                      icon: const Icon(Icons.person_add_rounded, color: Color(0xFF3B9BFF), size: 20),
+                      icon: const Icon(Icons.person_add_rounded, color: Color(0xFF3A7FCC), size: 20),
                       onPressed: () {
                         Navigator.pop(ctx);
                         showAddFriendModal(context);
@@ -1130,7 +1098,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   Navigator.pop(ctx);
                                   showAddFriendModal(context);
                                 },
-                                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3B9BFF), foregroundColor: Colors.black),
+                                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3A7FCC), foregroundColor: Colors.black),
                                 child: Text('profile.find_friends_btn'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
                               ),
                             ],
@@ -1217,9 +1185,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           return Container(
             padding: EdgeInsets.fromLTRB(20, 16, 20, 24 + MediaQuery.of(context).viewInsets.bottom),
             decoration: const BoxDecoration(
-              color: Color(0xFF0D1220),
+              color: Color(0xFF090B18),
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-              border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+              border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
             ),
             child: SingleChildScrollView(
               child: Column(
@@ -1236,7 +1204,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      const Icon(Icons.edit_note_rounded, color: Color(0xFF5BC8FA), size: 24),
+                      const Icon(Icons.edit_note_rounded, color: Color(0xFF4AADDC), size: 24),
                       const SizedBox(width: 10),
                       Text(
                         'profile.edit_title'.trFallback('Profilni Tahrirlash'),
@@ -1265,7 +1233,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                             padding: const EdgeInsets.all(3),
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)]),
+                              gradient: LinearGradient(colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)]),
                             ),
                             child: ClipOval(
                               child: AvatarCircle(
@@ -1279,7 +1247,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: const BoxDecoration(
-                              color: Color(0xFF5BC8FA),
+                              color: Color(0xFF4AADDC),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(Icons.camera_alt_rounded, size: 16, color: Colors.black),
@@ -1292,7 +1260,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   Center(
                     child: Text(
                       'profile.tap_to_change_photo'.trFallback('Rasmni o‘zgartirish uchun bosing'),
-                      style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11, fontWeight: FontWeight.w600),
+                      style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11, fontWeight: FontWeight.w600),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -1310,7 +1278,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1220),
+                        color: const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: const Color(0xFFFFB703).withValues(alpha: 0.5)),
                       ),
@@ -1344,11 +1312,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       hintText: 'profile.bio_hint'.trFallback('O‘zingiz haqingizda qisqacha yozing...'),
                       hintStyle: const TextStyle(color: Colors.white30),
                       filled: true,
-                      fillColor: const Color(0xFF131929),
+                      fillColor: const Color(0xFF090B18),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x335BC8FA))),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x334AADDC))),
                       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF5BC8FA))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4AADDC))),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -1363,11 +1331,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       hintText: 'profile.goal_hint'.trFallback('Masalan: IELTS 8.0 olish yoki 10 km yugurish...'),
                       hintStyle: const TextStyle(color: Colors.white30),
                       filled: true,
-                      fillColor: const Color(0xFF131929),
+                      fillColor: const Color(0xFF090B18),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x335BC8FA))),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x334AADDC))),
                       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Colors.white10)),
-                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF5BC8FA))),
+                      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4AADDC))),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -1393,7 +1361,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   Navigator.pop(ctx);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      backgroundColor: const Color(0xFF3B9BFF),
+                                      backgroundColor: const Color(0xFF3A7FCC),
                                       behavior: SnackBarBehavior.floating,
                                       content: Text('profile.profile_saved'.trFallback('Profil ma’lumotlari muvaffaqiyatli saqlandi! ✨'), style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                                     ),
@@ -1410,7 +1378,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               }
                             },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5BC8FA),
+                        backgroundColor: const Color(0xFF4AADDC),
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
@@ -1437,9 +1405,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+          border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1455,7 +1423,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(Icons.settings_suggest_rounded, color: Color(0xFF5BC8FA), size: 24),
+                const Icon(Icons.settings_suggest_rounded, color: Color(0xFF4AADDC), size: 24),
                 const SizedBox(width: 10),
                 Text(
                   'profile.settings_modal_title'.trFallback('SOZLAMALAR VA BOSHQARUV'),
@@ -1472,7 +1440,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
             _modalActionTile(
               icon: Icons.edit_note_rounded,
-              iconColor: const Color(0xFF5BC8FA),
+              iconColor: const Color(0xFF4AADDC),
               title: 'profile.edit_profile_tile'.trFallback('Profil Ma’lumotlarini Tahrirlash'),
               subtitle: 'profile.edit_profile_sub'.trFallback('Rasm, status (bio) va bosh maqsadni o‘zgartirish'),
               onTap: () {

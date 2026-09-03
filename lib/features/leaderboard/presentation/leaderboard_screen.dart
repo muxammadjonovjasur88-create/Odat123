@@ -1,4 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -128,10 +128,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0x335BC8FA) : const Color(0xFF131929),
+          color: isSelected ? const Color(0x334AADDC) : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? const Color(0xFF5BC8FA) : const Color(0x22FFFFFF),
+            color: isSelected ? const Color(0xFF4AADDC) : const Color(0x22FFFFFF),
             width: isSelected ? 1.5 : 1,
           ),
         ),
@@ -139,7 +139,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? const Color(0xFF5BC8FA) : Colors.white70,
+              color: isSelected ? const Color(0xFF4AADDC) : Colors.white70,
               fontSize: 11.5,
               fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
             ),
@@ -354,8 +354,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
               }
 
               return RefreshIndicator(
-                color: const Color(0xFF5BC8FA),
-                backgroundColor: const Color(0xFF0D1220),
+                color: const Color(0xFF4AADDC),
+                backgroundColor: const Color(0xFF090B18),
                 onRefresh: () async => ref.refresh(_globalLeaderboardProvider),
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
@@ -408,41 +408,59 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
         // Action Banner
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: Row(
+          child: Column(
             children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0x1539FF14),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0x3339FF14)),
-                  ),
-                  child: Row(
-                    children: [
-                      const Text('👥', style: TextStyle(fontSize: 20)),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'friends_ranking.weekly_banner'.tr(),
-                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                        ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0x1539FF14),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0x3339FF14)),
+                ),
+                child: Row(
+                  children: [
+                    const Text('👥', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'friends_ranking.weekly_banner'.tr(),
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 10),
-              ElevatedButton.icon(
-                onPressed: () => showAddFriendModal(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3B9BFF),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                icon: const Icon(Icons.person_add_rounded, size: 18),
-                label: Text('friends_ranking.add_btn'.tr(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => showAddFriendModal(context),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3A7FCC),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.person_add_rounded, size: 18),
+                      label: Text('friends_ranking.add_btn'.tr(), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.push(AppRoutes.communityHub),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4AADDC),
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      icon: const Icon(Icons.people_outline_rounded, size: 18),
+                      label: Text('community.card_title'.trFallback('Hamfikrlar'), style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -476,7 +494,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                         ElevatedButton.icon(
                           onPressed: () => showAddFriendModal(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B9BFF),
+                            backgroundColor: const Color(0xFF3A7FCC),
                             foregroundColor: Colors.black,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
@@ -513,7 +531,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                         ElevatedButton.icon(
                           onPressed: () => showAddFriendModal(context),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF3B9BFF),
+                            backgroundColor: const Color(0xFF3A7FCC),
                             foregroundColor: Colors.black,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
@@ -567,7 +585,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
             decoration: InputDecoration(
               hintText: 'clan.search_hint'.tr(),
               hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
-              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF5BC8FA), size: 20),
+              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF4AADDC), size: 20),
               suffixIcon: _clanSearchQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close_rounded, color: Colors.white54, size: 18),
@@ -578,12 +596,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                     )
                   : null,
               filled: true,
-              fillColor: const Color(0xFF0D1220),
+              fillColor: const Color(0xFF090B18),
               isDense: true,
               contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x22FFFFFF))),
               enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0x22FFFFFF))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF5BC8FA))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF4AADDC))),
             ),
           ),
         ),
@@ -597,7 +615,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
               child: ElevatedButton.icon(
                 onPressed: () => showCreateClanModal(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   foregroundColor: Colors.black,
                   elevation: 2,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -655,7 +673,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen>
                           ElevatedButton.icon(
                             onPressed: () => showCreateClanModal(context),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF5BC8FA),
+                              backgroundColor: const Color(0xFF4AADDC),
                               foregroundColor: Colors.black,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
@@ -732,16 +750,16 @@ class _ClanCard extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isMyClan ? const Color(0xFF111E36) : const Color(0xFF0D1220),
+          color: isMyClan ? const Color(0xFF111E36) : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isMyClan ? const Color(0xFF5BC8FA) : const Color(0x22FFFFFF),
+            color: isMyClan ? const Color(0xFF4AADDC) : const Color(0x22FFFFFF),
             width: isMyClan ? 1.5 : 1,
           ),
           boxShadow: isMyClan
               ? [
                   BoxShadow(
-                    color: const Color(0xFF5BC8FA).withValues(alpha: 0.15),
+                    color: const Color(0xFF4AADDC).withValues(alpha: 0.15),
                     blurRadius: 16,
                   )
                 ]
@@ -795,7 +813,7 @@ class _ClanCard extends ConsumerWidget {
                     Text(
                       clan.formattedTag,
                       style: const TextStyle(
-                        color: Color(0xFF5BC8FA),
+                        color: Color(0xFF4AADDC),
                         fontWeight: FontWeight.w900,
                         fontSize: 13,
                         letterSpacing: 1,
@@ -852,16 +870,16 @@ class _ClanCard extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: isMyClan ? const Color(0x33FF0055) : const Color(0x335BC8FA),
+                      color: isMyClan ? const Color(0x33FF0055) : const Color(0x334AADDC),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isMyClan ? const Color(0xFFFF0055) : const Color(0xFF5BC8FA),
+                        color: isMyClan ? const Color(0xFFFF0055) : const Color(0xFF4AADDC),
                       ),
                     ),
                     child: Text(
                       isMyClan ? 'clan.leave'.tr() : 'clan.join'.tr(),
                       style: TextStyle(
-                        color: isMyClan ? const Color(0xFFFF0055) : const Color(0xFF5BC8FA),
+                        color: isMyClan ? const Color(0xFFFF0055) : const Color(0xFF4AADDC),
                         fontWeight: FontWeight.w900,
                         fontSize: 11,
                       ),
@@ -901,7 +919,7 @@ class _TabBar extends StatelessWidget {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF5BC8FA) : Colors.transparent,
+            color: isSelected ? const Color(0xFF4AADDC) : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -937,7 +955,7 @@ class _TabBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0x22FFFFFF)),
       ),
@@ -1186,13 +1204,13 @@ class _CurrentUserStickyCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0x335BC8FA), Color(0x3339FF14)],
+          colors: [Color(0x334AADDC), Color(0x3339FF14)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF5BC8FA), width: 1.5),
+        border: Border.all(color: const Color(0xFF4AADDC), width: 1.5),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x225BC8FA),
+            color: Color(0x224AADDC),
             blurRadius: 14,
           ),
         ],
@@ -1223,7 +1241,7 @@ class _CurrentUserStickyCard extends StatelessWidget {
                 Text(
                   '⚡ ${formatCompactNumber(entry.totalPoints)} PTS',
                   style: const TextStyle(
-                    color: Color(0xFF5BC8FA),
+                    color: Color(0xFF4AADDC),
                     fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
@@ -1234,7 +1252,7 @@ class _CurrentUserStickyCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFF5BC8FA),
+              color: const Color(0xFF4AADDC),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -1280,12 +1298,12 @@ class _LeaderboardRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           decoration: BoxDecoration(
             color: isCurrentUser
-                ? const Color(0x225BC8FA)
-                : const Color(0xFF0D1220),
+                ? const Color(0x224AADDC)
+                : const Color(0xFF090B18),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: isCurrentUser
-                  ? const Color(0x665BC8FA)
+                  ? const Color(0x664AADDC)
                   : const Color(0x15FFFFFF),
             ),
           ),
@@ -1296,7 +1314,7 @@ class _LeaderboardRow extends StatelessWidget {
                 height: 28,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFF131929),
+                  color: const Color(0xFF090B18),
                   border: Border.all(color: Colors.white12),
                 ),
                 child: Center(
@@ -1328,9 +1346,9 @@ class _LeaderboardRow extends StatelessWidget {
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: entry.isOnline ? const Color(0xFF3B9BFF) : Colors.grey,
+                        color: entry.isOnline ? const Color(0xFF3A7FCC) : Colors.grey,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF0D1220), width: 1.5),
+                        border: Border.all(color: const Color(0xFF090B18), width: 1.5),
                       ),
                     ),
                   ),
@@ -1371,9 +1389,9 @@ class _LeaderboardRow extends StatelessWidget {
                     ),
                   ),
                   if (rank == 4)
-                    _buildRowPrizeBadge('🎧 Quloqchin', const Color(0xFF5BC8FA))
+                    _buildRowPrizeBadge('🎧 Quloqchin', const Color(0xFF4AADDC))
                   else if (rank == 5)
-                    _buildRowPrizeBadge('👕 Futbolka', const Color(0xFF3B9BFF))
+                    _buildRowPrizeBadge('👕 Futbolka', const Color(0xFF3A7FCC))
                   else if (rank == 6)
                     _buildRowPrizeBadge('☕ Bakal', const Color(0xFFFF0055))
                   else if (rank == 7)
@@ -1423,9 +1441,9 @@ void _showUserDetailSheet(BuildContext context, LeaderboardEntry entry) {
         return Container(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           decoration: const BoxDecoration(
-            color: Color(0xFF0D1220),
+            color: Color(0xFF090B18),
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(top: BorderSide(color: Color(0xFF5BC8FA), width: 1.5)),
+            border: Border(top: BorderSide(color: Color(0xFF4AADDC), width: 1.5)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1459,8 +1477,8 @@ void _showUserDetailSheet(BuildContext context, LeaderboardEntry entry) {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   _statBadge('⚡ Jami Ballar', '${formatCompactNumber(entry.totalPoints)} PTS', const Color(0xFFFFB703)),
-                  _statBadge('🏃 Yugurish', '${entry.runningDistanceKm.toStringAsFixed(1)} KM', const Color(0xFF5BC8FA)),
-                  _statBadge('💪 Mashq', '${entry.pushUpCount}', const Color(0xFF3B9BFF)),
+                  _statBadge('🏃 Yugurish', '${entry.runningDistanceKm.toStringAsFixed(1)} KM', const Color(0xFF4AADDC)),
+                  _statBadge('💪 Mashq', '${entry.pushUpCount}', const Color(0xFF3A7FCC)),
                 ],
               ),
               const SizedBox(height: 20),
@@ -1549,7 +1567,7 @@ void _showUserDetailSheet(BuildContext context, LeaderboardEntry entry) {
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            backgroundColor: const Color(0xFF3B9BFF),
+                                            backgroundColor: const Color(0xFF3A7FCC),
                                             content: Text('🤝 ${entry.name} do‘stlar safiga qo‘shildi!'),
                                           ),
                                         );
@@ -1563,8 +1581,8 @@ void _showUserDetailSheet(BuildContext context, LeaderboardEntry entry) {
                                     }
                                   },
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: const Color(0xFF3B9BFF),
-                                    side: const BorderSide(color: Color(0xFF3B9BFF), width: 1.5),
+                                    foregroundColor: const Color(0xFF3A7FCC),
+                                    side: const BorderSide(color: Color(0xFF3A7FCC), width: 1.5),
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                   ),
                                   icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
@@ -1608,7 +1626,7 @@ Widget _statBadge(String label, String value, Color color) {
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
     decoration: BoxDecoration(
-      color: const Color(0xFF131929),
+      color: const Color(0xFF090B18),
       borderRadius: BorderRadius.circular(14),
       border: Border.all(color: color.withValues(alpha: 0.4)),
     ),
@@ -1632,7 +1650,7 @@ void _showDirectMessageDialog(
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
         side: const BorderSide(color: Color(0xFF0088CC)),
@@ -1657,7 +1675,7 @@ void _showDirectMessageDialog(
           hintText: 'Xabaringizni yozing...',
           hintStyle: const TextStyle(color: Colors.white38),
           filled: true,
-          fillColor: const Color(0xFF131929),
+          fillColor: const Color(0xFF090B18),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         ),
       ),

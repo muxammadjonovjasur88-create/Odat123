@@ -258,7 +258,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
   Widget build(BuildContext context) {
     if (_permissionDenied) {
       return Scaffold(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -294,7 +294,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                 ElevatedButton.icon(
                   onPressed: () => openAppSettings(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF5BC8FA),
+                    backgroundColor: const Color(0xFF4AADDC),
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24, vertical: 12),
@@ -317,12 +317,12 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
 
     if (!_isCameraInitialized || _cameraController == null) {
       return Scaffold(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(color: Color(0xFF5BC8FA)),
+              CircularProgressIndicator(color: Color(0xFF4AADDC)),
               SizedBox(height: 16),
               Text(
                 'Kamera va pose detector yuklanmoqda...',
@@ -356,13 +356,13 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
         final shouldExit = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: const Color(0xFF0D1220),
+            backgroundColor: const Color(0xFF090B18),
             title: Text('vision.stop_confirm_title'.tr(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             content: Text('vision.stop_confirm_body'.tr(), style: const TextStyle(color: Colors.white70)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text('common.continue_btn'.tr(), style: const TextStyle(color: Color(0xFF5BC8FA))),
+                child: Text('common.continue_btn'.tr(), style: const TextStyle(color: Color(0xFF4AADDC))),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
@@ -433,12 +433,12 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xCC0A0E17),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0x445BC8FA)),
+                      border: Border.all(color: const Color(0x444AADDC)),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.timer_outlined,
-                            color: Color(0xFF5BC8FA), size: 16),
+                            color: Color(0xFF4AADDC), size: 16),
                         const SizedBox(width: 6),
                         Text(
                           timerText,
@@ -470,7 +470,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isReady
-                        ? const Color(0xFF3B9BFF)
+                        ? const Color(0xFF3A7FCC)
                         : const Color(0xFFFF0055),
                   ),
                 ),
@@ -478,7 +478,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                   children: [
                     Icon(
                       isReady ? Icons.check_circle_rounded : Icons.warning_amber_rounded,
-                      color: isReady ? const Color(0xFF3B9BFF) : Colors.white,
+                      color: isReady ? const Color(0xFF3A7FCC) : Colors.white,
                       size: 22,
                     ),
                     const SizedBox(width: 10),
@@ -508,12 +508,12 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                   color: const Color(0xEE0A0E17),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF5BC8FA),
+                    color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF4AADDC),
                     width: 2,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: isPlank ? const Color(0x66FF9F00) : const Color(0x665BC8FA),
+                      color: isPlank ? const Color(0x66FF9F00) : const Color(0x664AADDC),
                       blurRadius: 16,
                     ),
                   ],
@@ -533,7 +533,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                     Text(
                       isPlank ? plankHoldText : '$count',
                       style: TextStyle(
-                        color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF5BC8FA),
+                        color: isPlank ? const Color(0xFFFF9F00) : const Color(0xFF4AADDC),
                         fontSize: isPlank ? 36 : 48,
                         fontWeight: FontWeight.w900,
                       ),
@@ -564,11 +564,11 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                     onPressed: _switchCamera,
                     style: IconButton.styleFrom(
                       backgroundColor: const Color(0xCC151A27),
-                      side: const BorderSide(color: Color(0x445BC8FA)),
+                      side: const BorderSide(color: Color(0x444AADDC)),
                       padding: const EdgeInsets.all(14),
                     ),
                     icon: const Icon(Icons.flip_camera_ios_rounded,
-                        color: Color(0xFF5BC8FA), size: 24),
+                        color: Color(0xFF4AADDC), size: 24),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -577,7 +577,7 @@ class _ExerciseCameraScreenState extends ConsumerState<ExerciseCameraScreen> {
                       child: ElevatedButton.icon(
                         onPressed: _finishSession,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF3B9BFF),
+                          backgroundColor: const Color(0xFF3A7FCC),
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),

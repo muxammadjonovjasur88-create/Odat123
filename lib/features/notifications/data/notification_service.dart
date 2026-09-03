@@ -404,7 +404,7 @@ class NotificationService {
         >();
     final canExact = await android?.canScheduleExactNotifications() ?? false;
     final mode = canExact
-        ? AndroidScheduleMode.exactAllowWhileIdle
+        ? AndroidScheduleMode.alarmClock
         : AndroidScheduleMode.inexactAllowWhileIdle;
 
     await _plugin.zonedSchedule(

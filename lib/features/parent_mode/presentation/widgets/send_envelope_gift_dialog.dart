@@ -59,7 +59,7 @@ class _SendEnvelopeGiftDialogState extends State<_SendEnvelopeGiftDialog> with S
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF3B9BFF),
+          backgroundColor: const Color(0xFF3A7FCC),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           content: Row(
@@ -82,7 +82,7 @@ class _SendEnvelopeGiftDialogState extends State<_SendEnvelopeGiftDialog> with S
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: ScaleTransition(
         scale: _scaleAnimation,
@@ -102,12 +102,12 @@ class _SendEnvelopeGiftDialogState extends State<_SendEnvelopeGiftDialog> with S
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
                         colors: _isSent
-                            ? [const Color(0xFF3B9BFF), const Color(0xFF5BC8FA)]
+                            ? [const Color(0xFF3A7FCC), const Color(0xFF4AADDC)]
                             : [const Color(0xFFFFB703), const Color(0xFFFF4500)],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: (_isSent ? const Color(0xFF3B9BFF) : const Color(0xFFFFB703)).withValues(alpha: 0.35),
+                          color: (_isSent ? const Color(0xFF3A7FCC) : const Color(0xFFFFB703)).withValues(alpha: 0.35),
                           blurRadius: 20,
                         ),
                       ],
@@ -183,7 +183,7 @@ class _SendEnvelopeGiftDialogState extends State<_SendEnvelopeGiftDialog> with S
                   decoration: BoxDecoration(
                     color: const Color(0xFF141E33),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0x335BC8FA)),
+                    border: Border.all(color: const Color(0x334AADDC)),
                   ),
                   child: TextField(
                     controller: _noteController,

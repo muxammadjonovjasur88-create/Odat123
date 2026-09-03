@@ -174,7 +174,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
     return Theme(
       data: Theme.of(context).copyWith(
         colorScheme: Theme.of(context).colorScheme.copyWith(
-          primary: const Color(0xFF5BC8FA),
+          primary: const Color(0xFF4AADDC),
           surface: colors.surface,
           onSurface: colors.textPrimary,
         ),
@@ -241,9 +241,9 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
         position: _slideAnim,
         child: Container(
           decoration: BoxDecoration(
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border.all(color: const Color(0x335BC8FA), width: 1),
+            border: Border.all(color: const Color(0x334AADDC), width: 1),
           ),
           padding: EdgeInsets.fromLTRB(20, 12, 20, 24 + bottomPad),
           child: Form(
@@ -290,7 +290,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                   Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF131929),
+                      color: const Color(0xFF090B18),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: const Color(0x22FFFFFF)),
                     ),
@@ -301,7 +301,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                             icon: Icons.timer_outlined,
                             label: 'Fokus',
                             isSelected: _selectedGoalType == 'focus',
-                            activeColor: const Color(0xFF5BC8FA),
+                            activeColor: const Color(0xFF4AADDC),
                             onTap: () {
                               setState(() {
                                 _selectedGoalType = 'focus';
@@ -317,7 +317,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                             icon: Icons.videocam_rounded,
                             label: 'Mashq (AI)',
                             isSelected: _selectedGoalType == 'exercise',
-                            activeColor: const Color(0xFF3B9BFF),
+                            activeColor: const Color(0xFF3A7FCC),
                             onTap: () {
                               setState(() {
                                 _selectedGoalType = 'exercise';
@@ -360,10 +360,10 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                       hintStyle: const TextStyle(color: Colors.white38, fontSize: 13),
                       counterStyle: const TextStyle(color: Colors.white24),
                       filled: true,
-                      fillColor: const Color(0xFF131929),
+                      fillColor: const Color(0xFF090B18),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Color(0x335BC8FA)),
+                        borderSide: const BorderSide(color: Color(0x334AADDC)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -371,7 +371,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(color: Color(0xFF5BC8FA), width: 1.5),
+                        borderSide: const BorderSide(color: Color(0xFF4AADDC), width: 1.5),
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
@@ -387,20 +387,20 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1220),
+                        color: const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0x445BC8FA)),
+                        border: Border.all(color: const Color(0x444AADDC)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Row(
                             children: [
-                              Icon(Icons.lock_clock_rounded, color: Color(0xFF5BC8FA), size: 18),
+                              Icon(Icons.lock_clock_rounded, color: Color(0xFF4AADDC), size: 18),
                               SizedBox(width: 8),
                               Text(
                                 'Fokus Davomiyligi (Hard-Lock & Ilovalar Bloklash):',
-                                style: TextStyle(color: Color(0xFF5BC8FA), fontWeight: FontWeight.bold, fontSize: 12),
+                                style: TextStyle(color: Color(0xFF4AADDC), fontWeight: FontWeight.bold, fontSize: 12),
                               ),
                             ],
                           ),
@@ -413,8 +413,8 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                               return ChoiceChip(
                                 label: Text('$min daqiqa'),
                                 selected: sel,
-                                selectedColor: const Color(0xFF5BC8FA),
-                                backgroundColor: const Color(0xFF131929),
+                                selectedColor: const Color(0xFF4AADDC),
+                                backgroundColor: const Color(0xFF090B18),
                                 labelStyle: TextStyle(
                                   color: sel ? Colors.black : Colors.white70,
                                   fontWeight: FontWeight.w900,
@@ -441,7 +441,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF131929),
+                                      color: const Color(0xFF090B18),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: const Color(0x33FFFFFF)),
                                     ),
@@ -468,7 +468,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF131929),
+                                      color: const Color(0xFF090B18),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(color: const Color(0x33FFFFFF)),
                                     ),
@@ -497,20 +497,20 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0D1220),
+                        color: const Color(0xFF090B18),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0x4439FF14)),
+                        border: Border.all(color: const Color(0x444AADDC)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Row(
                             children: [
-                              Icon(Icons.fitness_center_rounded, color: Color(0xFF3B9BFF), size: 18),
+                              Icon(Icons.fitness_center_rounded, color: Color(0xFF3A7FCC), size: 18),
                               SizedBox(width: 8),
                               Text(
                                 'Mashq turi va AI Tekshiruv:',
-                                style: TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.bold, fontSize: 12),
+                                style: TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.bold, fontSize: 12),
                               ),
                             ],
                           ),
@@ -529,8 +529,8 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                               return ChoiceChip(
                                 label: Text(item['label']!),
                                 selected: sel,
-                                selectedColor: const Color(0xFF3B9BFF),
-                                backgroundColor: const Color(0xFF131929),
+                                selectedColor: const Color(0xFF3A7FCC),
+                                backgroundColor: const Color(0xFF090B18),
                                 labelStyle: TextStyle(
                                   color: sel ? Colors.black : Colors.white70,
                                   fontWeight: FontWeight.w900,
@@ -552,8 +552,8 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                               return ChoiceChip(
                                 label: Text('$reps ta'),
                                 selected: sel,
-                                selectedColor: const Color(0xFF3B9BFF),
-                                backgroundColor: const Color(0xFF131929),
+                                selectedColor: const Color(0xFF3A7FCC),
+                                backgroundColor: const Color(0xFF090B18),
                                 labelStyle: TextStyle(
                                   color: sel ? Colors.black : Colors.white70,
                                   fontWeight: FontWeight.bold,
@@ -576,7 +576,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: _pickDate,
-                          icon: const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF5BC8FA)),
+                          icon: const Icon(Icons.calendar_today_rounded, size: 16, color: Color(0xFF4AADDC)),
                           label: Text(
                             DateFormat('d MMMM, yyyy', context.locale.languageCode).format(_selectedDate),
                             style: const TextStyle(color: Colors.white, fontSize: 12),
@@ -592,7 +592,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: _pickTime,
-                          icon: const Icon(Icons.alarm_rounded, size: 16, color: Color(0xFF5BC8FA)),
+                          icon: const Icon(Icons.alarm_rounded, size: 16, color: Color(0xFF4AADDC)),
                           label: Text(
                             DateFormat('HH:mm').format(_selectedDate),
                             style: const TextStyle(color: Colors.white, fontSize: 12),
@@ -647,7 +647,7 @@ class _RemindersSheetState extends ConsumerState<RemindersSheet>
                     child: ElevatedButton(
                       onPressed: _saving ? null : _save,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF5BC8FA),
+                        backgroundColor: const Color(0xFF4AADDC),
                         foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
@@ -737,7 +737,7 @@ class _RepeatOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF5BC8FA) : const Color(0xFF131929),
+          color: selected ? const Color(0xFF4AADDC) : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(

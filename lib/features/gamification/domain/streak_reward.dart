@@ -34,7 +34,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 10,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 2,
@@ -43,7 +43,7 @@ class DailyStreakReward {
         type: RewardType.freeze,
         freezes: 1,
         icon: '❄️',
-        color: Color(0xFF3B9BFF),
+        color: Color(0xFF3A7FCC),
       ),
       const DailyStreakReward(
         day: 3,
@@ -52,7 +52,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 30,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 4,
@@ -78,7 +78,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 50,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 7,
@@ -88,7 +88,7 @@ class DailyStreakReward {
         points: 100,
         coins: 20,
         icon: '🎁',
-        color: Color(0xFF3B9BFF),
+        color: Color(0xFF3A7FCC),
       ),
       const DailyStreakReward(
         day: 8,
@@ -97,7 +97,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 20,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 9,
@@ -106,7 +106,7 @@ class DailyStreakReward {
         type: RewardType.freeze,
         freezes: 1,
         icon: '❄️',
-        color: Color(0xFF3B9BFF),
+        color: Color(0xFF3A7FCC),
       ),
       const DailyStreakReward(
         day: 10,
@@ -132,7 +132,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 50,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 13,
@@ -141,7 +141,7 @@ class DailyStreakReward {
         type: RewardType.freeze,
         freezes: 1,
         icon: '❄️',
-        color: Color(0xFF3B9BFF),
+        color: Color(0xFF3A7FCC),
       ),
       const DailyStreakReward(
         day: 14,
@@ -169,7 +169,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 60,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 17,
@@ -178,7 +178,7 @@ class DailyStreakReward {
         type: RewardType.freeze,
         freezes: 1,
         icon: '❄️',
-        color: Color(0xFF3B9BFF),
+        color: Color(0xFF3A7FCC),
       ),
       const DailyStreakReward(
         day: 18,
@@ -204,7 +204,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 80,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 21,
@@ -214,7 +214,7 @@ class DailyStreakReward {
         points: 300,
         coins: 100,
         icon: '💎',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 22,
@@ -232,7 +232,7 @@ class DailyStreakReward {
         type: RewardType.freeze,
         freezes: 1,
         icon: '❄️',
-        color: Color(0xFF3B9BFF),
+        color: Color(0xFF3A7FCC),
       ),
       const DailyStreakReward(
         day: 24,
@@ -249,7 +249,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 100,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 26,
@@ -267,7 +267,7 @@ class DailyStreakReward {
         type: RewardType.freeze,
         freezes: 1,
         icon: '❄️',
-        color: Color(0xFF3B9BFF),
+        color: Color(0xFF3A7FCC),
       ),
       const DailyStreakReward(
         day: 28,
@@ -276,7 +276,7 @@ class DailyStreakReward {
         type: RewardType.points,
         points: 150,
         icon: '⚡',
-        color: Color(0xFF5BC8FA),
+        color: Color(0xFF4AADDC),
       ),
       const DailyStreakReward(
         day: 29,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Odat app **brand** color system — extracted directly from the ODAT intro
 /// video and Phoenix logo artwork.
@@ -135,7 +135,7 @@ abstract final class AppColors {
     secondary:       odatCyan,            // Cyan secondary
     primaryPressed:  Color(0xFF531BAA),   // Darker violet pressed
     onPrimary:       Color(0xFFFFFFFF),   // White on violet
-    textPrimary:     Color(0xFF080B14),   // Near-black text
+    textPrimary:     Color(0xFF04050D),   // Near-black text
     textSecondary:   Color(0xFF3B4A72),   // Dark slate-blue
     textTertiary:    Color(0xFF64748B),   // Muted gray
     border:          Color(0xFFD1D9E9),   // Light border

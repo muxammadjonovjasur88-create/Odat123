@@ -36,6 +36,7 @@ import '../../features/premium/presentation/premium_stats_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/public_profile_screen.dart';
+import '../../features/profile/presentation/wallet_screen.dart';
 import '../../features/progress/presentation/progress_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/setup_profile/presentation/setup_profile_screen.dart';
@@ -192,6 +193,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       route(AppRoutes.community, (_) => const CommunityScreen()),
       route(AppRoutes.pointSystem, (_) => const PointSystemScreen()),
       route(AppRoutes.profile, (_) => const ProfileScreen()),
+      route(AppRoutes.wallet, (_) => const WalletScreen()),
       GoRoute(
         path: '${AppRoutes.profile}/:userId',
         pageBuilder: (context, state) => _calmPage(

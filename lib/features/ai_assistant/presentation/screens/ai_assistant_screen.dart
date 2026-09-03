@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +84,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       builder: (ctx) => Container(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
         decoration: const BoxDecoration(
-          color: Color(0xFF0D1220),
+          color: Color(0xFF090B18),
           borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           border: Border(top: BorderSide(color: Color(0xFFFFB703), width: 2)),
         ),
@@ -192,7 +192,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
             style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
           ),
         ),
-        const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 18),
+        const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 18),
       ],
     );
   }
@@ -212,7 +212,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
     final picker = ImagePicker();
     final source = await showModalBottomSheet<ImageSource>(
       context: context,
-      backgroundColor: const Color(0xFF0D1220),
+      backgroundColor: const Color(0xFF090B18),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -228,12 +228,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               ),
               const SizedBox(height: 20),
               ListTile(
-                leading: const Icon(Icons.camera_alt, color: Color(0xFF5BC8FA)),
+                leading: const Icon(Icons.camera_alt, color: Color(0xFF4AADDC)),
                 title: Text('ai.camera_source'.tr(), style: const TextStyle(color: Colors.white)),
                 onTap: () => Navigator.of(context).pop(ImageSource.camera),
               ),
               ListTile(
-                leading: const Icon(Icons.photo_library, color: Color(0xFF3B9BFF)),
+                leading: const Icon(Icons.photo_library, color: Color(0xFF3A7FCC)),
                 title: Text('ai.gallery_source'.tr(), style: const TextStyle(color: Colors.white)),
                 onTap: () => Navigator.of(context).pop(ImageSource.gallery),
               ),
@@ -569,7 +569,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF3B9BFF),
+          backgroundColor: const Color(0xFF3A7FCC),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           behavior: SnackBarBehavior.floating,
           content: Row(
@@ -600,7 +600,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF3B9BFF),
+          backgroundColor: const Color(0xFF3A7FCC),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           behavior: SnackBarBehavior.floating,
           content: Row(
@@ -636,13 +636,13 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
         if (!didPop) handleBack();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF080B14),
+        backgroundColor: const Color(0xFF04050D),
         bottomNavigationBar: AppBottomNav(
           current: AppNavTab.ai,
           onSelected: (tab) => goToTab(context, tab),
         ),
         appBar: AppBar(
-          backgroundColor: const Color(0xFF0D1220),
+          backgroundColor: const Color(0xFF090B18),
           surfaceTintColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
@@ -655,7 +655,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)],
+                    colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)],
                   ),
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -676,7 +676,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                   Text(
                     'ai_assistant.subtitle'.tr(),
                     style: const TextStyle(
-                      color: Color(0xFF5BC8FA),
+                      color: Color(0xFF4AADDC),
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),
@@ -693,7 +693,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               Expanded(
                 child: _isLoadingHistory
                     ? const Center(
-                        child: CircularProgressIndicator(color: Color(0xFF5BC8FA)),
+                        child: CircularProgressIndicator(color: Color(0xFF4AADDC)),
                       )
                     : RepaintBoundary(
                         child: ListView.builder(
@@ -717,7 +717,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                       const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5BC8FA)),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4AADDC)),
                       ),
                       const SizedBox(width: 10),
                       Text(
@@ -733,7 +733,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
               if (_selectedImage != null)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  color: const Color(0xFF0D1220),
+                  color: const Color(0xFF090B18),
                   child: Row(
                     children: [
                       Stack(
@@ -741,7 +741,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFF5BC8FA), width: 1.5),
+                              border: Border.all(color: const Color(0xFF4AADDC), width: 1.5),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: ClipRRect(
@@ -791,12 +791,12 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 margin: const EdgeInsets.fromLTRB(14, 0, 14, 8),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D1220),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(30),
-                  border: Border.all(color: const Color(0x445BC8FA), width: 1.2),
+                  border: Border.all(color: const Color(0x444AADDC), width: 1.2),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF5BC8FA).withValues(alpha: 0.1),
+                      color: const Color(0xFF4AADDC).withValues(alpha: 0.1),
                       blurRadius: 16,
                       offset: const Offset(0, 2),
                     ),
@@ -805,7 +805,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 child: Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.add_photo_alternate_rounded, color: Color(0xFF5BC8FA), size: 24),
+                      icon: const Icon(Icons.add_photo_alternate_rounded, color: Color(0xFF4AADDC), size: 24),
                       onPressed: _pickImage,
                       padding: const EdgeInsets.all(6),
                       constraints: const BoxConstraints(),
@@ -818,7 +818,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                         decoration: InputDecoration(
                           hintText: _isListening ? 'ai_assistant.voice_listening'.tr() : 'ai_assistant.input_hint'.tr(),
                           hintStyle: TextStyle(
-                            color: _isListening ? const Color(0xFF3B9BFF) : Colors.white38,
+                            color: _isListening ? const Color(0xFF3A7FCC) : Colors.white38,
                             fontSize: 13,
                             fontWeight: _isListening ? FontWeight.bold : FontWeight.normal,
                           ),
@@ -857,14 +857,14 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: _isListening
-                                      ? [const Color(0xFF3B9BFF), const Color(0xFF3B9BFF)]
-                                      : [const Color(0xFF0088CC), const Color(0xFF5BC8FA)],
+                                      ? [const Color(0xFF3A7FCC), const Color(0xFF3A7FCC)]
+                                      : [const Color(0xFF0088CC), const Color(0xFF4AADDC)],
                                 ),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
                                     color: _isListening
-                                        ? const Color(0xFF3B9BFF).withValues(alpha: 0.5)
+                                        ? const Color(0xFF3A7FCC).withValues(alpha: 0.5)
                                         : const Color(0xFF0088CC).withValues(alpha: 0.3),
                                     blurRadius: 8,
                                   ),
@@ -885,7 +885,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
 
                     // Send Button
                     IconButton(
-                      icon: const Icon(Icons.send_rounded, color: Color(0xFF3B9BFF), size: 24),
+                      icon: const Icon(Icons.send_rounded, color: Color(0xFF3A7FCC), size: 24),
                       onPressed: () => _sendMessage(_textController.text),
                       padding: const EdgeInsets.all(6),
                       constraints: const BoxConstraints(),
@@ -908,13 +908,13 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.88),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: msg.isUser ? const Color(0xFF0055FF) : const Color(0xFF131929),
+          color: msg.isUser ? const Color(0xFF0055FF) : const Color(0xFF090B18),
           borderRadius: BorderRadius.circular(18).copyWith(
             bottomRight: msg.isUser ? const Radius.circular(2) : const Radius.circular(18),
             bottomLeft: !msg.isUser ? const Radius.circular(2) : const Radius.circular(18),
           ),
           border: Border.all(
-            color: msg.isUser ? const Color(0x335BC8FA) : const Color(0x22FFFFFF),
+            color: msg.isUser ? const Color(0x334AADDC) : const Color(0x22FFFFFF),
           ),
         ),
         child: Column(
@@ -926,14 +926,14 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.mic, size: 14, color: msg.isUser ? Colors.white70 : const Color(0xFF5BC8FA)),
+                    Icon(Icons.mic, size: 14, color: msg.isUser ? Colors.white70 : const Color(0xFF4AADDC)),
                     const SizedBox(width: 4),
                     Text(
                       'ai_assistant.voice_badge'.tr(),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: msg.isUser ? Colors.white70 : const Color(0xFF5BC8FA),
+                        color: msg.isUser ? Colors.white70 : const Color(0xFF4AADDC),
                       ),
                     ),
                   ],
@@ -966,7 +966,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFF0A0E17),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF5BC8FA), width: 1.2),
+                  border: Border.all(color: const Color(0xFF4AADDC), width: 1.2),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -985,7 +985,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                             Text(
                               'KUNLIK JADVAL (${msg.suggestedTasks.length} ta)',
                               style: const TextStyle(
-                                color: Color(0xFF5BC8FA),
+                                color: Color(0xFF4AADDC),
                                 fontSize: 11,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.8,
@@ -1013,7 +1013,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                         margin: const EdgeInsets.only(bottom: 6),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF131929),
+                          color: const Color(0xFF090B18),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: const Color(0x22FFFFFF)),
                         ),
@@ -1022,13 +1022,13 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                               decoration: BoxDecoration(
-                                color: const Color(0x335BC8FA),
+                                color: const Color(0x334AADDC),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
                                 task.timeStr,
                                 style: const TextStyle(
-                                  color: Color(0xFF5BC8FA),
+                                  color: Color(0xFF4AADDC),
                                   fontWeight: FontWeight.w900,
                                   fontSize: 10.5,
                                 ),
@@ -1047,8 +1047,8 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                                 task.goalTypeBadge,
                                 style: TextStyle(
                                   color: task.goalType == 'exercise'
-                                      ? const Color(0xFF3B9BFF)
-                                      : (task.goalType == 'note' ? const Color(0xFFFFB703) : const Color(0xFF7B2FFF)),
+                                      ? const Color(0xFF3A7FCC)
+                                      : (task.goalType == 'note' ? const Color(0xFFFFB703) : const Color(0xFF6B25CC)),
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -1081,7 +1081,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                             IconButton(
                               padding: EdgeInsets.zero,
                               constraints: const BoxConstraints(),
-                              icon: const Icon(Icons.add_circle_rounded, color: Color(0xFF3B9BFF), size: 22),
+                              icon: const Icon(Icons.add_circle_rounded, color: Color(0xFF3A7FCC), size: 22),
                               onPressed: () => _addTaskToDailyPlan(task),
                             ),
                           ],
@@ -1095,7 +1095,7 @@ class _AiAssistantScreenState extends ConsumerState<AiAssistantScreen>
                       child: ElevatedButton.icon(
                         onPressed: () => _addAllTasksToDailyPlan(msg.suggestedTasks),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF5BC8FA),
+                          backgroundColor: const Color(0xFF4AADDC),
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         ),

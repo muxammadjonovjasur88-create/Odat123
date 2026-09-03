@@ -89,7 +89,7 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -121,14 +121,14 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
           height: 90,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF5BC8FA).withValues(alpha: 0.15),
-            border: Border.all(color: const Color(0xFF5BC8FA), width: 2),
+            color: const Color(0xFF4AADDC).withValues(alpha: 0.15),
+            border: Border.all(color: const Color(0xFF4AADDC), width: 2),
             boxShadow: const [
-              BoxShadow(color: Color(0x445BC8FA), blurRadius: 24, spreadRadius: 4),
+              BoxShadow(color: Color(0x444AADDC), blurRadius: 24, spreadRadius: 4),
             ],
           ),
           child: const Center(
-            child: Icon(Icons.do_not_disturb_on_rounded, color: Color(0xFF5BC8FA), size: 44),
+            child: Icon(Icons.do_not_disturb_on_rounded, color: Color(0xFF4AADDC), size: 44),
           ),
         ),
         const SizedBox(height: 24),
@@ -162,10 +162,10 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
               selected: isSel,
               onSelected: (_) => setState(() => _selectedDurationMin = mins),
               label: Text(label),
-              selectedColor: const Color(0xFF5BC8FA),
-              backgroundColor: const Color(0xFF131929),
+              selectedColor: const Color(0xFF4AADDC),
+              backgroundColor: const Color(0xFF090B18),
               labelStyle: TextStyle(
-                color: isSel ? const Color(0xFF080B14) : Colors.white,
+                color: isSel ? const Color(0xFF04050D) : Colors.white,
                 fontWeight: FontWeight.w900,
                 fontSize: 13,
               ),
@@ -182,17 +182,17 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFF5BC8FA), Color(0xFF3B9BFF)]),
+              gradient: const LinearGradient(colors: [Color(0xFF4AADDC), Color(0xFF3A7FCC)]),
               borderRadius: BorderRadius.circular(18),
               boxShadow: const [
-                BoxShadow(color: Color(0x445BC8FA), blurRadius: 18, offset: Offset(0, 4)),
+                BoxShadow(color: Color(0x444AADDC), blurRadius: 18, offset: Offset(0, 4)),
               ],
             ),
             child: Center(
               child: Text(
                 'wellbeing.start_detox_btn'.tr(),
                 style: const TextStyle(
-                  color: Color(0xFF080B14),
+                  color: Color(0xFF04050D),
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
@@ -215,16 +215,16 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
           height: 220,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const RadialGradient(colors: [Color(0x115BC8FA), Color(0xFF0D1220)]),
-            border: Border.all(color: const Color(0xFF5BC8FA), width: 3),
+            gradient: const RadialGradient(colors: [Color(0x115BC8FA), Color(0xFF090B18)]),
+            border: Border.all(color: const Color(0xFF4AADDC), width: 3),
             boxShadow: const [
-              BoxShadow(color: Color(0x335BC8FA), blurRadius: 30, spreadRadius: 4),
+              BoxShadow(color: Color(0x334AADDC), blurRadius: 30, spreadRadius: 4),
             ],
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.shield_rounded, color: Color(0xFF3B9BFF), size: 28),
+              const Icon(Icons.shield_rounded, color: Color(0xFF3A7FCC), size: 28),
               const SizedBox(height: 8),
               Text(
                 _formatRemainingTime(),
@@ -240,7 +240,7 @@ class _DigitalDetoxScreenState extends ConsumerState<DigitalDetoxScreen> {
               Text(
                 'wellbeing.detox_active_label'.tr(),
                 style: const TextStyle(
-                  color: Color(0xFF5BC8FA),
+                  color: Color(0xFF4AADDC),
                   fontSize: 10.5,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 2,

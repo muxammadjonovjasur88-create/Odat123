@@ -31,7 +31,7 @@ class _CoinsHistorySheet extends ConsumerWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF080B14),
+        color: Color(0xFF04050D),
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
         border: Border(top: BorderSide(color: Color(0xFFFFB703), width: 1.5)),
       ),
@@ -99,7 +99,7 @@ class _CoinsHistorySheet extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF131929),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.white12),
             ),
@@ -190,10 +190,10 @@ class _CoinsHistorySheet extends ConsumerWidget {
                             color = const Color(0xFFFF5400);
                           } else if (title.contains('Kupon') || title.contains('Promokod')) {
                             icon = Icons.card_giftcard_rounded;
-                            color = const Color(0xFF5BC8FA);
+                            color = const Color(0xFF4AADDC);
                           } else if (title.contains('G‘ildirak') || title.contains('Wheel')) {
                             icon = Icons.casino_rounded;
-                            color = const Color(0xFF3B9BFF);
+                            color = const Color(0xFF3A7FCC);
                           } else if (!isEarn) {
                             icon = Icons.shopping_bag_rounded;
                             color = const Color(0xFFFF0055);
@@ -223,7 +223,7 @@ class _CoinsHistorySheet extends ConsumerWidget {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: item.color.withValues(alpha: 0.3)),
       ),
@@ -277,14 +277,14 @@ class _CoinsHistorySheet extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: item.isEarn
-                  ? const Color(0x2200FF88)
+                  ? const Color(0x224AADDC)
                   : const Color(0x22FF0055),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
               item.isEarn ? '+${item.amount} Coin' : '-${item.amount} Coin',
               style: TextStyle(
-                color: item.isEarn ? const Color(0xFF3B9BFF) : const Color(0xFFFF0055),
+                color: item.isEarn ? const Color(0xFF3A7FCC) : const Color(0xFFFF0055),
                 fontWeight: FontWeight.w900,
                 fontSize: 12,
               ),

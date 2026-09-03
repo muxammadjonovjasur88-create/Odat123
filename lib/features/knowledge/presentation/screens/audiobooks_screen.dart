@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -100,7 +100,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
             'category': category,
             'durationMin': (data['durationMin'] as num?)?.toInt() ?? (data['duration'] as num?)?.toInt() ?? 15,
             'emoji': data['emoji'] as String? ?? '📚',
-            'color': const Color(0xFF5BC8FA),
+            'color': const Color(0xFF4AADDC),
             'telegramUrl': data['telegramUrl'] as String? ?? data['tgUrl'] as String? ?? 'https://t.me/odat_fenix',
             'audioUrl': data['audioUrl'] as String? ?? data['url'] as String? ?? data['fileUrl'] as String? ?? data['audio_url'] as String? ?? '',
             'desc': data['desc'] as String? ?? data['description'] as String? ?? '',
@@ -207,11 +207,11 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           duration: const Duration(seconds: 5),
-          backgroundColor: const Color(0xFF0D1220),
+          backgroundColor: const Color(0xFF090B18),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: const BorderSide(color: Color(0xFF5BC8FA), width: 1.2),
+            side: const BorderSide(color: Color(0xFF4AADDC), width: 1.2),
           ),
           content: Text(
             url.isEmpty
@@ -222,7 +222,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
           action: telegramUrl.isNotEmpty
               ? SnackBarAction(
                   label: '📱 Telegramda eshitish',
-                  textColor: const Color(0xFF5BC8FA),
+                  textColor: const Color(0xFF4AADDC),
                   onPressed: () => _openTelegram(telegramUrl),
                 )
               : null,
@@ -296,9 +296,9 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
         : null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -307,7 +307,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
         ),
         title: const Row(
           children: [
-            Icon(Icons.podcasts_rounded, color: Color(0xFF5BC8FA), size: 22),
+            Icon(Icons.podcasts_rounded, color: Color(0xFF4AADDC), size: 22),
             SizedBox(width: 8),
             Text(
               'Walk & Learn Podkastlar 🎙️',
@@ -322,7 +322,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
             // Category Filter Chips
             Container(
               height: 48,
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -341,7 +341,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
             // Content List
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF5BC8FA)))
+                  ? const Center(child: CircularProgressIndicator(color: Color(0xFF4AADDC)))
                   : filteredList.isEmpty
                       ? Center(
                           child: Padding(
@@ -354,10 +354,10 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
                                   height: 68,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: const Color(0xFF5BC8FA).withValues(alpha: 0.1),
-                                    border: Border.all(color: const Color(0xFF5BC8FA).withValues(alpha: 0.3)),
+                                    color: const Color(0xFF4AADDC).withValues(alpha: 0.1),
+                                    border: Border.all(color: const Color(0xFF4AADDC).withValues(alpha: 0.3)),
                                   ),
-                                  child: const Icon(Icons.podcasts_rounded, color: Color(0xFF5BC8FA), size: 34),
+                                  child: const Icon(Icons.podcasts_rounded, color: Color(0xFF4AADDC), size: 34),
                                 ),
                                 const SizedBox(height: 16),
                                 const Text(
@@ -383,14 +383,14 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
                             final item = filteredList[index];
                             final trackId = item['id'] as String? ?? item['title'] as String? ?? '';
                             final isCurrent = _currentTrackId == trackId;
-                            final color = item['color'] as Color? ?? const Color(0xFF5BC8FA);
+                            final color = item['color'] as Color? ?? const Color(0xFF4AADDC);
 
                             return GestureDetector(
                               onTap: () => _playTrack(item),
                               child: Container(
                                 padding: const EdgeInsets.all(14),
                                 decoration: BoxDecoration(
-                                  color: isCurrent ? const Color(0xFF0D1220) : const Color(0xFF0D1220),
+                                  color: isCurrent ? const Color(0xFF090B18) : const Color(0xFF090B18),
                                   borderRadius: BorderRadius.circular(18),
                                   border: Border.all(
                                     color: isCurrent ? color : const Color(0x22FFFFFF),
@@ -423,7 +423,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
                                           Text(
                                             item['title'] as String,
                                             style: TextStyle(
-                                              color: isCurrent ? const Color(0xFF5BC8FA) : Colors.white,
+                                              color: isCurrent ? const Color(0xFF4AADDC) : Colors.white,
                                               fontSize: 14.5,
                                               fontWeight: FontWeight.bold,
                                             ),
@@ -456,14 +456,14 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
                                                height: 24,
                                                child: CircularProgressIndicator(
                                                  strokeWidth: 2,
-                                                 color: Color(0xFF5BC8FA),
+                                                 color: Color(0xFF4AADDC),
                                                ),
                                              )
                                            : Icon(
                                                isCurrent && _isPlaying
                                                    ? Icons.pause_circle_filled_rounded
                                                    : Icons.play_circle_fill_rounded,
-                                               color: isCurrent ? const Color(0xFF5BC8FA) : Colors.white70,
+                                               color: isCurrent ? const Color(0xFF4AADDC) : Colors.white70,
                                                size: 38,
                                              ),
                                      ),
@@ -484,7 +484,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
           : Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0D1220),
+                color: const Color(0xFF090B18),
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(22)),
                 border: Border(top: BorderSide(color: (currentTrack['color'] as Color).withValues(alpha: 0.5), width: 1.5)),
                 boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 20)],
@@ -539,7 +539,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
                         },
                         icon: Icon(
                           _isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_filled_rounded,
-                          color: const Color(0xFF5BC8FA),
+                          color: const Color(0xFF4AADDC),
                           size: 38,
                         ),
                       ),
@@ -560,7 +560,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
                           ),
                           child: Text(
                             '${_speed}x',
-                            style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11, fontWeight: FontWeight.bold),
+                            style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -572,7 +572,7 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
                     child: LinearProgressIndicator(
                       value: _duration.inMilliseconds == 0 ? 0 : _position.inMilliseconds / _duration.inMilliseconds,
                       backgroundColor: Colors.white12,
-                      valueColor: AlwaysStoppedAnimation<Color>(currentTrack['color'] as Color? ?? const Color(0xFF5BC8FA)),
+                      valueColor: AlwaysStoppedAnimation<Color>(currentTrack['color'] as Color? ?? const Color(0xFF4AADDC)),
                       minHeight: 3.5,
                     ),
                   ),
@@ -596,8 +596,8 @@ class _AudiobooksScreenState extends State<AudiobooksScreen> {
             fontSize: 11.5,
           ),
         ),
-        selectedColor: const Color(0xFF5BC8FA),
-        backgroundColor: const Color(0xFF131929),
+        selectedColor: const Color(0xFF4AADDC),
+        backgroundColor: const Color(0xFF090B18),
         onSelected: (_) {
           setState(() {
             _selectedCategory = categoryKey;

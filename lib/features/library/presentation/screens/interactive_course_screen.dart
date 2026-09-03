@@ -170,7 +170,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
               const SizedBox(
                 width: 56,
                 height: 56,
-                child: CircularProgressIndicator(color: Color(0xFF5BC8FA), strokeWidth: 3.5),
+                child: CircularProgressIndicator(color: Color(0xFF4AADDC), strokeWidth: 3.5),
               ),
               const SizedBox(height: 24),
               const Text(
@@ -204,7 +204,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
     return Scaffold(
       backgroundColor: AppColors.dark.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
@@ -220,7 +220,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
             ),
             Text(
               '🎓 Interaktiv Kurs (+${_course!.rewardPoints} PTS)',
-              style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 11, fontWeight: FontWeight.w600),
+              style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 11, fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -229,7 +229,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
           IconButton(
             icon: Icon(
               _showExam ? Icons.auto_stories_rounded : Icons.school_rounded,
-              color: const Color(0xFF5BC8FA),
+              color: const Color(0xFF4AADDC),
             ),
             tooltip: _showExam ? 'Darslarga qaytish' : 'Imtihonga o\'tish',
             onPressed: () {
@@ -242,7 +242,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
         children: [
           // Top Progress Bar
           Container(
-            color: const Color(0xFF0D1220),
+            color: const Color(0xFF090B18),
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
             child: Column(
               children: [
@@ -255,7 +255,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                     ),
                     Text(
                       '${((completedCount / (totalLessons == 0 ? 1 : totalLessons)) * 100).toInt()}%',
-                      style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.bold, fontSize: 12),
+                      style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.bold, fontSize: 12),
                     ),
                   ],
                 ),
@@ -265,7 +265,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                   child: LinearProgressIndicator(
                     value: totalLessons == 0 ? 0 : completedCount / totalLessons,
                     backgroundColor: Colors.white12,
-                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF5BC8FA)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4AADDC)),
                     minHeight: 6,
                   ),
                 ),
@@ -277,7 +277,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
           if (!_showExam)
             Container(
               height: 48,
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -315,7 +315,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (lesson.isCompleted)
-                            const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF3B9BFF))
+                            const Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF3A7FCC))
                           else
                             Text('${idx + 1}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                           const SizedBox(width: 6),
@@ -329,7 +329,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                           ),
                         ],
                       ),
-                      selectedColor: const Color(0xFF5BC8FA),
+                      selectedColor: const Color(0xFF4AADDC),
                       backgroundColor: const Color(0xFF192238),
                       onSelected: (_) {
                         setState(() {
@@ -373,12 +373,12 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF19253C), Color(0xFF0D1220)],
+                colors: [Color(0xFF19253C), Color(0xFF090B18)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0x445BC8FA)),
+              border: Border.all(color: const Color(0x444AADDC)),
             ),
             child: Row(
               children: [
@@ -386,11 +386,11 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF5BC8FA).withValues(alpha: 0.15),
+                    color: const Color(0xFF4AADDC).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Center(
-                    child: Icon(Icons.menu_book_rounded, color: Color(0xFF5BC8FA), size: 24),
+                    child: Icon(Icons.menu_book_rounded, color: Color(0xFF4AADDC), size: 24),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -400,7 +400,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                     children: [
                       Text(
                         '${_currentLessonIndex + 1}-Dars',
-                        style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 12, fontWeight: FontWeight.bold),
+                        style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 12, fontWeight: FontWeight.bold),
                       ),
                       Text(
                         lesson.title,
@@ -423,7 +423,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFF0D1220),
+              color: const Color(0xFF090B18),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.white10),
             ),
@@ -463,7 +463,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                     hintText: 'Mashq bo\'yicha xulosangiz yoki bajarish qaydlaringiz...',
                     hintStyle: const TextStyle(color: Colors.white30, fontSize: 12),
                     filled: true,
-                    fillColor: const Color(0xFF0D1220),
+                    fillColor: const Color(0xFF090B18),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
                 ),
@@ -476,7 +476,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
           if (quizQuestions.isNotEmpty) ...[
             const Text(
               '❓ Darsni Mustahkamlash Testi',
-              style: TextStyle(color: Color(0xFF3B9BFF), fontSize: 16, fontWeight: FontWeight.w800),
+              style: TextStyle(color: Color(0xFF3A7FCC), fontSize: 16, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 10),
             _buildLessonQuizCard(quizQuestions),
@@ -500,7 +500,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                 style: const TextStyle(color: Colors.black, fontSize: 15, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: lesson.isCompleted ? const Color(0xFF5BC8FA) : const Color(0xFF3B9BFF),
+                backgroundColor: lesson.isCompleted ? const Color(0xFF4AADDC) : const Color(0xFF3A7FCC),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
             ),
@@ -516,13 +516,13 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0x2200FF88),
+          color: const Color(0x224AADDC),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0xFF3B9BFF)),
+          border: Border.all(color: const Color(0xFF3A7FCC)),
         ),
         child: const Row(
           children: [
-            Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 28),
+            Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 28),
             SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -540,7 +540,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF0D1220),
+        color: const Color(0xFF090B18),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0x3300FF88)),
       ),
@@ -552,7 +552,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
             children: [
               Text(
                 'Savol ${_currentQuizQIndex + 1}/${questions.length}',
-                style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.bold, fontSize: 12),
+                style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.bold, fontSize: 12),
               ),
             ],
           ),
@@ -574,14 +574,14 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
             if (_answerRevealed) {
               if (isCorrect) {
                 bgColor = const Color(0x3300FF88);
-                borderClr = const Color(0xFF3B9BFF);
+                borderClr = const Color(0xFF3A7FCC);
               } else if (isSelected && !isCorrect) {
                 bgColor = const Color(0x33FF0055);
                 borderClr = const Color(0xFFFF0055);
               }
             } else if (isSelected) {
-              bgColor = const Color(0x335BC8FA);
-              borderClr = const Color(0xFF5BC8FA);
+              bgColor = const Color(0x334AADDC);
+              borderClr = const Color(0xFF4AADDC);
             }
 
             return GestureDetector(
@@ -622,7 +622,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                       child: Text(option, style: const TextStyle(color: Colors.white, fontSize: 13)),
                     ),
                     if (_answerRevealed && isCorrect)
-                      const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 18),
+                      const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 18),
                   ],
                 ),
               ),
@@ -654,13 +654,13 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
               Text(
                 'Sizga +${_course!.rewardPoints} PTS taqdim etildi va profilingizga sertifikat belgisi qo\'shildi!',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF3B9BFF), fontSize: 14, height: 1.4),
+                style: const TextStyle(color: Color(0xFF3A7FCC), fontSize: 14, height: 1.4),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -697,7 +697,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
               ElevatedButton(
                 onPressed: () => setState(() => _showExam = false),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF5BC8FA),
+                  backgroundColor: const Color(0xFF4AADDC),
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -729,7 +729,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
               ),
               Text(
                 'To\'g\'ri: $_examScore',
-                style: const TextStyle(color: Color(0xFF3B9BFF), fontWeight: FontWeight.bold, fontSize: 13),
+                style: const TextStyle(color: Color(0xFF3A7FCC), fontWeight: FontWeight.bold, fontSize: 13),
               ),
             ],
           ),
@@ -738,7 +738,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF221A0F), Color(0xFF131929)],
+                colors: [Color(0xFF221A0F), Color(0xFF090B18)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -757,13 +757,13 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
             final isSelected = _selectedExamOption == idx;
             final isCorrect = idx == q.correctIndex;
 
-            Color bgColor = const Color(0xFF0D1220);
+            Color bgColor = const Color(0xFF090B18);
             Color borderClr = Colors.white12;
 
             if (_examAnswerRevealed) {
               if (isCorrect) {
                 bgColor = const Color(0x3300FF88);
-                borderClr = const Color(0xFF3B9BFF);
+                borderClr = const Color(0xFF3A7FCC);
               } else if (isSelected && !isCorrect) {
                 bgColor = const Color(0x33FF0055);
                 borderClr = const Color(0xFFFF0055);
@@ -816,7 +816,7 @@ class _InteractiveCourseScreenState extends ConsumerState<InteractiveCourseScree
                       child: Text(option, style: const TextStyle(color: Colors.white, fontSize: 14)),
                     ),
                     if (_examAnswerRevealed && isCorrect)
-                      const Icon(Icons.check_circle_rounded, color: Color(0xFF3B9BFF), size: 20),
+                      const Icon(Icons.check_circle_rounded, color: Color(0xFF3A7FCC), size: 20),
                   ],
                 ),
               ),

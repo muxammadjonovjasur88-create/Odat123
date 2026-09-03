@@ -57,9 +57,9 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
     HapticFeedback.mediumImpact();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF0D1220),
+        backgroundColor: const Color(0xFF090B18),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFF3B9BFF))),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFF3A7FCC))),
         content: Text('Referal kod nusxalandi: $_myReferralCode'),
       ),
     );
@@ -69,8 +69,8 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1220),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Color(0x445BC8FA))),
+        backgroundColor: const Color(0xFF090B18),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Color(0x444AADDC))),
         title: Row(
           children: [
             const Icon(Icons.card_giftcard_rounded, color: Color(0xFFFFB703)),
@@ -95,7 +95,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                 hintText: 'ODAT-REF-XXXX',
                 hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
                 filled: true,
-                fillColor: const Color(0xFF131929),
+                fillColor: const Color(0xFF090B18),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),
             ),
@@ -123,7 +123,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      backgroundColor: const Color(0xFF3B9BFF),
+                      backgroundColor: const Color(0xFF3A7FCC),
                       content: Text('referral.reward_success'.tr()),
                     ),
                   );
@@ -137,7 +137,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3B9BFF),
+              backgroundColor: const Color(0xFF3A7FCC),
               foregroundColor: Colors.black,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -151,7 +151,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080B14),
+      backgroundColor: const Color(0xFF04050D),
       appBar: const FlowaAppBar(showBackButton: true),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -167,7 +167,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                   gradient: const RadialGradient(
                     center: Alignment.topLeft,
                     radius: 1.2,
-                    colors: [Color(0xFF1B2845), Color(0xFF0D1220)],
+                    colors: [Color(0xFF1B2845), Color(0xFF090B18)],
                   ),
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(color: const Color(0x66FFB703), width: 1.5),
@@ -208,9 +208,9 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0D1220),
+                  color: const Color(0xFF090B18),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0x335BC8FA)),
+                  border: Border.all(color: const Color(0x334AADDC)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -221,10 +221,10 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _isLoading
-                            ? const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5BC8FA))
+                            ? const CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF4AADDC))
                             : Text(
                                 _myReferralCode ?? 'ODAT-REF-100',
-                                style: const TextStyle(color: Color(0xFF5BC8FA), fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 1.2),
+                                style: const TextStyle(color: Color(0xFF4AADDC), fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: 1.2),
                               ),
                         Row(
                           children: [
@@ -236,7 +236,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                             IconButton(
                               onPressed: _shareCode,
                               tooltip: 'Ulashish',
-                              icon: const Icon(Icons.share_rounded, color: Color(0xFF3B9BFF)),
+                              icon: const Icon(Icons.share_rounded, color: Color(0xFF3A7FCC)),
                             ),
                           ],
                         ),
@@ -274,7 +274,7 @@ class _ReferralScreenState extends ConsumerState<ReferralScreen> {
                   icon: const Icon(Icons.share_rounded, color: Colors.black),
                   label: Text('referral.share_friends'.tr(), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B9BFF),
+                    backgroundColor: const Color(0xFF3A7FCC),
                     foregroundColor: Colors.black,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
